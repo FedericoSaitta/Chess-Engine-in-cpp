@@ -85,3 +85,31 @@ const int nediag[64]=
     1, 2,3, 4, 5, 6, 7, 8,
     0, 1,2, 3, 4, 5, 6, 7
 };
+
+BITBOARD pawnAttacks[2][64];
+
+BITBOARD maskPawnAttacks(const int square, const int side) {
+
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+    if (!side) { // for white
+        if (notHFile & (board << 7)){ attacks |= (board << 7); }
+        if (notAFile & (board << 9)){ attacks |= (board << 9); }
+    }
+    else { // for black
+        if (notAFile & (board >> 7)){ attacks |= (board >> 7); }
+        if (notHFile & (board >> 9)){ attacks |= (board >> 9); }
+    }
+
+    return attacks;
+}
+
+void maskPawnAttacksArray() {
+    // fills in pawnAttacks, 0 is white and 1 is black
+    for (int i = 0; i < 64; i ++) {
+        pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
+        pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
+    }
+}

@@ -1,0 +1,4 @@
+# DONE: make the notAFile and those similar values just constants that dont need initialization
+#
+#
+#

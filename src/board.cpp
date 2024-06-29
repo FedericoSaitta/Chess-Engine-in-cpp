@@ -24,6 +24,11 @@ BITBOARD bitRookMoves[64]{};
 BITBOARD bitQueenMoves[64]{};
 BITBOARD bitKingMoves[64]{};
 
+BITBOARD maskCols[64]{};
+BITBOARD notAFile{18374403900871474942};
+BITBOARD notABFile{18229723555195321596};
+BITBOARD notHFile{9187201950435737471};
+BITBOARD notHGFile{4557430888798830399};
 
 
 // Functions for setting specific squares on and off
@@ -41,5 +46,18 @@ void setBits() {
         setBit(mask[i], i);
         notMask[i] = mask[i];
     }
+
+
+    for (int i = 0; i < 64; i++) {
+        for (int j = 0; j < 64; j++) {
+            if (col[i] == col[j]) {
+                setBit(maskCols[i], j);
+            }
+        }
+    }
 }
+
+
+
+
 

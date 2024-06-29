@@ -16,4 +16,6 @@ add_executable(ChessEngine src/main.cpp
         src/update.cpp
         src/init.cpp
         src/misc.cpp
-        src/misc.h)
+        src/misc.h
+        tests/bitmask_tests.cpp
+        tests/bitmask_tests.h)
