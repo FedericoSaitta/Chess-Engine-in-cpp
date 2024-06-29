@@ -11,3 +11,16 @@ A8 B8 C8 D8 E8 F8 G8 H8
 note that white is at the top here
 */
 #include "board.h"
+
+#include "globals.h"
+
+
+BITBOARD bitMoves[6][64]{}; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 5
+
+
+constexpr void setKnightMoves() {
+
+    for (int i = 0; i < 64; i++) {
+
+    }
+}
