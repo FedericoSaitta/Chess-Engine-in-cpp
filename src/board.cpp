@@ -30,7 +30,6 @@ BITBOARD bitKingMoves[64]{};
 void setBit(BITBOARD& bb, const int square) {
     bb |= (1ULL << square);
 }
-// Not sure whether the 1ULL is actually right
 
 void setBitFalse(BITBOARD& bb, const int square) {
     bb &= ~mask[square];
@@ -38,11 +37,9 @@ void setBitFalse(BITBOARD& bb, const int square) {
 
 
 void setBits() {
-
     for (int i=0; i < 64; i++) {
         setBit(mask[i], i);
         notMask[i] = mask[i];
-
     }
 }
 

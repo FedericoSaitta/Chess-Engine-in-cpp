@@ -9,5 +9,6 @@
 #include "globals.h"
 
 void printBitBoard(BITBOARD& bb);
+void mirrorHorizontal (BITBOARD& bb);
 
 #endif //MISC_H

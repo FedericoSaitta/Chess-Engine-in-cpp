@@ -1,6 +1,7 @@
 //
 // Created by Federico Saitta on 29/06/2024.
 //
+
 #include "globals.h"
 
 const char piece_char[6] =
