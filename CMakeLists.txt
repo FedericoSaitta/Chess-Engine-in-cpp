@@ -13,4 +13,7 @@ add_executable(ChessEngine src/main.cpp
         src/board.cpp
         src/globals.h
         src/attack.cpp
-        src/update.cpp)
+        src/update.cpp
+        src/init.cpp
+        src/misc.cpp
+        src/misc.h)

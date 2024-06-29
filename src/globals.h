@@ -104,7 +104,29 @@
 #define Black 1
 
 
-// Here are also stored any functions that are used in multiple files
+//**** board.cpp ****//
+extern BITBOARD mask[64];
+extern BITBOARD notMask[64];
+
+extern BITBOARD bitMoves[6][64]; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 5
+
+extern BITBOARD bitKnightMoves[64];
+extern BITBOARD bitBishopMoves[64];
+extern BITBOARD bitRookMoves[64];
+extern BITBOARD bitQueenMoves[64];
+extern BITBOARD bitKingMoves[64];
+
+
+//**** init.cpp ****//
+const extern char piece_char[6];
+const extern int piece_value[6];
+const extern int init_color[64];
+const extern int init_board[64];
+const extern int col[64];
+const extern int row[64];
+const extern int nwdiag[64];
+const extern int nediag[64];
+
 
 
 

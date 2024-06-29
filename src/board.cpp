@@ -10,17 +10,39 @@ A8 B8 C8 D8 E8 F8 G8 H8
 
 note that white is at the top here
 */
-#include "board.h"
-
 #include "globals.h"
+#include <cstdint>
 
+BITBOARD mask[64]{};
+BITBOARD notMask[64]{};
 
 BITBOARD bitMoves[6][64]{}; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 5
 
+BITBOARD bitKnightMoves[64]{};
+BITBOARD bitBishopMoves[64]{};
+BITBOARD bitRookMoves[64]{};
+BITBOARD bitQueenMoves[64]{};
+BITBOARD bitKingMoves[64]{};
 
-constexpr void setKnightMoves() {
 
-    for (int i = 0; i < 64; i++) {
+
+// Functions for setting specific squares on and off
+void setBit(BITBOARD& bb, const int square) {
+    bb |= (1ULL << square);
+}
+// Not sure whether the 1ULL is actually right
+
+void setBitFalse(BITBOARD& bb, const int square) {
+    bb &= ~mask[square];
+}
+
+
+void setBits() {
+
+    for (int i=0; i < 64; i++) {
+        setBit(mask[i], i);
+        notMask[i] = mask[i];
 
     }
 }
+
