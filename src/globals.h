@@ -1,6 +1,6 @@
 //
-// Created by Federico Saitta on 28/06/2024.
-//
+// In this file we declare the variables and functions that are used across multiple files
+// these function and variables will have their own definition in their own .cpp file
 
 #ifndef GLOBALS_H
 #define GLOBALS_H
@@ -99,7 +99,6 @@
 #define Q 4
 #define K 5
 #define EMPTY 6
-
 
 #define White 0
 #define Black 1
