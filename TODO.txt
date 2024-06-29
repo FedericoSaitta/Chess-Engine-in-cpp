@@ -1,4 +1,4 @@
 # DONE: make the notAFile and those similar values just constants that dont need initialization
-#
+# Knight and pawn pre-computed tables are okay
 #
 #

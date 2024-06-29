@@ -10,6 +10,7 @@
 
 namespace Test{
     void countPawnAttacks();
+    void countKnightMoves();
 }
 
 

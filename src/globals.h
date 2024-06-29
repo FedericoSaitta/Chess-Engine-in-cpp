@@ -165,7 +165,10 @@ const extern int nwdiag[64];
 const extern int nediag[64];
 
 BITBOARD maskPawnAttacks(int square, int side); // Maybe i dont need this at the global level
+BITBOARD maskKnightMoves(int square);  // these are mostly for debugging
+
 void maskPawnAttacksArray();
+void maskKnightMovesArray();
 
 
 #endif //GLOBALS_H

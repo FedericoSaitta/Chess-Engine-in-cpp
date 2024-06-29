@@ -88,6 +88,7 @@ const int nediag[64]=
 
 BITBOARD pawnAttacks[2][64];
 
+
 BITBOARD maskPawnAttacks(const int square, const int side) {
 
     U64 attacks{};
@@ -111,5 +112,33 @@ void maskPawnAttacksArray() {
     for (int i = 0; i < 64; i ++) {
         pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
         pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
+    }
+}
+
+BITBOARD maskKnightMoves(const int square) {
+
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+
+    if ((board << 17) & notAFile) attacks |= board << 17;
+    if ((board << 15) & notHFile) attacks |= board << 15;
+    if ((board << 10) & notABFile) attacks |= board << 10;
+    if ((board << 6) & notHGFile) attacks |= board << 6;
+
+    if ((board >> 17) & notHFile) attacks |= board >> 17;
+    if ((board >> 15) & notAFile) attacks |= board >> 15;
+    if ((board >> 10) & notHGFile) attacks |= board >> 10;
+    if ((board >> 6) & notABFile) attacks |= board >> 6;
+
+    return attacks;
+}
+
+
+void maskKnightMovesArray() {
+    // fills in pawnAttacks, 0 is white and 1 is black
+    for (int i = 0; i < 64; i ++) {
+        bitKnightMoves[i] =  maskKnightMoves(i);
     }
 }

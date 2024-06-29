@@ -10,10 +10,9 @@ int main() {
 
     setBits();
 
-   // BITBOARD a = maskPawnAttacks(F3, 1);
+    BITBOARD a = maskKnightMoves(E4);
 
     Test::countPawnAttacks();
-
-
+    Test::countKnightMoves();
 }
 // This should contain functions for starting the UCI protocol
