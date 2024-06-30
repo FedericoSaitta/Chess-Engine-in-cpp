@@ -112,4 +112,31 @@ namespace Test{
         std::cout << std::boolalpha;
         std::cout << "countKingMoves Test successfull: " << testPassed << '\n';
     } // This doesnt consider castling
+
+    void countBishopMoves() {
+        setBits();
+
+        int totalMoves{};
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(maskBishopMoves(i))); }
+
+        if (totalMoves != 364) {
+            std::cerr << "**countBishopMoves Test failed** \n";
+        } else {
+            std::cout << "countBishopMoves Test successfull: " << '\n';
+        }
+    }
+
+    void countRookMoves() {
+        setBits();
+
+        int totalMoves{};
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(maskRookMoves(i))); }
+
+        if (totalMoves != 672) {
+            std::cerr << "**countRookMoves Test failed** \n";
+        } else {
+            std::cout << "countRookMoves Test successfull: " << '\n';
+        }
+
+    }
 }

@@ -144,6 +144,54 @@ BITBOARD maskKingMoves(const int square) {
 }
 
 
+
+// Write tests for these two functions
+
+
+// This generates relevant bishop occupancy squares
+// in the mask we do not consider the edge landing squares
+// not storing this anywhere at the moment
+BITBOARD maskBishopMoves(const int square) {
+    U64 attacks{};
+
+    // initial rank and files
+    int r{}, f{};
+
+    const int tr{ square / 8 }; //target row
+    const int tf{ square % 8 }; //target file
+
+    for (r = tr + 1, f = tf + 1; r < 7 && f < 7; r++, f++) { attacks |= (1ULL << (r * 8 + f)); }
+
+    for (r = tr - 1, f = tf + 1; r > 0 && f < 7; r--, f++) { attacks |= (1ULL << (r * 8 + f)); }
+    for (r = tr + 1, f = tf - 1; r < 7 && f > 0; r++, f--) { attacks |= (1ULL << (r * 8 + f)); }
+
+    for (r = tr - 1, f = tf - 1; r > 0 && f > 0; r--, f--) { attacks |= (1ULL << (r * 8 + f)); }
+
+    return attacks;
+}
+
+// need to implement this
+BITBOARD maskRookMoves(const int square) {
+    U64 attacks{};
+
+    // initial rank and files
+    int r{}, f{};
+
+    const int tr{ square / 8 }; //target row
+    const int tf{ square % 8 }; //target file
+
+    for (r = tr + 1; r < 7; r++) { attacks |= (1ULL << (r * 8 + tf)); }
+    for (r = tr - 1; r > 0; r--) { attacks |= (1ULL << (r * 8 + tf)); }
+
+    for (f = tf + 1; f < 7; f++) { attacks |= (1ULL << (tr * 8 + f)); }
+    for (f = tf - 1; f > 0; f--) { attacks |= (1ULL << (tr * 8 + f)); }
+
+    return attacks;
+}
+
+
+
+
 void maskLeaperPiecesArrays() {
 
     for (int i = 0; i < 64; i ++) {

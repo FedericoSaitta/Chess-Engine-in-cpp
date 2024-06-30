@@ -21,6 +21,7 @@ void printBitBoard(BITBOARD& bb, bool mirrored) {
 
     if (mirrored) { std::cout << "   A B C D E F G H"; }
     else { std::cout << "   H G F E D C B A"; }
+    std::cout << '\n';
 }
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally

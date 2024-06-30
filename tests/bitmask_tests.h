@@ -12,6 +12,8 @@ namespace Test{
     void countPawnAttacks();
     void countKnightMoves();
     void countKingMoves();
+    void countBishopMoves();
+    void countRookMoves();
 }
 
 
