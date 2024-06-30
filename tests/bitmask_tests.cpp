@@ -17,7 +17,7 @@ namespace Test{
 
     void countPawnAttacks() {
         setBits();
-        maskPawnAttacksArray(); // initializes the 2D array containing pawn attacks
+        maskLeaperPiecesArrays(); // initializes the 2D array containing pawn attacks
         bool testPassed{true};
 
         // Range is restricted as pawns can only captures between rank 1 and 7 inclusive
@@ -28,12 +28,12 @@ namespace Test{
 
             if ( (col[i] == 0) | (col[i] == 7)) {
                 if ( (whiteCount != blackCount) || (whiteCount != 1) ) {
-                    std::cout << "**Index " << i << ": wrong** \n";
+                    std::cerr << "**Index " << i << ": wrong** \n";
                     testPassed = false;
                 }
 
             } else if ( (whiteCount != blackCount) || (whiteCount != 2) ){
-                std::cout << "**Index " << i << ": wrong** \n";
+                std::cerr << "**Index " << i << ": wrong** \n";
                 testPassed = false;
             }
         }
@@ -44,23 +44,23 @@ namespace Test{
     }
     void countKnightMoves() {
         setBits();
-        maskKnightMovesArray();
+        maskLeaperPiecesArrays();
         bool testPassed{true};
 
         if ( ( std::popcount(bitKnightMoves[A1]) != std::popcount(bitKnightMoves[A8]) )
           || ( std::popcount(bitKnightMoves[A8]) != 2 ) ){
-            std::cout << "**Index " << A1 << " or " << A8 << ": wrong** \n";
+            std::cerr << "**Index " << A1 << " or " << A8 << ": wrong** \n";
             testPassed = false;
         }
 
         if ( ( std::popcount(bitKnightMoves[H8]) != std::popcount(bitKnightMoves[H1]) )
           || ( std::popcount(bitKnightMoves[H8]) != 2) ) {
-            std::cout << "**Index " << H8 << " or " << H1 << ": wrong** \n";
+            std::cerr << "**Index " << H8 << " or " << H1 << ": wrong** \n";
             testPassed = false;
         }
 
         if (std::popcount(bitKnightMoves[E4]) != 8) {
-            std::cout << "**Index " << E4 << ": wrong** \n";
+            std::cerr << "**Index " << E4 << ": wrong** \n";
             testPassed = false;
         }
 
@@ -70,7 +70,7 @@ namespace Test{
         for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKnightMoves[i])); }
 
         if (totalMoves != 336) {
-            std::cout << "**Total number of moves is wrong** \n";
+            std::cerr << "**Total number of moves is wrong** \n";
             testPassed = false;
         }
 
@@ -79,23 +79,23 @@ namespace Test{
     }
     void countKingMoves() {
         setBits();
-        maskKingMovesArray();
+        maskLeaperPiecesArrays();
         bool testPassed{true};
 
         if ( ( std::popcount(bitKingMoves[A1]) != std::popcount(bitKingMoves[A8]) )
           || ( std::popcount(bitKingMoves[A8]) != 3 ) ){
-            std::cout << "**Index " << A1 << " or " << A8 << ": wrong** \n";
+            std::cerr << "**Index " << A1 << " or " << A8 << ": wrong** \n";
             testPassed = false;
           }
 
         if ( ( std::popcount(bitKingMoves[H8]) != std::popcount(bitKingMoves[H1]) )
           || ( std::popcount(bitKingMoves[H8]) != 3) ) {
-            std::cout << "**Index " << H8 << " or " << H1 << ": wrong** \n";
+            std::cerr << "**Index " << H8 << " or " << H1 << ": wrong** \n";
             testPassed = false;
           }
 
         if (std::popcount(bitKingMoves[E4]) != 8) {
-            std::cout << "**Index " << E4 << ": wrong** \n";
+            std::cerr << "**Index " << E4 << ": wrong** \n";
             testPassed = false;
         }
 
@@ -105,7 +105,7 @@ namespace Test{
         for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKingMoves[i])); }
 
         if (totalMoves != 420) {
-            std::cout << "**Total number of moves is wrong** \n";
+            std::cerr << "**Total number of moves is wrong** \n";
             testPassed = false;
         }
 

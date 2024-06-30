@@ -168,9 +168,7 @@ BITBOARD maskPawnAttacks(int square, int side); // Maybe i dont need this at the
 BITBOARD maskKnightMoves(int square);  // these are mostly for debugging
 BITBOARD maskKingMoves(int square);
 
-void maskPawnAttacksArray();
-void maskKnightMovesArray();
-void maskKingMovesArray();
+void maskLeaperPiecesArrays();
 
 
 #endif //GLOBALS_H

@@ -131,7 +131,8 @@ BITBOARD maskKingMoves(const int square) {
 
     setBit(board, square);
 
-    attacks |= ((board << 8) | (board >> 8));
+    if (board << 8) attacks |= (board << 8);
+    if (board >> 8) attacks |= (board >> 8);
     if ((board << 1) & notAFile) {
         attacks |= (board << 1) | (board << 9) | (board >> 7);
     }
@@ -143,22 +144,13 @@ BITBOARD maskKingMoves(const int square) {
 }
 
 
-void maskPawnAttacksArray() {
-    // fills in pawnAttacks, 0 is white and 1 is black
+void maskLeaperPiecesArrays() {
+
     for (int i = 0; i < 64; i ++) {
         pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
         pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
-    }
-}
-void maskKnightMovesArray() {
-    // fills in pawnAttacks, 0 is white and 1 is black
-    for (int i = 0; i < 64; i ++) {
+
         bitKnightMoves[i] =  maskKnightMoves(i);
-    }
-}
-void maskKingMovesArray() {
-    // fills in pawnAttacks, 0 is white and 1 is black
-    for (int i = 0; i < 64; i ++) {
         bitKingMoves[i] =  maskKingMoves(i);
     }
 }
