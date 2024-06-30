@@ -10,7 +10,7 @@
 // these could go under tests but there we will put more rigorous testing functions
 
 // prints the bitboard, run bb through mirrorHorizontal to obtain normal view of the board (A1: bottom left)
-void printBitBoard(BITBOARD& bb, bool mirrored) {
+void printBitBoard(const BITBOARD bb, const bool mirrored) {
     std::cout << '\n';
     for (int i = 63; i >= 0; --i) {
         if ((i + 1) % 8 == 0){ std::cout << (1 + i / 8) << "| "; }

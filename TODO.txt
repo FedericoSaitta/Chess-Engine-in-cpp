@@ -1,4 +1,5 @@
-# DONE: make the notAFile and those similar values just constants that dont need initialization
-# Knight and pawn pre-computed tables are okay
+# DONE: make the notAFile and those similar values just constants that don't need initialization
+# DONE: Knight and pawn pre-computed tables
 #
-#
+# create an array from which given an index you can print out human-readable squares
+# write some test and clean up the code

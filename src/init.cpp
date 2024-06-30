@@ -190,8 +190,6 @@ BITBOARD maskRookMoves(const int square) {
 }
 
 
-
-
 void maskLeaperPiecesArrays() {
 
     for (int i = 0; i < 64; i ++) {
@@ -201,4 +199,70 @@ void maskLeaperPiecesArrays() {
         bitKnightMoves[i] =  maskKnightMoves(i);
         bitKingMoves[i] =  maskKingMoves(i);
     }
+}
+
+
+// In this function we want to hit the board edges unlike before
+// at the moements lets assume we can eat the blockers
+// movegenerators will deal with this difference
+BITBOARD bishopAttacksOnTheFly(const int square, const U64 blocker) {
+    U64 attacks{};
+
+    // initial rank and files
+    int r{}, f{};
+
+    const int tr{ square / 8 }; //target row
+    const int tf{ square % 8 }; //target file
+
+    for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++) {
+        attacks |= (1ULL << (r * 8 + f));
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    for (r = tr - 1, f = tf + 1; r >= 0 && f <= 7; r--, f++) {
+        attacks |= (1ULL << (r * 8 + f));
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+    for (r = tr + 1, f = tf - 1; r <= 7 && f >= 0; r++, f--) {
+        attacks |= (1ULL << (r * 8 + f));
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    for (r = tr - 1, f = tf - 1; r >= 0 && f >= 0; r--, f--) {
+        attacks |= (1ULL << (r * 8 + f));
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    return attacks;
+}
+
+
+BITBOARD rookAttacksOnTheFly(const int square, const U64 blocker) {
+    U64 attacks{};
+
+    // initial rank and files
+    int r{}, f{};
+
+    const int tr{ square / 8 }; //target row
+    const int tf{ square % 8 }; //target file
+
+    for (r = tr + 1; r <= 7; r++) {
+        attacks |= (1ULL << (r * 8 + tf));
+        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    }
+    for (r = tr - 1; r >= 0; r--) {
+        attacks |= (1ULL << (r * 8 + tf));
+        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    }
+
+    for (f = tf + 1; f <= 7; f++) {
+        attacks |= (1ULL << (tr * 8 + f));
+        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    }
+    for (f = tf - 1; f >= 0; f--) {
+        attacks |= (1ULL << (tr * 8 + f));
+        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    }
+
+    return attacks;
 }

@@ -170,7 +170,33 @@ BITBOARD maskKingMoves(int square);
 BITBOARD maskBishopMoves(int square);
 BITBOARD maskRookMoves(int square);
 
+BITBOARD bishopAttacksOnTheFly(int square, U64 blocker);
+BITBOARD rookAttacksOnTheFly(int square, U64 blocker);
+
 void maskLeaperPiecesArrays();
+
+
+// this resets the Leftmostbit, in this case it is the most significant bit
+// to quickly count the number of bits on a bitboard use the bit hacK
+// board &= (board - 1), this is the function to count bits on a bitboard
+// inline basically inserts your code inside the block instead of making an actuall "call", can cause code bloating
+// use inline for functions that will be called a lot
+
+inline int countBits(BITBOARD board) {
+    int count{};
+    while (board) { board &= (board - 1); count++; }
+    return count;
+}
+
+// visually for you gets the rightmost bit, in the tutorial it is the leftmost
+// of course this only works for boards that have at least one bit set on them
+inline int getLeastSigBitIndex(const BITBOARD board) {
+
+    if (board) {
+        return countBits((board & -board) - 1);
+    }
+    return -1; // in case the bitboard is initially empty
+}
 
 
 #endif //GLOBALS_H
