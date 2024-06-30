@@ -106,15 +106,6 @@ BITBOARD maskPawnAttacks(const int square, const int side) {
 
     return attacks;
 }
-
-void maskPawnAttacksArray() {
-    // fills in pawnAttacks, 0 is white and 1 is black
-    for (int i = 0; i < 64; i ++) {
-        pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
-        pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
-    }
-}
-
 BITBOARD maskKnightMoves(const int square) {
 
     U64 attacks{};
@@ -134,11 +125,40 @@ BITBOARD maskKnightMoves(const int square) {
 
     return attacks;
 }
+BITBOARD maskKingMoves(const int square) {
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+
+    attacks |= ((board << 8) | (board >> 8));
+    if ((board << 1) & notAFile) {
+        attacks |= (board << 1) | (board << 9) | (board >> 7);
+    }
+    if ((board >> 1) & notHFile) {
+        attacks |= (board >> 1) | (board >> 9) | (board << 7);
+    }
+
+    return attacks;
+}
 
 
+void maskPawnAttacksArray() {
+    // fills in pawnAttacks, 0 is white and 1 is black
+    for (int i = 0; i < 64; i ++) {
+        pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
+        pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
+    }
+}
 void maskKnightMovesArray() {
     // fills in pawnAttacks, 0 is white and 1 is black
     for (int i = 0; i < 64; i ++) {
         bitKnightMoves[i] =  maskKnightMoves(i);
+    }
+}
+void maskKingMovesArray() {
+    // fills in pawnAttacks, 0 is white and 1 is black
+    for (int i = 0; i < 64; i ++) {
+        bitKingMoves[i] =  maskKingMoves(i);
     }
 }

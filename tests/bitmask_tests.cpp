@@ -10,6 +10,9 @@
 #include "/Users/federicosaitta/CLionProjects/ChessEngine/src/misc.h"
 
 
+
+// Code is quite repetitive could you use some sort of templates???
+
 namespace Test{
 
     void countPawnAttacks() {
@@ -31,7 +34,7 @@ namespace Test{
 
             } else if ( (whiteCount != blackCount) || (whiteCount != 2) ){
                 std::cout << "**Index " << i << ": wrong** \n";
-            testPassed = false;
+                testPassed = false;
             }
         }
 
@@ -39,7 +42,6 @@ namespace Test{
         std::cout << "countPawnAttacks Test successfull: " << testPassed << '\n';
 
     }
-
     void countKnightMoves() {
         setBits();
         maskKnightMovesArray();
@@ -48,23 +50,66 @@ namespace Test{
         if ( ( std::popcount(bitKnightMoves[A1]) != std::popcount(bitKnightMoves[A8]) )
           || ( std::popcount(bitKnightMoves[A8]) != 2 ) ){
             std::cout << "**Index " << A1 << " or " << A8 << ": wrong** \n";
+            testPassed = false;
         }
 
         if ( ( std::popcount(bitKnightMoves[H8]) != std::popcount(bitKnightMoves[H1]) )
-          || ( std::popcount(bitKnightMoves[A8]) != 2) ) {
+          || ( std::popcount(bitKnightMoves[H8]) != 2) ) {
             std::cout << "**Index " << H8 << " or " << H1 << ": wrong** \n";
+            testPassed = false;
         }
 
-        if (std::popcount(bitKnightMoves[E4]) != 8){ std::cout << "**Index " << E4 << ": wrong** \n"; }
+        if (std::popcount(bitKnightMoves[E4]) != 8) {
+            std::cout << "**Index " << E4 << ": wrong** \n";
+            testPassed = false;
+        }
 
         // Total number of moves of a knight is 336:
-        // https://math.stackexchange.com/questions/2204736/how-many-different-knights-moves-are-there-on-an-n-times-n-chessboard
+        // https://chess.stackexchange.com/questions/33329/how-many-possible-chess-moves-are-there
         int totalMoves{};
         for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKnightMoves[i])); }
 
-        if (totalMoves != 336) { std::cout << "**Total number of moves is wrong** \n"; }
+        if (totalMoves != 336) {
+            std::cout << "**Total number of moves is wrong** \n";
+            testPassed = false;
+        }
 
         std::cout << std::boolalpha;
         std::cout << "countKnightMoves Test successfull: " << testPassed << '\n';
     }
+    void countKingMoves() {
+        setBits();
+        maskKingMovesArray();
+        bool testPassed{true};
+
+        if ( ( std::popcount(bitKingMoves[A1]) != std::popcount(bitKingMoves[A8]) )
+          || ( std::popcount(bitKingMoves[A8]) != 3 ) ){
+            std::cout << "**Index " << A1 << " or " << A8 << ": wrong** \n";
+            testPassed = false;
+          }
+
+        if ( ( std::popcount(bitKingMoves[H8]) != std::popcount(bitKingMoves[H1]) )
+          || ( std::popcount(bitKingMoves[H8]) != 3) ) {
+            std::cout << "**Index " << H8 << " or " << H1 << ": wrong** \n";
+            testPassed = false;
+          }
+
+        if (std::popcount(bitKingMoves[E4]) != 8) {
+            std::cout << "**Index " << E4 << ": wrong** \n";
+            testPassed = false;
+        }
+
+        // Total number of moves of a knight is 336:
+        // https://chess.stackexchange.com/questions/33329/how-many-possible-chess-moves-are-there
+        int totalMoves{};
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKingMoves[i])); }
+
+        if (totalMoves != 420) {
+            std::cout << "**Total number of moves is wrong** \n";
+            testPassed = false;
+        }
+
+        std::cout << std::boolalpha;
+        std::cout << "countKingMoves Test successfull: " << testPassed << '\n';
+    } // This doesnt consider castling
 }
