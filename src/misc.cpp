@@ -6,6 +6,8 @@
 
 #include "globals.h"
 #include "constants.h"
+#include "inline_functions.h"
+
 #include <iostream>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,

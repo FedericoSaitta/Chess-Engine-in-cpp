@@ -1,43 +1,9 @@
 //
 // Created by Federico Saitta on 29/06/2024.
 //
-
+#include "constants.h"
 #include "globals.h"
-
-const char piece_char[6] =
-{
-    'P', 'N', 'B', 'R', 'Q', 'K'
-};
-
-const int piece_value[6] =
-{
-    100, 300, 300, 500, 900, 10000
-};
-
-const int init_color[64] =
-{
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1
-};
-
-const int init_board[64] =
-{
-    3, 1, 2, 4, 5, 2, 1, 3,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    3, 1, 2, 4, 5, 2, 1, 3
-};
-
+#include "inline_functions.h"
 
 const int bishopRelevantBits[64]{
     6, 5, 5, 5, 5, 5, 5, 6,
@@ -49,6 +15,7 @@ const int bishopRelevantBits[64]{
     5, 5, 5, 5, 5, 5, 5, 5,
     6, 5, 5, 5, 5, 5, 5, 6
 };
+
 const int rookRelevantBits[64] {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -60,206 +27,7 @@ const int rookRelevantBits[64] {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
-BITBOARD pawnAttacks[2][64];
-
-
-BITBOARD maskPawnAttacks(const int square, const int side) {
-
-    U64 attacks{};
-    U64 board{};
-
-    setBit(board, square);
-    if (!side) { // for white
-        if (notHFile & (board << 7)){ attacks |= (board << 7); }
-        if (notAFile & (board << 9)){ attacks |= (board << 9); }
-    }
-    else { // for black
-        if (notAFile & (board >> 7)){ attacks |= (board >> 7); }
-        if (notHFile & (board >> 9)){ attacks |= (board >> 9); }
-    }
-
-    return attacks;
-}
-BITBOARD maskKnightMoves(const int square) {
-
-    U64 attacks{};
-    U64 board{};
-
-    setBit(board, square);
-
-    if ((board << 17) & notAFile) attacks |= board << 17;
-    if ((board << 15) & notHFile) attacks |= board << 15;
-    if ((board << 10) & notABFile) attacks |= board << 10;
-    if ((board << 6) & notHGFile) attacks |= board << 6;
-
-    if ((board >> 17) & notHFile) attacks |= board >> 17;
-    if ((board >> 15) & notAFile) attacks |= board >> 15;
-    if ((board >> 10) & notHGFile) attacks |= board >> 10;
-    if ((board >> 6) & notABFile) attacks |= board >> 6;
-
-    return attacks;
-}
-BITBOARD maskKingMoves(const int square) {
-    U64 attacks{};
-    U64 board{};
-
-    setBit(board, square);
-
-    if (board << 8) attacks |= (board << 8);
-    if (board >> 8) attacks |= (board >> 8);
-    if ((board << 1) & notAFile) {
-        attacks |= (board << 1) | (board << 9) | (board >> 7);
-    }
-    if ((board >> 1) & notHFile) {
-        attacks |= (board >> 1) | (board >> 9) | (board << 7);
-    }
-
-    return attacks;
-}
-
-
-
-// Write tests for these two functions
-
-
-// This generates relevant bishop occupancy squares
-// in the mask we do not consider the edge landing squares
-// not storing this anywhere at the moment
-BITBOARD maskBishopMoves(const int square) {
-    U64 attacks{};
-
-    // initial rank and files
-    int r{}, f{};
-
-    const int tr{ square / 8 }; //target row
-    const int tf{ square % 8 }; //target file
-
-    for (r = tr + 1, f = tf + 1; r < 7 && f < 7; r++, f++) { attacks |= (1ULL << (r * 8 + f)); }
-
-    for (r = tr - 1, f = tf + 1; r > 0 && f < 7; r--, f++) { attacks |= (1ULL << (r * 8 + f)); }
-    for (r = tr + 1, f = tf - 1; r < 7 && f > 0; r++, f--) { attacks |= (1ULL << (r * 8 + f)); }
-
-    for (r = tr - 1, f = tf - 1; r > 0 && f > 0; r--, f--) { attacks |= (1ULL << (r * 8 + f)); }
-
-    return attacks;
-}
-
-// need to implement this
-BITBOARD maskRookMoves(const int square) {
-    U64 attacks{};
-
-    // initial rank and files
-    int r{}, f{};
-
-    const int tr{ square / 8 }; //target row
-    const int tf{ square % 8 }; //target file
-
-    for (r = tr + 1; r < 7; r++) { attacks |= (1ULL << (r * 8 + tf)); }
-    for (r = tr - 1; r > 0; r--) { attacks |= (1ULL << (r * 8 + tf)); }
-
-    for (f = tf + 1; f < 7; f++) { attacks |= (1ULL << (tr * 8 + f)); }
-    for (f = tf - 1; f > 0; f--) { attacks |= (1ULL << (tr * 8 + f)); }
-
-    return attacks;
-}
-
-
-void initLeaperPiecesAttacks() {
-
-    for (int i = 0; i < 64; i ++) {
-        pawnAttacks[0][i] =  maskPawnAttacks(i, 0);
-        pawnAttacks[1][i] =  maskPawnAttacks(i, 1);
-
-        bitKnightMoves[i] =  maskKnightMoves(i);
-        bitKingMoves[i] =  maskKingMoves(i);
-    }
-}
-
-
-// In this function we want to hit the board edges unlike before
-// at the moements lets assume we can eat the blockers
-// movegenerators will deal with this difference
-BITBOARD bishopAttacksOnTheFly(const int square, const U64 blocker) {
-    U64 attacks{};
-
-    // initial rank and files
-    int r{}, f{};
-
-    const int tr{ square / 8 }; //target row
-    const int tf{ square % 8 }; //target file
-
-    for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++) {
-        attacks |= (1ULL << (r * 8 + f));
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
-    }
-
-    for (r = tr - 1, f = tf + 1; r >= 0 && f <= 7; r--, f++) {
-        attacks |= (1ULL << (r * 8 + f));
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
-    }
-    for (r = tr + 1, f = tf - 1; r <= 7 && f >= 0; r++, f--) {
-        attacks |= (1ULL << (r * 8 + f));
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
-    }
-
-    for (r = tr - 1, f = tf - 1; r >= 0 && f >= 0; r--, f--) {
-        attacks |= (1ULL << (r * 8 + f));
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
-    }
-
-    return attacks;
-}
-
-BITBOARD rookAttacksOnTheFly(const int square, const U64 blocker) {
-    U64 attacks{};
-
-    // initial rank and files
-    int r{}, f{};
-
-    const int tr{ square / 8 }; //target row
-    const int tf{ square % 8 }; //target file
-
-    for (r = tr + 1; r <= 7; r++) {
-        attacks |= (1ULL << (r * 8 + tf));
-        if ( (1ULL << (r * 8 + tf)) & blocker) break;
-    }
-    for (r = tr - 1; r >= 0; r--) {
-        attacks |= (1ULL << (r * 8 + tf));
-        if ( (1ULL << (r * 8 + tf)) & blocker) break;
-    }
-
-    for (f = tf + 1; f <= 7; f++) {
-        attacks |= (1ULL << (tr * 8 + f));
-        if ( (1ULL << (tr * 8 + f)) & blocker) break;
-    }
-    for (f = tf - 1; f >= 0; f--) {
-        attacks |= (1ULL << (tr * 8 + f));
-        if ( (1ULL << (tr * 8 + f)) & blocker) break;
-    }
-
-    return attacks;
-}
-
-
-BITBOARD setOccupancies(const int index, const int bitInMask, U64 attackMask) {
-    U64 occupancy{};
-
-    for (int i=0; i < bitInMask; i++) {
-
-        const int square {getLeastSigBitIndex(attackMask)};
-        setBitFalse(attackMask, square);
-
-        if (index & (1ULL << i)) {
-            occupancy |= (1ULL << square);
-        }
-
-    }
-    return occupancy;
-}
-
-
 // from this https://www.reddit.com/r/chessprogramming/comments/wsrf3s/is_there_any_place_i_can_copy_fancy_magic_numbers/
-
 const U64 bishopMagics[64] {
     0xC00204004A0449ULL, 0x3020A20A02202000ULL, 0x4282881002004ULL, 0x8244250200140020ULL,
     0x2442021008840010ULL, 0x822020080004ULL, 0x2010801042040D0ULL, 0x2020110311104006ULL,
@@ -298,6 +66,187 @@ const U64 rookMagics[64] {
     0x401001002080005ULL, 0x1A01001A04002829ULL, 0x5000210842100084ULL, 0x310810C240142ULL
 };
 
+BITBOARD pawnAttacks[2][64];
+BITBOARD bitKnightMoves[64]{};
+BITBOARD bitKingMoves[64]{};
+
+BITBOARD bitBishopMoves[64]{};
+BITBOARD bitRookMoves[64]{};
+BITBOARD bitQueenMoves[64]{};
+
+BITBOARD bitBishopMovesTable[64][512];
+BITBOARD bitRookMovesTable[64][4096];
+
+// *** NON-MAGIC PRE-COMPUTED TABLES *** //
+BITBOARD maskPawnAttacks(const int square, const int side) {
+
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+
+    if (!side) { // for white
+        if (notHFile & (board << 7)){ attacks |= (board << 7); }
+        if (notAFile & (board << 9)){ attacks |= (board << 9); }
+    }
+    else { // for black
+        if (notAFile & (board >> 7)){ attacks |= (board >> 7); }
+        if (notHFile & (board >> 9)){ attacks |= (board >> 9); }
+    }
+
+    return attacks;
+}
+
+BITBOARD maskKnightMoves(const int square) {
+
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+
+    if ((board << 17) & notAFile) attacks |= board << 17;
+    if ((board << 15) & notHFile) attacks |= board << 15;
+    if ((board << 10) & notABFile) attacks |= board << 10;
+    if ((board << 6) & notHGFile) attacks |= board << 6;
+
+    if ((board >> 17) & notHFile) attacks |= board >> 17;
+    if ((board >> 15) & notAFile) attacks |= board >> 15;
+    if ((board >> 10) & notHGFile) attacks |= board >> 10;
+    if ((board >> 6) & notABFile) attacks |= board >> 6;
+
+    return attacks;
+}
+
+BITBOARD maskKingMoves(const int square) {
+    U64 attacks{};
+    U64 board{};
+
+    setBit(board, square);
+
+    if (board << 8) attacks |= (board << 8);
+    if (board >> 8) attacks |= (board >> 8);
+    if ((board << 1) & notAFile) {
+        attacks |= (board << 1) | (board << 9) | (board >> 7);
+    }
+    if ((board >> 1) & notHFile) {
+        attacks |= (board >> 1) | (board >> 9) | (board << 7);
+    }
+
+    return attacks;
+}
+
+// *** PLAIN-MAGIC PRE-COMPUTED TABLES *** //
+// https://chess.stackexchange.com/questions/40051/border-pieces-in-magic-bitboards#:~:text=The%20reason%20the%20borders%20are,rook%20can%20attack%20other%20squares.
+BITBOARD maskBishopMoves(const int square) {
+    U64 attacks{};
+
+    const int tr{ square / 8 }; // target row
+    const int tf{ square % 8 }; // target file
+
+    for (int r = tr + 1, f = tf + 1; r < 7 && f < 7; r++, f++) { setBit(attacks, r * 8 + f); }
+
+    for (int r = tr - 1, f = tf + 1; r > 0 && f < 7; r--, f++) { setBit(attacks, r * 8 + f); }
+    for (int r = tr + 1, f = tf - 1; r < 7 && f > 0; r++, f--) { setBit(attacks, r * 8 + f); }
+
+    for (int r = tr - 1, f = tf - 1; r > 0 && f > 0; r--, f--) { setBit(attacks, r * 8 + f); }
+
+    return attacks;
+}
+
+BITBOARD maskRookMoves(const int square) {
+    U64 attacks{};
+
+    const int tr{ square / 8 }; // target row
+    const int tf{ square % 8 }; // target file
+
+    for (int r = tr + 1; r < 7; r++) { setBit(attacks, r * 8 + tf); }
+    for (int r = tr - 1; r > 0; r--) { setBit(attacks, r * 8 + tf); }
+
+    for (int f = tf + 1; f < 7; f++) { setBit(attacks, tr * 8 + f); }
+    for (int f = tf - 1; f > 0; f--) { setBit(attacks, tr * 8 + f); }
+
+    return attacks;
+}
+
+BITBOARD bishopAttacksOnTheFly(const int square, const U64 blocker) {
+    U64 attacks{};
+
+    const int tr{ square / 8 }; // target row
+    const int tf{ square % 8 }; // target file
+
+    for (int r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++) {
+        setBit(attacks, r * 8 + f);
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    for (int r = tr - 1, f = tf + 1; r >= 0 && f <= 7; r--, f++) {
+        setBit(attacks, r * 8 + f);
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+    for (int r = tr + 1, f = tf - 1; r <= 7 && f >= 0; r++, f--) {
+        setBit(attacks, r * 8 + f);
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    for (int r = tr - 1, f = tf - 1; r >= 0 && f >= 0; r--, f--) {
+        setBit(attacks, r * 8 + f);
+        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    }
+
+    return attacks;
+}
+
+BITBOARD rookAttacksOnTheFly(const int square, const U64 blocker) {
+    // generates an attack Bitboard for each square on the board, here we loop till the end of the baord
+    U64 attacks{};
+
+    const int tr{ square / 8 }; // target row
+    const int tf{ square % 8 }; // target file
+
+    for (int r = tr + 1; r <= 7; r++) {
+        setBit(attacks, r * 8 + tf);
+        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    }
+    for (int r = tr - 1; r >= 0; r--) {
+        setBit(attacks, r * 8 + tf);
+        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    }
+
+    for (int f = tf + 1; f <= 7; f++) {
+        setBit(attacks, tr * 8 + f);
+        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    }
+    for (int f = tf - 1; f >= 0; f--) {
+        setBit(attacks, tr * 8 + f);
+        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    }
+
+    return attacks;
+}
+
+BITBOARD setOccupancies(const int index, const int bitInMask, U64 attackMask) {
+    U64 occupancy{};
+
+    for (int i=0; i < bitInMask; i++) {
+
+        const int square {getLeastSigBitIndex(attackMask)};
+        setBitFalse(attackMask, square);
+
+        if (index & (1ULL << i)) { setBit(occupancy, square); }
+    }
+    return occupancy;
+}
+
+// *** INITIALIZING BITBOARD ARRAYS *** //
+void initLeaperPiecesAttacks() {
+    for (int square=0; square < 64; square ++) {
+        pawnAttacks[0][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
+        pawnAttacks[1][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
+
+        bitKnightMoves[square] =  maskKnightMoves(square);
+        bitKingMoves[square] =  maskKingMoves(square);
+    }
+}
 
 void initSliderAttacks(const int bishop) {
 
@@ -307,7 +256,7 @@ void initSliderAttacks(const int bishop) {
 
         const U64 attackMask { bishop ? bitBishopMoves[square] : bitRookMoves[square]};
 
-        const int relevantBitsCount{ countBits(attackMask)};
+        const int relevantBitsCount{ countBits(attackMask) };
         const int occupacyIndex { (1 << relevantBitsCount) };
 
         for (int index=0; index < occupacyIndex; index++) {

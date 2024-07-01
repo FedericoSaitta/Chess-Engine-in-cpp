@@ -3,6 +3,7 @@
 
 #include "globals.h"
 #include "constants.h"
+#include "inline_functions.h"
 #include "misc.h"
 
 #include "bitmask_tests.h"
@@ -25,17 +26,9 @@ int main() {
     setBit(occupancy, H7);
     setBit(occupancy, C5);
 
-
     printBitBoard(occupancy);
-
     printBitBoard(getBishopAttacks(D4, occupancy));
-
-
-    //BITBOARD a{ rookAttacksOnTheFly(E4, blocker) };
-    //printBitBoard(blocker);
-    //printBitBoard(a);
-
-    // now the rook seems to be running okay, make sure to run test for it
+    printBitBoard(getRookAttacks(C4, occupancy));
 
 
     Test::countPawnAttacks();
@@ -47,10 +40,11 @@ int main() {
 
     // so mask only is true at the index in the list, not mask is the opposide
     // maskCols has ones in the column of the square chosen
-    printBitBoard(mask[0]);
-    printBitBoard(notMask[1]);
-    printBitBoard(maskCols[8]);
+    printBitBoard(maskCols[3]);
 
-
+    printBitBoard(maskKnightMoves(B3));
+    printBitBoard(maskKingMoves(H3));
+    printBitBoard(maskPawnAttacks(D3, 0));
+    printBitBoard(maskPawnAttacks(D3, 1));
 }
 // This should contain functions for starting the UCI protocol

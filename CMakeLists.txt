@@ -28,4 +28,5 @@ add_executable(ChessEngine src/main.cpp
         tests/bitmask_tests.cpp
         tests/bitmask_tests.h
         include/constants.h
+        include/inline_functions.h
 )
