@@ -13,17 +13,19 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedan
 #set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
-
+include_directories(include)
+include_directories(tests)
 
 add_executable(ChessEngine src/main.cpp
         src/main.cpp
         src/movegen.cpp
         src/board.cpp
-        src/globals.h
-        src/attack.cpp
+        include/globals.h
         src/update.cpp
         src/init.cpp
         src/misc.cpp
-        src/misc.h
+        include/misc.h
         tests/bitmask_tests.cpp
-        tests/bitmask_tests.h)
+        tests/bitmask_tests.h
+        include/constants.h
+)

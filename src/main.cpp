@@ -2,9 +2,10 @@
 #include <chrono>
 
 #include "globals.h"
+#include "constants.h"
 #include "misc.h"
 
-#include "/Users/federicosaitta/CLionProjects/ChessEngine/tests/bitmask_tests.h"
+#include "bitmask_tests.h"
 
 
 int main() {
@@ -17,10 +18,17 @@ int main() {
 
     U64 occupancy { 0ULL };
     setBit(occupancy, B2);
+    setBit(occupancy, D7);
+    setBit(occupancy, A6);
+    setBit(occupancy, B4);
+    setBit(occupancy, E4);
+    setBit(occupancy, H7);
+    setBit(occupancy, C5);
+
 
     printBitBoard(occupancy);
 
-    printBitBoard(getRookAttacks(D4, occupancy));
+    printBitBoard(getBishopAttacks(D4, occupancy));
 
 
     //BITBOARD a{ rookAttacksOnTheFly(E4, blocker) };
@@ -29,15 +37,19 @@ int main() {
 
     // now the rook seems to be running okay, make sure to run test for it
 
-    /* maybe you could rewrite some of the tests, they seem like overkill for that they do and a bit repetitive
+
     Test::countPawnAttacks();
     Test::countKnightMoves();
     Test::countKingMoves();
 
     Test::countBishopMoves();
     Test::countRookMoves();
-    */
 
+    // so mask only is true at the index in the list, not mask is the opposide
+    // maskCols has ones in the column of the square chosen
+    printBitBoard(mask[0]);
+    printBitBoard(notMask[0]);
+    printBitBoard(maskCols[8]);
 
 
 }

@@ -6,8 +6,10 @@
 
 #include <bit>
 #include <iostream>
-#include "/Users/federicosaitta/CLionProjects/ChessEngine/src/globals.h"
-#include "/Users/federicosaitta/CLionProjects/ChessEngine/src/misc.h"
+
+#include "globals.h"
+#include "misc.h"
+#include "constants.h"
 
 
 
@@ -26,7 +28,8 @@ namespace Test{
             const int whiteCount{ std::popcount(pawnAttacks[0][i]) };
             const int blackCount{ std::popcount(pawnAttacks[1][i]) };
 
-            if ( (col[i] == 0) | (col[i] == 7)) {
+            // checks that pawn is not on A or H file
+            if ( (i % 8 == 0) | (i % 8 == 7)) {
                 if ( (whiteCount != blackCount) || (whiteCount != 1) ) {
                     std::cerr << "**Index " << i << ": wrong** \n";
                     testPassed = false;

@@ -5,8 +5,12 @@
 #ifndef BITMASK_TESTS_H
 #define BITMASK_TESTS_H
 
-#include "/Users/federicosaitta/CLionProjects/ChessEngine/src/globals.h"
-#include "/Users/federicosaitta/CLionProjects/ChessEngine/src/misc.h"
+#include <bit>
+#include <iostream>
+
+#include "globals.h"
+#include "misc.h"
+#include "constants.h"
 
 namespace Test{
     void countPawnAttacks();

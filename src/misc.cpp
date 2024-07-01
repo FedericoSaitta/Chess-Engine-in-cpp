@@ -5,7 +5,9 @@
 #include "misc.h"
 
 #include "globals.h"
+#include "constants.h"
 #include <iostream>
+
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
 // these could go under tests but there we will put more rigorous testing functions
 

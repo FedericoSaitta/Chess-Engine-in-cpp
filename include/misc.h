@@ -5,7 +5,7 @@
 #ifndef MISC_H
 #define MISC_H
 
-
+#include "constants.h"
 #include "globals.h"
 
 void printBitBoard(BITBOARD bb, bool mirrored=false);

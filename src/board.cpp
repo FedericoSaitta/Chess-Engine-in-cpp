@@ -11,7 +11,7 @@ A8 B8 C8 D8 E8 F8 G8 H8
 note that white is at the top here
 */
 #include "globals.h"
-#include <cstdint>
+#include "constants.h"
 
 BITBOARD mask[64]{};
 BITBOARD notMask[64]{};
@@ -48,12 +48,13 @@ void setBitFalse(BITBOARD& bb, const int square) {
 void setBits() {
     for (int i=0; i < 64; i++) {
         setBit(mask[i], i);
-        notMask[i] = mask[i];
+        notMask[i] = ~mask[i];
     }
 
     for (int i = 0; i < 64; i++) {
         for (int j = 0; j < 64; j++) {
-            if (col[i] == col[j]) {
+            // checking that i and j are the same column
+            if ((i % 8) == (j % 8)) {
                 setBit(maskCols[i], j);
             }
         }
