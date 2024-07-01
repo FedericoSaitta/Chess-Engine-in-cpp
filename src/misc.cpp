@@ -33,5 +33,5 @@ BITBOARD mirrorHorizontal (BITBOARD bb) {
     bb = ((bb >> 2) & k2) | ((bb & k2) << 2);
     bb = ((bb >> 4) & k4) | ((bb & k4) << 4);
 
-    return {bb};
+    return bb;
 }

@@ -10,16 +10,20 @@
 int main() {
 
     setBits();
-    maskLeaperPiecesArrays();
-    BITBOARD blocker {0ULL};
-    setBit(blocker, E3);
-    setBit(blocker, G4);
-    setBit(blocker, A7);
+    initLeaperPiecesArrays();
 
-    printBitBoard(blocker);
-    int index {getLeastSigBitIndex(blocker)};
-    printBitBoard(blocker);
-    std::cout << index;
+    initSliderAttacks(1);
+    initSliderAttacks(0);
+
+    U64 occupancy { 0ULL };
+    setBit(occupancy, B2);
+    setBit(occupancy, D6);
+    setBit(occupancy, D7);
+    setBit(occupancy, B4);
+    setBit(occupancy, G4);
+    printBitBoard(occupancy);
+
+    printBitBoard(getRookAttacks(D4, occupancy));
 
 
     //BITBOARD a{ rookAttacksOnTheFly(E4, blocker) };

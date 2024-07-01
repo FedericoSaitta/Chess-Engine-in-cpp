@@ -20,6 +20,10 @@ BITBOARD bitMoves[6][64]{}; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 
 
 BITBOARD bitKnightMoves[64]{};
 BITBOARD bitBishopMoves[64]{};
+
+BITBOARD bitBishopMovesTable[64][512];
+BITBOARD bitRookMovesTable[64][4096];
+
 BITBOARD bitRookMoves[64]{};
 BITBOARD bitQueenMoves[64]{};
 BITBOARD bitKingMoves[64]{};
@@ -46,7 +50,6 @@ void setBits() {
         setBit(mask[i], i);
         notMask[i] = mask[i];
     }
-
 
     for (int i = 0; i < 64; i++) {
         for (int j = 0; j < 64; j++) {

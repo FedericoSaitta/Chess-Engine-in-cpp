@@ -139,16 +139,25 @@ extern BITBOARD notABFile;
 extern BITBOARD notHFile;
 extern BITBOARD notHGFile;
 
+// relevant occupancy bit count for every square on the board
+extern const int bishopRelevantBits[64];
+extern const int rookRelevantBits[64];
+
+
 extern BITBOARD bitMoves[6][64]; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 5
 
 extern BITBOARD pawnAttacks[2][64];
 
-
 extern BITBOARD bitKnightMoves[64];
-extern BITBOARD bitBishopMoves[64];
-extern BITBOARD bitRookMoves[64];
 extern BITBOARD bitQueenMoves[64];
 extern BITBOARD bitKingMoves[64];
+
+extern BITBOARD bitBishopMoves[64];
+extern BITBOARD bitRookMoves[64];
+
+extern BITBOARD bitBishopMovesTable[64][512];
+extern BITBOARD bitRookMovesTable[64][4096];
+
 
 void setBit(BITBOARD& bb, int square);
 void setBitFalse(BITBOARD& bb, int square);
@@ -173,7 +182,8 @@ BITBOARD maskRookMoves(int square);
 BITBOARD bishopAttacksOnTheFly(int square, U64 blocker);
 BITBOARD rookAttacksOnTheFly(int square, U64 blocker);
 
-void maskLeaperPiecesArrays();
+void initLeaperPiecesArrays();
+void initSliderAttacks(int bishop);
 
 
 // this resets the Leftmostbit, in this case it is the most significant bit
@@ -196,6 +206,31 @@ inline int getLeastSigBitIndex(const BITBOARD board) {
         return countBits((board & -board) - 1);
     }
     return -1; // in case the bitboard is initially empty
+}
+
+
+BITBOARD setOccupancies(int index, int bitInMask, U64 attackMask);
+
+extern const U64 bishopMagics[64];
+extern const U64 rookMagics[64];
+
+
+inline U64 getBishopAttacks(const int square, U64 occupancy) {
+    // get bishop attacks assuming current board occupancy
+    occupancy &= bitBishopMoves[square];
+    occupancy *= bishopMagics[square];
+    occupancy >>= 64 - bishopRelevantBits[square];
+
+    return bitBishopMovesTable[square][occupancy];
+}
+
+inline U64 getRookAttacks(const int square, U64 occupancy) {
+    // get bishop attacks assuming current board occupancy
+    occupancy &= bitRookMoves[square];
+    occupancy *= rookMagics[square];
+    occupancy >>= 64 - rookRelevantBits[square];
+
+    return bitRookMovesTable[square][occupancy];
 }
 
 
