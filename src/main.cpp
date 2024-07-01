@@ -48,7 +48,7 @@ int main() {
     // so mask only is true at the index in the list, not mask is the opposide
     // maskCols has ones in the column of the square chosen
     printBitBoard(mask[0]);
-    printBitBoard(notMask[0]);
+    printBitBoard(notMask[1]);
     printBitBoard(maskCols[8]);
 
 
