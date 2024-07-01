@@ -211,7 +211,7 @@ BITBOARD maskRookMoves(const int square) {
 }
 
 
-void initLeaperPiecesArrays() {
+void initLeaperPiecesAttacks() {
 
     for (int i = 0; i < 64; i ++) {
         pawnAttacks[0][i] =  maskPawnAttacks(i, 0);

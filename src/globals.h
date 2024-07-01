@@ -182,7 +182,7 @@ BITBOARD maskRookMoves(int square);
 BITBOARD bishopAttacksOnTheFly(int square, U64 blocker);
 BITBOARD rookAttacksOnTheFly(int square, U64 blocker);
 
-void initLeaperPiecesArrays();
+void initLeaperPiecesAttacks();
 void initSliderAttacks(int bishop);
 
 

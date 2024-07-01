@@ -10,17 +10,14 @@
 int main() {
 
     setBits();
-    initLeaperPiecesArrays();
+    initLeaperPiecesAttacks();
 
     initSliderAttacks(1);
     initSliderAttacks(0);
 
     U64 occupancy { 0ULL };
     setBit(occupancy, B2);
-    setBit(occupancy, D6);
-    setBit(occupancy, D7);
-    setBit(occupancy, B4);
-    setBit(occupancy, G4);
+
     printBitBoard(occupancy);
 
     printBitBoard(getRookAttacks(D4, occupancy));

@@ -17,7 +17,7 @@ namespace Test{
 
     void countPawnAttacks() {
         setBits();
-        initLeaperPiecesArrays(); // initializes the 2D array containing pawn attacks
+        initLeaperPiecesAttacks(); // initializes the 2D array containing pawn attacks
         bool testPassed{true};
 
         // Range is restricted as pawns can only captures between rank 1 and 7 inclusive
@@ -44,7 +44,7 @@ namespace Test{
     }
     void countKnightMoves() {
         setBits();
-        initLeaperPiecesArrays();
+        initLeaperPiecesAttacks();
         bool testPassed{true};
 
         if ( ( std::popcount(bitKnightMoves[A1]) != std::popcount(bitKnightMoves[A8]) )
@@ -79,7 +79,7 @@ namespace Test{
     }
     void countKingMoves() {
         setBits();
-        initLeaperPiecesArrays();
+        initLeaperPiecesAttacks();
         bool testPassed{true};
 
         if ( ( std::popcount(bitKingMoves[A1]) != std::popcount(bitKingMoves[A8]) )
