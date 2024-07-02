@@ -10,11 +10,10 @@
 
 #include "constants.h"
 
+
 // //////////////// //
-//**** board.cpp ****//
+//**** init.cpp ****//
 // //////////////// //
-extern BITBOARD mask[64];
-extern BITBOARD notMask[64];
 extern BITBOARD maskCols[64];
 
 extern BITBOARD notAFile;
@@ -22,20 +21,6 @@ extern BITBOARD notABFile;
 extern BITBOARD notHFile;
 extern BITBOARD notHGFile;
 
-const extern char piece_char[6];
-const extern int piece_value[6];
-const extern int init_color[64];
-const extern int init_board[64];
-
-extern BITBOARD bitMoves[6][64]; // the indices are P: 0, N: 1, B: 2, R: 3, Q: 4, K: 5
-
-void setBits();
-
-
-
-// //////////////// //
-//**** init.cpp ****//
-// //////////////// //
 extern const int bishopRelevantBits[64];
 extern const int rookRelevantBits[64];
 
@@ -68,6 +53,26 @@ BITBOARD setOccupancies(int index, int bitInMask, U64 attackMask);
 
 void initLeaperPiecesAttacks();
 void initSliderAttacks(int bishop);
+void initBits();
+void initAll();
 
+
+
+// //////////////// //
+//**** board.cpp ****//
+// //////////////// //
+const extern char piece_char[6];
+const extern int piece_value[6];
+const extern int init_color[64];
+const extern int init_board[64];
+
+void initBits();
+
+extern BITBOARD bitboards[12]; // indices from 0 to 11 define by macros
+extern BITBOARD occupancies[3]; // white, black pieces, both sides, maybe use enums for this
+
+extern int side; // side to move
+extern int enPassantSQ;
+extern int castle;
 
 #endif //GLOBALS_H

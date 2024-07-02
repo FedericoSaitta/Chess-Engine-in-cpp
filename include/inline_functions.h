@@ -17,6 +17,14 @@ inline void setBitFalse(BITBOARD& board, const int square) {
     board &= ~(1ULL << square);
 }
 
+inline bool getBit(BITBOARD& board, const int square) {
+    return (board >> square) & 1ULL;
+}
+
+
+
+
+
 // this resets the Leftmostbit, in this case it is the most significant bit
 // to quickly count the number of bits on a bitboard use the bit hacK
 // board &= (board - 1), this is the function to count bits on a bitboard

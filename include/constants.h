@@ -117,6 +117,13 @@
 #define K 5
 #define EMPTY 6
 
+// Castling rights relevant bits
+#define WK 1
+#define WQ 2
+#define BK 4
+#define BQ 8
+
+// side to move
 #define White 0
 #define Black 1
 

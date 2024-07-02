@@ -16,8 +16,10 @@ namespace Test{
     void countPawnAttacks();
     void countKnightMoves();
     void countKingMoves();
-    void countBishopMoves();
-    void countRookMoves();
+    void countBishopMoves_noEdges();
+    void countRookMoves_noEdges();
+
+    // ultimately the perft function will decide if the magic bitboards are correct
 }
 
 

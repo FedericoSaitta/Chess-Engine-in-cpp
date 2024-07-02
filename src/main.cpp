@@ -8,43 +8,31 @@
 
 #include "bitmask_tests.h"
 
+// #define RUN_TESTS
+
 
 int main() {
+    initAll();
 
-    setBits();
-    initLeaperPiecesAttacks();
-
-    initSliderAttacks(1);
-    initSliderAttacks(0);
-
-    U64 occupancy { 0ULL };
-    setBit(occupancy, B2);
-    setBit(occupancy, D7);
-    setBit(occupancy, A6);
-    setBit(occupancy, B4);
-    setBit(occupancy, E4);
-    setBit(occupancy, H7);
-    setBit(occupancy, C5);
-
-    printBitBoard(occupancy);
-    printBitBoard(getBishopAttacks(D4, occupancy));
-    printBitBoard(getRookAttacks(C4, occupancy));
-
-
+#ifdef RUN_TESTS
     Test::countPawnAttacks();
     Test::countKnightMoves();
     Test::countKingMoves();
 
-    Test::countBishopMoves();
-    Test::countRookMoves();
+    Test::countBishopMoves_noEdges();
+    Test::countRookMoves_noEdges();
 
-    // so mask only is true at the index in the list, not mask is the opposide
-    // maskCols has ones in the column of the square chosen
-    printBitBoard(maskCols[3]);
+    BITBOARD occupancies{ 0ULL };
+    setBit(occupancies, A1);
+    setBit(occupancies, B3);
+    setBit(occupancies, C5);
+    setBit(occupancies, D7);
+    setBit(occupancies, G2);
+    setBit(occupancies, H4);
+    setBit(occupancies, B7);
 
-    printBitBoard(maskKnightMoves(B3));
-    printBitBoard(maskKingMoves(H3));
-    printBitBoard(maskPawnAttacks(D3, 0));
-    printBitBoard(maskPawnAttacks(D3, 1));
+    printBitBoard(getRookAttacks(F3, occupancies));
+    printBitBoard(getBishopAttacks(F3, occupancies));
+#endif
 }
 // This should contain functions for starting the UCI protocol

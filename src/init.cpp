@@ -5,6 +5,7 @@
 #include "globals.h"
 #include "inline_functions.h"
 
+
 const int bishopRelevantBits[64]{
     6, 5, 5, 5, 5, 5, 5, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
@@ -27,7 +28,7 @@ const int rookRelevantBits[64] {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
-// from this https://www.reddit.com/r/chessprogramming/comments/wsrf3s/is_there_any_place_i_can_copy_fancy_magic_numbers/
+// from this https://www.reddit.com/row/chessprogramming/comments/wsrf3s/is_there_any_place_i_can_copy_fancy_magic_numbers/
 const U64 bishopMagics[64] {
     0xC00204004A0449ULL, 0x3020A20A02202000ULL, 0x4282881002004ULL, 0x8244250200140020ULL,
     0x2442021008840010ULL, 0x822020080004ULL, 0x2010801042040D0ULL, 0x2020110311104006ULL,
@@ -65,6 +66,13 @@ const U64 rookMagics[64] {
     0x4000204100958001ULL, 0x3000950040832202ULL, 0x200008401501ULL, 0x82022100C810000DULL,
     0x401001002080005ULL, 0x1A01001A04002829ULL, 0x5000210842100084ULL, 0x310810C240142ULL
 };
+
+BITBOARD maskCols[64]{};
+
+BITBOARD notAFile{18374403900871474942ULL};
+BITBOARD notABFile{18229723555195321596ULL};
+BITBOARD notHFile{9187201950435737471ULL};
+BITBOARD notHGFile{4557430888798830399ULL};
 
 BITBOARD pawnAttacks[2][64];
 BITBOARD bitKnightMoves[64]{};
@@ -140,15 +148,15 @@ BITBOARD maskKingMoves(const int square) {
 BITBOARD maskBishopMoves(const int square) {
     U64 attacks{};
 
-    const int tr{ square / 8 }; // target row
-    const int tf{ square % 8 }; // target file
+    const int targetRow{ square / 8 }; // target row
+    const int targetFile{ square % 8 }; // target file
 
-    for (int r = tr + 1, f = tf + 1; r < 7 && f < 7; r++, f++) { setBit(attacks, r * 8 + f); }
+    for (int row = targetRow + 1, file = targetFile + 1; row < 7 && file < 7; row++, file++) { setBit(attacks, row * 8 + file); }
 
-    for (int r = tr - 1, f = tf + 1; r > 0 && f < 7; r--, f++) { setBit(attacks, r * 8 + f); }
-    for (int r = tr + 1, f = tf - 1; r < 7 && f > 0; r++, f--) { setBit(attacks, r * 8 + f); }
+    for (int row = targetRow - 1, file = targetFile + 1; row > 0 && file < 7; row--, file++) { setBit(attacks, row * 8 + file); }
+    for (int row = targetRow + 1, file = targetFile - 1; row < 7 && file > 0; row++, file--) { setBit(attacks, row * 8 + file); }
 
-    for (int r = tr - 1, f = tf - 1; r > 0 && f > 0; r--, f--) { setBit(attacks, r * 8 + f); }
+    for (int row = targetRow - 1, file = targetFile - 1; row > 0 && file > 0; row--, file--) { setBit(attacks, row * 8 + file); }
 
     return attacks;
 }
@@ -156,14 +164,14 @@ BITBOARD maskBishopMoves(const int square) {
 BITBOARD maskRookMoves(const int square) {
     U64 attacks{};
 
-    const int tr{ square / 8 }; // target row
-    const int tf{ square % 8 }; // target file
+    const int targetRow{ square / 8 }; // target row
+    const int targetFile{ square % 8 }; // target file
 
-    for (int r = tr + 1; r < 7; r++) { setBit(attacks, r * 8 + tf); }
-    for (int r = tr - 1; r > 0; r--) { setBit(attacks, r * 8 + tf); }
+    for (int row = targetRow + 1; row < 7; row++) { setBit(attacks, row * 8 + targetFile); }
+    for (int row = targetRow - 1; row > 0; row--) { setBit(attacks, row * 8 + targetFile); }
 
-    for (int f = tf + 1; f < 7; f++) { setBit(attacks, tr * 8 + f); }
-    for (int f = tf - 1; f > 0; f--) { setBit(attacks, tr * 8 + f); }
+    for (int file = targetFile + 1; file < 7; file++) { setBit(attacks, targetRow * 8 + file); }
+    for (int file = targetFile - 1; file > 0; file--) { setBit(attacks, targetRow * 8 + file); }
 
     return attacks;
 }
@@ -171,26 +179,26 @@ BITBOARD maskRookMoves(const int square) {
 BITBOARD bishopAttacksOnTheFly(const int square, const U64 blocker) {
     U64 attacks{};
 
-    const int tr{ square / 8 }; // target row
-    const int tf{ square % 8 }; // target file
+    const int targetRow{ square / 8 }; // target row
+    const int targetFile{ square % 8 }; // target file
 
-    for (int r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++) {
-        setBit(attacks, r * 8 + f);
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    for (int row = targetRow + 1, file = targetFile + 1; row <= 7 && file <= 7; row++, file++) {
+        setBit(attacks, row * 8 + file);
+        if ( (1ULL << (row * 8 + file)) & blocker) break;
     }
 
-    for (int r = tr - 1, f = tf + 1; r >= 0 && f <= 7; r--, f++) {
-        setBit(attacks, r * 8 + f);
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    for (int row = targetRow - 1, file = targetFile + 1; row >= 0 && file <= 7; row--, file++) {
+        setBit(attacks, row * 8 + file);
+        if ( (1ULL << (row * 8 + file)) & blocker) break;
     }
-    for (int r = tr + 1, f = tf - 1; r <= 7 && f >= 0; r++, f--) {
-        setBit(attacks, r * 8 + f);
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    for (int row = targetRow + 1, file = targetFile - 1; row <= 7 && file >= 0; row++, file--) {
+        setBit(attacks, row * 8 + file);
+        if ( (1ULL << (row * 8 + file)) & blocker) break;
     }
 
-    for (int r = tr - 1, f = tf - 1; r >= 0 && f >= 0; r--, f--) {
-        setBit(attacks, r * 8 + f);
-        if ( (1ULL << (r * 8 + f)) & blocker) break;
+    for (int row = targetRow - 1, file = targetFile - 1; row >= 0 && file >= 0; row--, file--) {
+        setBit(attacks, row * 8 + file);
+        if ( (1ULL << (row * 8 + file)) & blocker) break;
     }
 
     return attacks;
@@ -200,25 +208,25 @@ BITBOARD rookAttacksOnTheFly(const int square, const U64 blocker) {
     // generates an attack Bitboard for each square on the board, here we loop till the end of the baord
     U64 attacks{};
 
-    const int tr{ square / 8 }; // target row
-    const int tf{ square % 8 }; // target file
+    const int targetRow{ square / 8 }; // target row
+    const int targetFile{ square % 8 }; // target file
 
-    for (int r = tr + 1; r <= 7; r++) {
-        setBit(attacks, r * 8 + tf);
-        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    for (int row = targetRow + 1; row <= 7; row++) {
+        setBit(attacks, row * 8 + targetFile);
+        if ( (1ULL << (row * 8 + targetFile)) & blocker) break;
     }
-    for (int r = tr - 1; r >= 0; r--) {
-        setBit(attacks, r * 8 + tf);
-        if ( (1ULL << (r * 8 + tf)) & blocker) break;
+    for (int row = targetRow - 1; row >= 0; row--) {
+        setBit(attacks, row * 8 + targetFile);
+        if ( (1ULL << (row * 8 + targetFile)) & blocker) break;
     }
 
-    for (int f = tf + 1; f <= 7; f++) {
-        setBit(attacks, tr * 8 + f);
-        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    for (int file = targetFile + 1; file <= 7; file++) {
+        setBit(attacks, targetRow * 8 + file);
+        if ( (1ULL << (targetRow * 8 + file)) & blocker) break;
     }
-    for (int f = tf - 1; f >= 0; f--) {
-        setBit(attacks, tr * 8 + f);
-        if ( (1ULL << (tr * 8 + f)) & blocker) break;
+    for (int file = targetFile - 1; file >= 0; file--) {
+        setBit(attacks, targetRow * 8 + file);
+        if ( (1ULL << (targetRow * 8 + file)) & blocker) break;
     }
 
     return attacks;
@@ -277,3 +285,22 @@ void initSliderAttacks(const int bishop) {
         }
     }
 }
+
+void initBits() {
+    for (int i = 0; i < 64; i++) {
+        for (int j = 0; j < 64; j++) {
+            // checking that i and j are the same column
+            if ((i % 8) == (j % 8)) {
+                setBit(maskCols[i], j);
+            }
+        }
+    }
+} // maybe you can delete this later
+
+void initAll() {
+    initBits();
+    initLeaperPiecesAttacks();
+
+    initSliderAttacks(1);
+    initSliderAttacks(0);
+} // this only takes 100 ms at startup in DEBUG mode
