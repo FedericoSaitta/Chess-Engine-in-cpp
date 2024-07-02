@@ -1,6 +1,5 @@
 #include <iostream>
 #include <chrono>
-#include <bitset>
 
 #include "globals.h"
 #include "constants.h"
@@ -13,15 +12,16 @@
 
 
 int main() {
+    // make sure to call this otherwise tests dont run
+    initAll(); // Done at compile time :)
 
-    initAll(); // this is successfully done at compile time :)
-
-    const std::string starpos = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
+    const std::string starpos = "r3k2r/p1ppqpP1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPpP/R3K2R w KQkq - 0 1 ";
     parseFEN(starpos);
 
     printBoardFancy();
 
-    printAttackedSquares(Black);
+   // printAttackedSquares(Black);
+    generateMoves();
 
 
 #ifdef RUN_TESTS
@@ -45,4 +45,3 @@ int main() {
     printBitBoard(getBishopAttacks(F3, occupancies));
 #endif
 }
-// This should contain functions for starting the UCI protocol

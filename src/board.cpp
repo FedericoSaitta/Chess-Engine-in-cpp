@@ -6,20 +6,11 @@
 #include <sstream>
 #include <cstring>
 
-#include "misc.h"
-
-
-const int piece_value[6] =
-{
-    100, 300, 300, 500, 900, 10000
-};
-
-// whatch out you are missing a lot of enums compared to him
-
 
 // think about using string view as you only need to read from the FEN string i think??
 void parseFEN(const std::string& fenString) {
 
+    // re-setting the board state each time a new FEN is parsed
     memset(bitboards, 0ULL, sizeof(bitboards));
     memset(occupancies, 0ULL, sizeof(occupancies));
     side = 0;
@@ -43,7 +34,7 @@ void parseFEN(const std::string& fenString) {
         } else if (std::isdigit(c)) {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
-            setBit(bitboards[charPieces[c]], rank * 8 + file);
+            setBit(bitboards[charPieces[static_cast<unsigned char>(c)]], rank * 8 + file);
             file++;
         }
     }
@@ -60,7 +51,7 @@ void parseFEN(const std::string& fenString) {
         }
     }
 
-    ////// there is a problem here, your en passant square is not flipped unlike your board representaiton
+
     if(parts[3][0] == '-') {
         enPassantSQ = 64; // the 64th index represents the 'outside the board' square
     } else {
@@ -70,14 +61,10 @@ void parseFEN(const std::string& fenString) {
     }
 
 
-
-    // Lastly we also want to populate the white and black occupancy
+    // Lastly populate the white and black occupancy bitboards
     for (int bbPiece=0; bbPiece < 6; bbPiece++) {
         occupancies[0] |= bitboards[bbPiece]; // for white
         occupancies[1] |= bitboards[bbPiece + 6]; // for black
         occupancies[2] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
     }
-
 }
-
-

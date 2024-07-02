@@ -11,13 +11,9 @@
 #include <iostream>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
-// these could go under tests but there we will put more rigorous testing functions
+// these could go under tests but I will put more rigorous testing functions there.
 
-const char asciiPieces[] { "PNBRQKpkbrqk" };
-const int charPieces[] = { ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5, // white
-                           ['p'] = 6, ['n'] = 7, ['b'] = 8, ['r'] = 9, ['q'] = 10, ['k'] = 11}; // black
-const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
-                              "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
+
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
 BITBOARD mirrorHorizontal (BITBOARD bb) {
@@ -31,7 +27,6 @@ BITBOARD mirrorHorizontal (BITBOARD bb) {
     return bb;
 }
 
-// prints the bitboard, run bb through mirrorHorizontal to obtain normal view of the board (A1: bottom left)
 void printBitBoard(const BITBOARD bb, const bool mirrored) {
     std::cout << '\n';
     for (int square = 63; square >= 0; --square) {
@@ -46,21 +41,20 @@ void printBitBoard(const BITBOARD bb, const bool mirrored) {
     std::cout << '\n';
 }
 
-// this should also print the castling rights and the en - passant square and the side to move
+
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
 
     // we first have to mirror all our bitboards
 
     //before you were mirroring in place, very problematic!!!!
     BITBOARD mirrorredBB[12]{};
-    for (int bbPiece=0; bbPiece < 12; bbPiece++) {
-        if (bitboards[bbPiece]) {
-            mirrorredBB[bbPiece] = mirrorHorizontal(bitboards[bbPiece]);
+    for (int piece=0; piece < 12; piece++) {
+        if (bitboards[piece]) {
+            mirrorredBB[piece] = mirrorHorizontal(bitboards[piece]);
         }
     }
 
-    const char* emptySymbol = ".";
-
+    
     for (int square=63; square >= 0; --square) {
         if ((square + 1) % 8 == 0) std::cout << '\n' << (square + 1) / 8 << "| ";
 
@@ -74,6 +68,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
             }
         }
 
+        const char* emptySymbol = ".";
         const char* symbol{ (piece == -1) ? emptySymbol : unicodePieces[piece] };
         std::cout << ' ' << symbol << ' ';
     }

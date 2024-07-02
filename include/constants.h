@@ -1,3 +1,9 @@
+// In this file all the pre-processor definitions are listed, these include board squares, pieces and states
+// which are referred to as A1 or B (for Bishop) instead of as ints.
+
+// The square mapping of the bitboards is in little-Endian (A1: 0, ..., H8: 63) as seen below:
+
+// Chess squares
 // A8  B8  C8  D8  E8  F8  G8  H8
 // A7  B7  C7  D7  E7  F7  G7  H7
 // A6  B6  C6  D6  E6  F6  G6  H6
@@ -7,7 +13,7 @@
 // A2  B2  C2  D2  E2  F2  G2  H2
 // A1  B1  C1  D1  E1  F1  G1  H1
 
-// Bitboard Indices
+// Respective Bitboard Indices
 // 56  57  58  59  60  61  62  63
 // 48  49  50  51  52  53  54  55
 // 40  41  42  43  44  45  46  47
@@ -98,17 +104,7 @@
 #define G8  62
 #define H8  63
 
-// Move directions as seen from white, north is up the board
-#define NORTH 0
-#define NE 1
-#define EAST 2
-#define SE 3
-#define SOUTH 4
-#define SW 5
-#define WEST 6
-#define NW 7
-
-// Piece values
+// Piece values, 6 is added to form black pieces
 #define P 0
 #define N 1
 #define B 2

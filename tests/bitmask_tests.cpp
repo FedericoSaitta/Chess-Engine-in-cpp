@@ -12,11 +12,9 @@
 #include "constants.h"
 
 
-// Code is quite repetitive could you use some sort of templates???
 namespace Test{
 
     void countPawnAttacks() {
-        initLeaperPiecesAttacks(); // initializes the 2D array containing pawn attacks
 
         // Range is restricted as pawns can only captures between rank 1 and 7 inclusive
         for(int i=8; i < 56; i++) {
@@ -39,26 +37,25 @@ namespace Test{
     }
 
     void countKnightMoves() {
-        initLeaperPiecesAttacks();
 
-        if ( ( std::popcount(bitKnightMoves[A1]) != std::popcount(bitKnightMoves[A8]) )
-          || ( std::popcount(bitKnightMoves[A8]) != 2 ) ){
+        if ( ( std::popcount(bitKnightAttacks[A1]) != std::popcount(bitKnightAttacks[A8]) )
+          || ( std::popcount(bitKnightAttacks[A8]) != 2 ) ){
             std::cerr << "**Index " << A1 << " or " << A8 << ": wrong** \n";
         }
 
-        if ( ( std::popcount(bitKnightMoves[H8]) != std::popcount(bitKnightMoves[H1]) )
-          || ( std::popcount(bitKnightMoves[H8]) != 2) ) {
+        if ( ( std::popcount(bitKnightAttacks[H8]) != std::popcount(bitKnightAttacks[H1]) )
+          || ( std::popcount(bitKnightAttacks[H8]) != 2) ) {
             std::cerr << "**Index " << H8 << " or " << H1 << ": wrong** \n";
         }
 
-        if (std::popcount(bitKnightMoves[E4]) != 8) {
+        if (std::popcount(bitKnightAttacks[E4]) != 8) {
             std::cerr << "**Index " << E4 << ": wrong** \n";
         }
 
         // Total number of moves of a knight is 336:
         // https://chess.stackexchange.com/questions/33329/how-many-possible-chess-moves-are-there
         int totalMoves{};
-        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKnightMoves[i])); }
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKnightAttacks[i])); }
 
         if (totalMoves != 336) {
             std::cerr << "**Total number of moves is wrong** \n";
@@ -68,26 +65,24 @@ namespace Test{
     }
 
     void countKingMoves() {
-        initLeaperPiecesAttacks();
-
-        if ( ( std::popcount(bitKingMoves[A1]) != std::popcount(bitKingMoves[A8]) )
-          || ( std::popcount(bitKingMoves[A8]) != 3 ) ){
+        if ( ( std::popcount(bitKingAttacks[A1]) != std::popcount(bitKingAttacks[A8]) )
+          || ( std::popcount(bitKingAttacks[A8]) != 3 ) ){
             std::cerr << "**Index " << A1 << " or " << A8 << ": wrong** \n";
           }
 
-        if ( ( std::popcount(bitKingMoves[H8]) != std::popcount(bitKingMoves[H1]) )
-          || ( std::popcount(bitKingMoves[H8]) != 3) ) {
+        if ( ( std::popcount(bitKingAttacks[H8]) != std::popcount(bitKingAttacks[H1]) )
+          || ( std::popcount(bitKingAttacks[H8]) != 3) ) {
             std::cerr << "**Index " << H8 << " or " << H1 << ": wrong** \n";
           }
 
-        if (std::popcount(bitKingMoves[E4]) != 8) {
+        if (std::popcount(bitKingAttacks[E4]) != 8) {
             std::cerr << "**Index " << E4 << ": wrong** \n";
         }
 
         // Total number of moves of a knight is 336:
         // https://chess.stackexchange.com/questions/33329/how-many-possible-chess-moves-are-there
         int totalMoves{};
-        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKingMoves[i])); }
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitKingAttacks[i])); }
 
         if (totalMoves != 420) {
             std::cerr << "**Total number of moves is wrong** \n";
@@ -98,7 +93,7 @@ namespace Test{
 
     void countBishopMoves_noEdges() {
         int totalMoves{};
-        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(maskBishopMoves(i))); }
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitBishopAttacks[i])); }
 
         if (totalMoves != 364) {
             std::cerr << "**countBishopMoves Test failed** \n";
@@ -108,9 +103,8 @@ namespace Test{
     }
 
     void countRookMoves_noEdges() {
-
         int totalMoves{};
-        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(maskRookMoves(i))); }
+        for (int i=0; i < 64; i++) { totalMoves += (std::popcount(bitRookAttacks[i])); }
 
         if (totalMoves != 672) {
             std::cerr << "**countRookMoves Test failed** \n";
