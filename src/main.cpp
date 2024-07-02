@@ -15,13 +15,24 @@ int main() {
     // make sure to call this otherwise tests dont run
     initAll(); // Done at compile time :)
 
-    const std::string starpos = "r3k2r/p1ppqpP1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPpP/R3K2R w KQkq - 0 1 ";
+    // remember en-passant square must be lowercase
+    const std::string starpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
     parseFEN(starpos);
 
     printBoardFancy();
 
    // printAttackedSquares(Black);
+
+    // testing the time it takes
+    auto start = std::chrono::high_resolution_clock::now();
+
     generateMoves();
+
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_ms = end - start;
+    std::cout << "Elapsed time: " << elapsed_ms.count() << " milliseconds\n";
+
 
 
 #ifdef RUN_TESTS
