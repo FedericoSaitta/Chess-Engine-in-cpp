@@ -8,21 +8,15 @@
 #include "constants.h"
 #include "globals.h"
 
-
 inline void setBit(BITBOARD& board, const int square) {
     board |= (1ULL << square);
 }
-
 inline void setBitFalse(BITBOARD& board, const int square) {
     board &= ~(1ULL << square);
 }
-
 inline bool getBit(BITBOARD& board, const int square) {
     return (board >> square) & 1ULL;
 }
-
-
-
 
 
 // this resets the Leftmostbit, in this case it is the most significant bit
@@ -30,7 +24,6 @@ inline bool getBit(BITBOARD& board, const int square) {
 // board &= (board - 1), this is the function to count bits on a bitboard
 // inline basically inserts your code inside the block instead of making an actuall "call", can cause code bloating
 // use inline for functions that will be called a lot
-
 inline int countBits(BITBOARD board) {
     int count{};
     while (board) { board &= (board - 1); count++; }
@@ -56,8 +49,6 @@ inline U64 getBishopAttacks(const int square, U64 occupancy) {
 
     return bitBishopMovesTable[square][occupancy];
 }
-
-
 inline U64 getRookAttacks(const int square, U64 occupancy) {
     // get bishop attacks assuming current board occupancy
     occupancy &= bitRookMoves[square];
@@ -66,7 +57,6 @@ inline U64 getRookAttacks(const int square, U64 occupancy) {
 
     return bitRookMovesTable[square][occupancy];
 }
-
 inline U64 getQueenAttacks(const int square, U64 occupancy) {
 
     U64 bishopOccupancy{ occupancy };
@@ -81,6 +71,30 @@ inline U64 getQueenAttacks(const int square, U64 occupancy) {
     rookOccupancy >>= 64 - rookRelevantBits[square];
 
     return (bitBishopMovesTable[square][bishopOccupancy] | bitRookMovesTable[square][rookOccupancy]);
+}
+
+inline int isSqAttacked(const int square, const int side) {
+
+    // attacked by pawns
+    if ( (side == White) && (pawnAttacks[Black][square] & bitboards[P]) ) return 1;
+    if ( (side == Black) && (pawnAttacks[White][square] & bitboards[P + 6]) ) return 1;
+
+    // attacked by knight
+    if ( bitKnightMoves[square] & ((side == White) ? bitboards[N] : bitboards[N + 6] ) ) return 1;
+
+    // attacked by bishop
+    if ( (getBishopAttacks(square, occupancies[2]) & ((side == White) ? bitboards[B] : bitboards[B+6])) ) return 1;
+
+    // attacked by rook
+    if ( (getRookAttacks(square, occupancies[2]) & ((side == White) ? bitboards[R] : bitboards[R+6])) ) return 1;
+
+    // attacked by queen
+    if ( (getQueenAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Q] : bitboards[Q+6])) ) return 1;
+
+    // attacked by king
+    if ( bitKingMoves[square] & ((side == White) ? bitboards[K] : bitboards[K + 6] ) ) return 1;
+
+    return 0;
 }
 
 

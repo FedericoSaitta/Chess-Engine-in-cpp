@@ -248,8 +248,8 @@ BITBOARD setOccupancies(const int index, const int bitInMask, U64 attackMask) {
 // *** INITIALIZING BITBOARD ARRAYS *** //
 void initLeaperPiecesAttacks() {
     for (int square=0; square < 64; square ++) {
-        pawnAttacks[0][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
-        pawnAttacks[1][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
+        pawnAttacks[White][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
+        pawnAttacks[Black][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
 
         bitKnightMoves[square] =  maskKnightMoves(square);
         bitKingMoves[square] =  maskKingMoves(square);

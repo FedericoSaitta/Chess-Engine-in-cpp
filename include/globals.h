@@ -75,6 +75,7 @@ extern int castle;
 
 void parseFEN(const std::string& fenString);
 
+
 extern const char* chessBoard[65];
 
 #endif //GLOBALS_H

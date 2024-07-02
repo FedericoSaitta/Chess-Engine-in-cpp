@@ -19,21 +19,6 @@ const int charPieces[] = { ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4
 const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
 
-// prints the bitboard, run bb through mirrorHorizontal to obtain normal view of the board (A1: bottom left)
-void printBitBoard(const BITBOARD bb, const bool mirrored) {
-    std::cout << '\n';
-    for (int i = 63; i >= 0; --i) {
-        if ((i + 1) % 8 == 0){ std::cout << (1 + i / 8) << "| "; }
-
-        std::cout << ((bb >> i) & 1) << ' ';
-        if (i % 8 == 0){ std::cout << '\n'; }
-    }
-
-    if (mirrored) { std::cout << "   A B C D E F G H"; }
-    else { std::cout << "   H G F E D C B A"; }
-    std::cout << '\n';
-}
-
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
 BITBOARD mirrorHorizontal (BITBOARD bb) {
     constexpr U64 k1 = 0x5555555555555555;
@@ -46,13 +31,31 @@ BITBOARD mirrorHorizontal (BITBOARD bb) {
     return bb;
 }
 
+// prints the bitboard, run bb through mirrorHorizontal to obtain normal view of the board (A1: bottom left)
+void printBitBoard(const BITBOARD bb, const bool mirrored) {
+    std::cout << '\n';
+    for (int square = 63; square >= 0; --square) {
+        if ((square + 1) % 8 == 0){ std::cout << (1 + square / 8) << "| "; }
+
+        std::cout << ((bb >> square) & 1) << ' ';
+        if (square % 8 == 0){ std::cout << '\n'; }
+    }
+
+    if (mirrored) { std::cout << "   A B C D E F G H"; }
+    else { std::cout << "   H G F E D C B A"; }
+    std::cout << '\n';
+}
+
 // this should also print the castling rights and the en - passant square and the side to move
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
 
     // we first have to mirror all our bitboards
+
+    //before you were mirroring in place, very problematic!!!!
+    BITBOARD mirrorredBB[12]{};
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
         if (bitboards[bbPiece]) {
-            bitboards[bbPiece] = mirrorHorizontal(bitboards[bbPiece]);
+            mirrorredBB[bbPiece] = mirrorHorizontal(bitboards[bbPiece]);
         }
     }
 
@@ -65,7 +68,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
 
         for (int bbPiece=0; bbPiece < 12; bbPiece++) {
 
-            if ( getBit(bitboards[bbPiece], square) ) {
+            if ( getBit(mirrorredBB[bbPiece], square) ) {
                 piece = bbPiece;
                 break;
             }
@@ -79,4 +82,16 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
     std::cout << std::boolalpha;
     std::cout << "White to move: "<< !side << ", Castling: " << std::bitset<4>(castle)
               << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
+}
+
+void printAttackedSquares(int side) {
+    std::cout << '\n';
+    for (int square = 63; square >= 0; --square) {
+        if ((square + 1) % 8 == 0){ std::cout << (1 + square / 8) << "| "; }
+        
+        std::cout << isSqAttacked(square, side) << ' ';
+        if (square % 8 == 0){ std::cout << '\n'; }
+    }
+    std::cout << "   H G F E D C B A";
+    std::cout << '\n';
 }

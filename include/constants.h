@@ -115,7 +115,6 @@
 #define R 3
 #define Q 4
 #define K 5
-#define EMPTY 6
 
 // Castling rights relevant bits
 #define WK 1
