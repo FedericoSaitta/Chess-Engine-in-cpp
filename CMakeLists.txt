@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedan
 
 
 ## Release builds
-#set(CMAKE_BUILD_TYPE Release)
+#et(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
 include_directories(include)
@@ -29,4 +29,5 @@ add_executable(ChessEngine src/main.cpp
         tests/bitmask_tests.h
         include/constants.h
         include/inline_functions.h
+        src/globals.cpp
 )

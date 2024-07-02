@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <bitset>
 
 #include "globals.h"
 #include "constants.h"
@@ -12,7 +13,15 @@
 
 
 int main() {
-    initAll();
+
+    initAll(); // this is successfully done at compile time :)
+
+    const std::string starpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    parseFEN(starpos);
+
+    printBoardFancy();
+
+
 
 #ifdef RUN_TESTS
     Test::countPawnAttacks();

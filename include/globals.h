@@ -10,6 +10,7 @@
 
 #include "constants.h"
 
+#include <iostream>
 
 // //////////////// //
 //**** init.cpp ****//
@@ -61,10 +62,7 @@ void initAll();
 // //////////////// //
 //**** board.cpp ****//
 // //////////////// //
-const extern char piece_char[6];
 const extern int piece_value[6];
-const extern int init_color[64];
-const extern int init_board[64];
 
 void initBits();
 
@@ -74,5 +72,9 @@ extern BITBOARD occupancies[3]; // white, black pieces, both sides, maybe use en
 extern int side; // side to move
 extern int enPassantSQ;
 extern int castle;
+
+void parseFEN(const std::string& fenString);
+
+extern const char* chessBoard[65];
 
 #endif //GLOBALS_H

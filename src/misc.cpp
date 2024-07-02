@@ -75,5 +75,8 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
         std::cout << ' ' << symbol << ' ';
     }
     std::cout << '\n';
-    std::cout << "    A  B  C  D  E  F  G  H";
+    std::cout << "    A  B  C  D  E  F  G  H \n";
+    std::cout << std::boolalpha;
+    std::cout << "White to move: "<< !side << ", Castling: " << std::bitset<4>(castle)
+              << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
 }

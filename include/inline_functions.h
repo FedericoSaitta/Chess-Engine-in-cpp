@@ -67,5 +67,21 @@ inline U64 getRookAttacks(const int square, U64 occupancy) {
     return bitRookMovesTable[square][occupancy];
 }
 
+inline U64 getQueenAttacks(const int square, U64 occupancy) {
+
+    U64 bishopOccupancy{ occupancy };
+    U64 rookOccupancy{ occupancy };
+
+    bishopOccupancy &= bitBishopMoves[square];
+    bishopOccupancy *= bishopMagics[square];
+    bishopOccupancy >>= 64 - bishopRelevantBits[square];
+
+    rookOccupancy &= bitRookMoves[square];
+    rookOccupancy *= rookMagics[square];
+    rookOccupancy >>= 64 - rookRelevantBits[square];
+
+    return (bitBishopMovesTable[square][bishopOccupancy] | bitRookMovesTable[square][rookOccupancy]);
+}
+
 
 #endif //INLINEFUNCTIONS_H
