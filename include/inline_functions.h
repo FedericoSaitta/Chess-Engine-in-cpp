@@ -3,6 +3,7 @@
 #ifndef INLINEFUNCTIONS_H
 #define INLINEFUNCTIONS_H
 
+#include <cstring>
 #include "constants.h"
 #include "globals.h"
 
@@ -108,5 +109,26 @@ inline void addMove(MoveList& moveList, const int move) {
     moveList.moves[moveList.count] = move;
     moveList.count++;
 }
+
+
+inline void copyBoard() {
+    std::memcpy(bitboardsCopy, bitboards, 96); // Copy 96 bytes (bitboards are 8 bytes each)
+    std::memcpy(occupanciesCopy, occupancies, 24); // Copy 24 bytes (occupancies are 8 bytes each)
+    sideCopy = side;
+    enPassantCopy = enPassantSQ;
+    castleCopy = castle;
+}
+
+inline void restoreBoard() {
+    std::memcpy(bitboards, bitboardsCopy, 96); // Copy 96 bytes (bitboards are 8 bytes each)
+    std::memcpy(occupancies, occupanciesCopy, 24); // Copy 24 bytes (occupancies are 8 bytes each)
+    side = sideCopy;
+    enPassantSQ = enPassantCopy;
+    castle = castleCopy;
+}
+
+
+
+
 
 #endif //INLINEFUNCTIONS_H

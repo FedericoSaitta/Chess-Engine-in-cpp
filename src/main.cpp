@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <cstring>
 
 #include "globals.h"
 #include "constants.h"
@@ -8,7 +9,7 @@
 
 #include "tests.h"
 
-#define RUN_TESTS
+// #define RUN_TESTS
 
 
 int main() {
@@ -16,19 +17,29 @@ int main() {
     initAll(); // Done at compile time :)
 
     // remember en-passant square must be lowercase
-    const std::string starpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
-    parseFEN(starpos);
+    const std::string starpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    /*parseFEN(fenString);
+    nodes = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    MoveList moveList{ };
+    generateMoves(moveList, 0);
+
+
+    for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
+    // preserve board state
+    copyBoard();
+
+
+    // make move
+    if (!makeMove(moveList.moves[moveCount], 0)) {
+    std::cout << "Move illegal," << '\n';
+    continue;
+    }
+
     printBoardFancy();
+    */
 
-    MoveList moveList{ {0}, 0 };
-
-    // should en-passant be consdired a capture???
-
-    generateMoves(moveList);
-    printMovesList(moveList);
-    std::cout << moveList.count << '\n';
-
-    // my guess would be around 4 M moves per second with bulk counting
+    Test::perft(starpos, 2);
 
 
 #ifdef RUN_TESTS

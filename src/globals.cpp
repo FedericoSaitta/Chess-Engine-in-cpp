@@ -113,6 +113,11 @@ int side;
 int enPassantSQ;
 int castle;
 
+BITBOARD bitboardsCopy[12];
+BITBOARD occupanciesCopy[3];
+int sideCopy;
+int enPassantCopy;
+int castleCopy;
 
 // /////////////////// //
 //**** movegen.cpp ****//

@@ -14,7 +14,9 @@
 ///*** little subtlelty, we are not checking the landing square of the castling eg g1 for white with isSQAttacked
 //// as this is a pseudo legal generator, in the make move function we will check that the king is not in check
 /// and will hence eliminate those moves
-void generateMoves(MoveList& moveList) {
+
+// captures only == 1 if you only want captures
+void generateMoves(MoveList& moveList, const int onlyCaptures) {
 
     // is this really needed though?
     moveList.count = 0;
@@ -44,18 +46,18 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Queen, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Rook, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Bishop, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Knight, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight, 0, 0, 0, 0) );
 
 
                         } else {
                             // one square ahead
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
                             // two squares ahead
                             if ( (startSquare >= A2) && (startSquare <= H2) && !getBit(occupancies[2], targetSquare + 8)) {
-                                addMove(moveList, encodeMove(startSquare, targetSquare + 8, Pawn, 0, 0, 1, 0, 0) );
+                                addMove(moveList, encodeMove(startSquare, targetSquare + 8, piece, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -68,13 +70,13 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Queen, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Rook, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Bishop, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Knight, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight, 1, 0, 0, 0) );
 
                         } else {
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
 
                         setBitFalse(attacks, targetSquare);
@@ -86,8 +88,7 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 0, 0, 1, 0) );
-
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
 
@@ -101,7 +102,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], F1) && !getBit(occupancies[2], G1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(F1, Black) ) {
-                            addMove(moveList, encodeMove(startSquare, G1, King, 0, 0, 0, 0, 1) );
+                            addMove(moveList, encodeMove(E1, G1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -111,7 +112,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], B1) && !getBit(occupancies[2], C1) && !getBit(occupancies[2], D1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(D1, Black) ) {
-                            addMove(moveList, encodeMove(startSquare, C1, King, 0, 0, 0, 0, 1) );
+                            addMove(moveList, encodeMove(E1, C1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -130,18 +131,18 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Queen + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Rook + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Bishop + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Knight + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight + 6, 0, 0, 0, 0) );
 
                         } else {
                             // one square ahead
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                             // two squares ahead
                             if ( (startSquare >= A7) && (startSquare <= H7) && !getBit(occupancies[2], targetSquare - 8)) {
-                                addMove(moveList, encodeMove(startSquare, targetSquare - 8, Pawn + 6, 0, 0, 1, 0, 0) );
+                                addMove(moveList, encodeMove(startSquare, targetSquare - 8, piece, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -153,12 +154,12 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Queen + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Rook + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Bishop + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Knight + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight + 6, 1, 0, 0, 0) );
                         } else {
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
 
                         setBitFalse(attacks, targetSquare);
@@ -169,7 +170,7 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 0, 0, 1, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
 
@@ -183,7 +184,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], F8) && !getBit(occupancies[2], G8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(F8, White) ) {
-                            addMove(moveList, encodeMove(startSquare, G8, King + 6, 0, 0, 0, 0, 1) );
+                            addMove(moveList, encodeMove(E8, G8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -193,7 +194,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], B8) && !getBit(occupancies[2], C8) && !getBit(occupancies[2], D8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(D8, White) ) {
-                            addMove(moveList, encodeMove(startSquare, C8, King + 6, 0, 0, 0, 0, 1) );
+                            addMove(moveList, encodeMove(E8, C8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }

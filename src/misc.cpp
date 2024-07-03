@@ -98,11 +98,23 @@ void printMove(const int move) {
                           promotedPieces[getMovePromPiece(move)] );
 }
 
+
 // mainly for debugging purposes
 void printMovesList(const MoveList& moveList) {
+    std::cout << "Move  Piece PromPiece Capture DoublePush EnPassant Castling \n";
+
     for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
         const int move {moveList.moves[moveCount]};
-        printMove(move);
+        std::printf("%s%s%c   ", chessBoard[getMoveStartSQ(move)],
+                          chessBoard[getMoveTargettSQ(move)],
+                          promotedPieces[getMovePromPiece(move)] );
 
+        std::cout << ( unicodePieces[getMovePiece(move)] ) << "      ";
+        std::cout << ( ((getMovePromPiece(move) != 0)) ? unicodePieces[getMovePromPiece(move)] : "0" )<< "         ";
+        std::cout << ((getMoveCapture(move) > 0) ? 1 : 0) << "        ";
+        std::cout << ((getMoveDoublePush(move) > 0) ? 1 : 0) << "          ";
+        std::cout << ((getMoveEnPassant(move) > 0) ? 1 : 0) << "         ";
+        std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
+        std::cout << '\n';
     }
 }

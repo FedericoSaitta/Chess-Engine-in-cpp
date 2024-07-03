@@ -63,9 +63,20 @@ struct MoveList {
     int count;
 };
 
-void generateMoves(MoveList& moveList);
+void generateMoves(MoveList& moveList, int onlyCaptures);
 
-extern MoveList moveList;
+
+// /////////////////// //
+//**** update.cpp ****//
+// /////////////////// //
+extern BITBOARD bitboardsCopy[12];
+extern BITBOARD occupanciesCopy[3];
+extern int sideCopy;
+extern int enPassantCopy;
+extern int castleCopy;
+
+int makeMove(int move, int onlyCaptures);
+
 
 // ///////////////// //
 // **** misc.cpp ****//

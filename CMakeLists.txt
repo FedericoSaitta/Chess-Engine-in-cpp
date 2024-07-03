@@ -31,4 +31,5 @@ add_executable(ChessEngine src/main.cpp
         include/inline_functions.h
         src/globals.cpp
         tests/move_tests.cpp
+        tests/perft_tests.cpp
 )

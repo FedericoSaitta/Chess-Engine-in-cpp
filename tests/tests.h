@@ -20,6 +20,10 @@ namespace Test{
     void countRookMoves_noEdges();
 
     void moveEncodingAndDecoding();
+
+    extern long long int nodes;
+    void perftDriver(int depth);
+    void perft(const std::string& fenString, int depth);
 }
 
 
