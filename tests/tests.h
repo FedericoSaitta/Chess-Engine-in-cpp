@@ -2,8 +2,8 @@
 // Created by Federico Saitta on 29/06/2024.
 //
 
-#ifndef BITMASK_TESTS_H
-#define BITMASK_TESTS_H
+#ifndef TESTS_H
+#define TESTS_H
 
 #include <bit>
 #include <iostream>
@@ -19,8 +19,8 @@ namespace Test{
     void countBishopMoves_noEdges();
     void countRookMoves_noEdges();
 
-    // ultimately the perft function will decide if the magic bitboards are correct
+    void moveEncodingAndDecoding();
 }
 
 
-#endif //BITMASK_TESTS_H
+#endif //TESTS_H

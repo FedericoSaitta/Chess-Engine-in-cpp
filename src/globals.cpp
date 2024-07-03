@@ -114,12 +114,22 @@ int enPassantSQ;
 int castle;
 
 
+// /////////////////// //
+//**** movegen.cpp ****//
+// /////////////////// //
+MoveList moveList{ {0}, 0 };
+
 
 // //////////////// //
 //**** misc.cpp ****//
 // //////////////// //
 const char asciiPieces[] { "PNBRQKpkbrqk" };
+const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Knight] = 'n',
+                            [Queen + 6] = 'q', [Rook + 6] = 'r', [Bishop + 6] = 'b', [Knight + 6] = 'n',
+                            [0] =  ' ' }; // these are always lowercase for both colors
+
 const int charPieces[] = { ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5, // white
                            ['p'] = 6, ['n'] = 7, ['b'] = 8, ['r'] = 9, ['q'] = 10, ['k'] = 11}; // black
+
 const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black

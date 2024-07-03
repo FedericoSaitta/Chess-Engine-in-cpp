@@ -27,7 +27,7 @@ void generateMoves() {
         // these are the special cases that dont have
         // generate white pawn moves and white king castling moves
         if (side == White) {
-            if (piece == P) { // loop over white pawn bitboard
+            if (piece == Pawn) { // loop over white pawn bitboard
 
                 while(bitboard) {
                     startSquare = getLeastSigBitIndex(bitboard);
@@ -82,7 +82,7 @@ void generateMoves() {
                 }
             } // this works
 
-            if (piece == K) {
+            if (piece == King) {
                 // king side castling
                 if (castle & WK) {
                     // checking that the space is empty
@@ -106,7 +106,7 @@ void generateMoves() {
             }
         } else {
             // generate black pawn moves and black king castling moves
-            if (piece == (P + 6) ) { // loop over white pawn bitboard
+            if (piece == (Pawn + 6) ) { // loop over white pawn bitboard
 
                 while(bitboard) {
                     startSquare = getLeastSigBitIndex(bitboard);
@@ -157,7 +157,7 @@ void generateMoves() {
                 }
             } // this works
 
-            if (piece == (K + 6)) {
+            if (piece == (King + 6)) {
                 // king side castling
                 if (castle & BK) {
                     // checking that the space is empty
@@ -182,7 +182,7 @@ void generateMoves() {
         }
 
         // generate knight moves
-        if ( (side == White)? piece == N : piece == (N + 6) ) {
+        if ( (side == White)? piece == Knight : piece == (Knight + 6) ) {
             while (bitboard) {
                 startSquare = getLeastSigBitIndex(bitboard);
 
@@ -208,7 +208,7 @@ void generateMoves() {
         }
 
         // generate bishop moves
-        if ( (side == White)? piece == B : piece == (B + 6) ) {
+        if ( (side == White)? piece == Bishop : piece == (Bishop + 6) ) {
             while (bitboard) {
                 startSquare = getLeastSigBitIndex(bitboard);
 
@@ -234,7 +234,7 @@ void generateMoves() {
         }
 
         // generate rook moves
-        if ( (side == White)? piece == R : piece == (R + 6) ) {
+        if ( (side == White)? piece == Rook : piece == (Rook + 6) ) {
             while (bitboard) {
                 startSquare = getLeastSigBitIndex(bitboard);
 
@@ -260,7 +260,7 @@ void generateMoves() {
         }
 
         // generate queen moves
-        if ( (side == White)? piece == Q : piece == (Q + 6) ) {
+        if ( (side == White)? piece == Queen : piece == (Queen + 6) ) {
             while (bitboard) {
                 startSquare = getLeastSigBitIndex(bitboard);
 
@@ -285,7 +285,7 @@ void generateMoves() {
         }
 
         // generate king moves
-        if ( (side == White)? piece == K : piece == (K + 6) ) {
+        if ( (side == White)? piece == King : piece == (King + 6) ) {
             while (bitboard) {
                 startSquare = getLeastSigBitIndex(bitboard);
 
@@ -311,3 +311,17 @@ void generateMoves() {
     }
 
 }
+
+// Move encodings
+
+
+// 0000 0000 0000 0000 0011 1111 start square           0x3f
+// 0000 0000 0000 1111 1100 0000 target square          0xfc0
+// 0000 0000 1111 0000 0000 0000 piece                  0xf000
+// 0000 1111 0000 0000 0000 0000 promoted piece         0xf0000
+// 0001 0000 0000 0000 0000 0000 capture flag           0x100000
+// 0010 0000 0000 0000 0000 0000 double push flag       0x200000
+// 0100 0000 0000 0000 0000 0000 en passant flag        0x400000
+// 1000 0000 0000 0000 0000 0000 castling flag          0x800000
+
+

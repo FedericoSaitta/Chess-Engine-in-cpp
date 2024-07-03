@@ -26,8 +26,9 @@ add_executable(ChessEngine src/main.cpp
         src/misc.cpp
         include/misc.h
         tests/bitmask_tests.cpp
-        tests/bitmask_tests.h
+        tests/tests.h
         include/constants.h
         include/inline_functions.h
         src/globals.cpp
+        tests/move_tests.cpp
 )

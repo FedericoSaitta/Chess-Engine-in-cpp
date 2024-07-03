@@ -1,5 +1,5 @@
 // In this file all the pre-processor definitions are listed, these include board squares, pieces and states
-// which are referred to as A1 or B (for Bishop) instead of as ints.
+// which are referred to as A1 or Bishop (for Bishop) instead of as ints.
 
 // The square mapping of the bitboards is in little-Endian (A1: 0, ..., H8: 63) as seen below:
 
@@ -105,12 +105,12 @@
 #define H8  63
 
 // Piece values, 6 is added to form black pieces
-#define P 0
-#define N 1
-#define B 2
-#define R 3
-#define Q 4
-#define K 5
+#define Pawn 0
+#define Knight 1
+#define Bishop 2
+#define Rook 3
+#define Queen 4
+#define King 5
 
 // Castling rights relevant bits
 #define WK 1

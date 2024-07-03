@@ -45,7 +45,7 @@ void initAll();
 // //////////////// //
 extern const char* chessBoard[65];
 
-extern BITBOARD bitboards[12]; // P, N, B, R, Q, K, p, n, b, r, q, k
+extern BITBOARD bitboards[12]; // Pawn, Knight, Bishop, Rook, Queen, King, p, n, b, r, q, k
 extern BITBOARD occupancies[3]; // white, black, both sides combined
 
 extern int side; // side to move
@@ -60,12 +60,19 @@ void parseFEN(const std::string& fenString);
 // /////////////////// //
 void generateMoves();
 
+struct MoveList {
+    int moves[256];
+    int count;
+};
+
+extern MoveList moveList;
 
 // ///////////////// //
 // **** misc.cpp ****//
 // ///////////////// //
 extern const char asciiPieces[];
 extern const int charPieces[];
+extern const char promotedPieces[];
 extern const char* unicodePieces[];
 
 

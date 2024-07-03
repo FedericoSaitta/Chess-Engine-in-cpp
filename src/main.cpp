@@ -6,7 +6,7 @@
 #include "inline_functions.h"
 #include "misc.h"
 
-#include "bitmask_tests.h"
+#include "tests.h"
 
 // #define RUN_TESTS
 
@@ -21,6 +21,14 @@ int main() {
 
     printBoardFancy();
 
+
+    const int move { encodeMove(E2, E7, 0, 0, 0, 0, 0, 0) };
+    printMove(move);
+
+
+    printMovesList(moveList);
+
+    /*
    // printAttackedSquares(Black);
 
     // testing the time it takes
@@ -29,11 +37,12 @@ int main() {
     generateMoves();
 
 
+
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed_ms = end - start;
     std::cout << "Elapsed time: " << elapsed_ms.count() << " milliseconds\n";
 
-
+*/
 
 #ifdef RUN_TESTS
     Test::countPawnAttacks();
@@ -42,6 +51,8 @@ int main() {
 
     Test::countBishopMoves_noEdges();
     Test::countRookMoves_noEdges();
+
+    Test::moveEncodingAndDecoding();
 
     BITBOARD occupancies{ 0ULL };
     setBit(occupancies, A1);

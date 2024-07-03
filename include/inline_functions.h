@@ -67,25 +67,46 @@ inline U64 getQueenAttacks(const int square, U64 occupancy) {
 inline int isSqAttacked(const int square, const int side) {
 
     // attacked by pawns
-    if ( (side == White) && (pawnAttacks[Black][square] & bitboards[P]) ) return 1;
-    if ( (side == Black) && (pawnAttacks[White][square] & bitboards[P + 6]) ) return 1;
+    if ( (side == White) && (pawnAttacks[Black][square] & bitboards[Pawn]) ) return 1;
+    if ( (side == Black) && (pawnAttacks[White][square] & bitboards[Pawn + 6]) ) return 1;
 
     // attacked by knight
-    if ( bitKnightAttacks[square] & ((side == White) ? bitboards[N] : bitboards[N + 6] ) ) return 1;
+    if ( bitKnightAttacks[square] & ((side == White) ? bitboards[Knight] : bitboards[Knight + 6] ) ) return 1;
 
     // attacked by bishop
-    if ( (getBishopAttacks(square, occupancies[2]) & ((side == White) ? bitboards[B] : bitboards[B+6])) ) return 1;
+    if ( (getBishopAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Bishop] : bitboards[Bishop+6])) ) return 1;
 
     // attacked by rook
-    if ( (getRookAttacks(square, occupancies[2]) & ((side == White) ? bitboards[R] : bitboards[R+6])) ) return 1;
+    if ( (getRookAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Rook] : bitboards[Rook+6])) ) return 1;
 
     // attacked by queen
-    if ( (getQueenAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Q] : bitboards[Q+6])) ) return 1;
+    if ( (getQueenAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Queen] : bitboards[Queen+6])) ) return 1;
 
     // attacked by king
-    if ( bitKingAttacks[square] & ((side == White) ? bitboards[K] : bitboards[K + 6] ) ) return 1;
+    if ( bitKingAttacks[square] & ((side == White) ? bitboards[King] : bitboards[King + 6] ) ) return 1;
 
     return 0;
+}
+
+
+inline int encodeMove(const int start, const int target, const int piece, const int promoted,
+                      const int capture, const int doublePush, const int enPassant, const int castling) {
+
+    return start | (target << 6) | (piece << 12) | (promoted << 16) | (capture << 20) | (doublePush << 21) | (enPassant << 22) | (castling << 23);
+}
+
+inline int getMoveStartSQ(const int move) { return (move & 0x3f); }
+inline int getMoveTargettSQ(const int move) { return ((move & 0xfc0) >> 6); }
+inline int getMovePiece(const int move) { return ((move & 0xf000) >> 12); }
+inline int getMovePromPiece(const int move) { return ((move & 0xf0000) >> 16); }
+inline int getMoveCapture(const int move) { return (move & 0x100000); }
+inline int getMoveDoublePush(const int move) { return (move & 0x200000); }
+inline int getMoveEnPassant(const int move) { return (move & 0x400000); }
+inline int getMoveCastling(const int move) { return (move & 0x800000); }
+
+inline void addMove(MoveList& moveList, const int move) {
+    moveList.moves[moveList.count] = move;
+    moveList.count++;
 }
 
 #endif //INLINEFUNCTIONS_H

@@ -2,7 +2,7 @@
 // Tests are designed to be fully contained so that user only needs to call the test from the main
 // function without the need of any helper functions or previous input
 
-#include "bitmask_tests.h"
+#include "tests.h"
 
 #include <bit>
 #include <iostream>

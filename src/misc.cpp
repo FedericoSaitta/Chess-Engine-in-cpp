@@ -79,7 +79,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
               << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
 }
 
-void printAttackedSquares(int side) {
+void printAttackedSquares(const int side) {
     std::cout << '\n';
     for (int square = 63; square >= 0; --square) {
         if ((square + 1) % 8 == 0){ std::cout << (1 + square / 8) << "| "; }
@@ -89,4 +89,20 @@ void printAttackedSquares(int side) {
     }
     std::cout << "   H G F E D C B A";
     std::cout << '\n';
+}
+
+// for UCI protocol
+void printMove(const int move) {
+    std::printf("%s%s%c\n", chessBoard[getMoveStartSQ(move)],
+                          chessBoard[getMoveTargettSQ(move)],
+                          promotedPieces[getMovePromPiece(move)] );
+}
+
+// mainly for debugging purposes
+void printMovesList(const MoveList& moveList) {
+    for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
+        const int move {moveList.moves[moveCount]};
+        printMove(move);
+
+    }
 }

@@ -18,6 +18,9 @@ void printBitBoard(BITBOARD bb, bool mirrored=false);
 void printBoardFancy();
 
 void printAttackedSquares(int side);
+void printMove(int move);
+void printMovesList(const MoveList& moveList);
+
 
 
 #endif //MISC_H
