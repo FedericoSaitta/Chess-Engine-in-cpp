@@ -58,12 +58,12 @@ void parseFEN(const std::string& fenString);
 // /////////////////// //
 //**** movegen.cpp ****//
 // /////////////////// //
-void generateMoves();
-
 struct MoveList {
     int moves[256];
     int count;
 };
+
+void generateMoves(MoveList& moveList);
 
 extern MoveList moveList;
 

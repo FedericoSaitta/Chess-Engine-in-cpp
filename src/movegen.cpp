@@ -1,6 +1,8 @@
 //
 // Created by Federico Saitta on 28/06/2024.
 //
+#include <__algorithm/ranges_move.h>
+
 #include "globals.h"
 #include "constants.h"
 #include "inline_functions.h"
@@ -12,7 +14,11 @@
 ///*** little subtlelty, we are not checking the landing square of the castling eg g1 for white with isSQAttacked
 //// as this is a pseudo legal generator, in the make move function we will check that the king is not in check
 /// and will hence eliminate those moves
-void generateMoves() {
+void generateMoves(MoveList& moveList) {
+
+    // is this really needed though?
+    moveList.count = 0;
+
     int startSquare{};
     int targetSquare{};
 
@@ -38,15 +44,18 @@ void generateMoves() {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            std::cout << "pawn promotion on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Queen, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Rook, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Bishop, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Knight, 0, 0, 0, 0) );
 
 
                         } else {
                             // one square ahead
-                            std::cout << "pawn move to: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 0, 0, 0, 0) );
                             // two squares ahead
                             if ( (startSquare >= A2) && (startSquare <= H2) && !getBit(occupancies[2], targetSquare + 8)) {
-                                std::cout << "double pawn move to: " << chessBoard[targetSquare + 8] << '\n';
+                                addMove(moveList, encodeMove(startSquare, targetSquare + 8, Pawn, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -59,9 +68,13 @@ void generateMoves() {
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            std::cout << "pawn capture promotion on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Queen, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Rook, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Bishop, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, Knight, 1, 0, 0, 0) );
+
                         } else {
-                            std::cout << "pawn capture on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 1, 0, 0, 0) );
                         }
 
                         setBitFalse(attacks, targetSquare);
@@ -73,7 +86,7 @@ void generateMoves() {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            std::cout << "pawn en-passant on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn, 0, 0, 0, 1, 0) );
 
                         }
                     }
@@ -88,7 +101,7 @@ void generateMoves() {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], F1) && !getBit(occupancies[2], G1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(F1, Black) ) {
-                            std::cout << "White WK castle" << '\n';
+                            addMove(moveList, encodeMove(startSquare, G1, King, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -98,7 +111,7 @@ void generateMoves() {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], B1) && !getBit(occupancies[2], C1) && !getBit(occupancies[2], D1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(D1, Black) ) {
-                            std::cout << "White WQ castle" << '\n';
+                            addMove(moveList, encodeMove(startSquare, C1, King, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -117,14 +130,18 @@ void generateMoves() {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            std::cout << "pawn promotion on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Queen + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Rook + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Bishop + 6, 0, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Knight + 6, 0, 0, 0, 0) );
 
                         } else {
                             // one square ahead
-                            std::cout << "pawn move to: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 0, 0, 0, 0) );
+
                             // two squares ahead
                             if ( (startSquare >= A7) && (startSquare <= H7) && !getBit(occupancies[2], targetSquare - 8)) {
-                                std::cout << "double pawn move to: " << chessBoard[targetSquare - 8] << '\n';
+                                addMove(moveList, encodeMove(startSquare, targetSquare - 8, Pawn + 6, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -136,9 +153,12 @@ void generateMoves() {
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            std::cout << "pawn capture promotion on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Queen + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Rook + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Bishop + 6, 1, 0, 0, 0) );
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, Knight + 6, 1, 0, 0, 0) );
                         } else {
-                            std::cout << "pawn capture on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 1, 0, 0, 0) );
                         }
 
                         setBitFalse(attacks, targetSquare);
@@ -149,7 +169,7 @@ void generateMoves() {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            std::cout << "pawn en-passant on: " << chessBoard[targetSquare] << '\n';
+                            addMove(moveList, encodeMove(startSquare, targetSquare, Pawn + 6, 0, 0, 0, 1, 0) );
                         }
                     }
 
@@ -163,7 +183,7 @@ void generateMoves() {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], F8) && !getBit(occupancies[2], G8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(F8, White) ) {
-                            std::cout << "Black BK castle" << '\n';
+                            addMove(moveList, encodeMove(startSquare, G8, King + 6, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -173,7 +193,7 @@ void generateMoves() {
                     // checking that the space is empty
                     if( !getBit(occupancies[2], B8) && !getBit(occupancies[2], C8) && !getBit(occupancies[2], D8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(D8, White) ) {
-                            std::cout << "Black BQ castle" << '\n';
+                            addMove(moveList, encodeMove(startSquare, C8, King + 6, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -195,10 +215,10 @@ void generateMoves() {
 
                     // quiet moves
                     if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        std::cout << "Knight move on: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        std::cout << "Knight capture to: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
                     setBitFalse(attacks, targetSquare);
@@ -221,10 +241,10 @@ void generateMoves() {
 
                     // quiet moves
                     if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        std::cout << "Bishop move on: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        std::cout << "Bishop capture to: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
                     setBitFalse(attacks, targetSquare);
@@ -247,10 +267,10 @@ void generateMoves() {
 
                     // quiet moves
                     if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        std::cout << "Rook move on: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        std::cout << "Rook capture to: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
                     setBitFalse(attacks, targetSquare);
@@ -272,10 +292,10 @@ void generateMoves() {
 
                     // quiet moves
                     if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        std::cout << "Queen move on: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        std::cout << "Queen capture to: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
                     setBitFalse(attacks, targetSquare);
@@ -297,10 +317,10 @@ void generateMoves() {
 
                     // quiet moves
                     if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        std::cout << "King move on: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        std::cout << "King capture to: " << chessBoard[targetSquare] << '\n';
+                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
                     setBitFalse(attacks, targetSquare);

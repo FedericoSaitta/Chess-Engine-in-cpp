@@ -52,19 +52,19 @@ namespace Test{
                 std::cerr << "wrong promPiece" << '\n';
                 break;
             }
-            if ( getMoveCapture(move) && capture ) {
+            if ( (getMoveCapture(move) >> 20) != capture ) {
                 std::cerr << "wrong capture" << '\n';
                 break;
             }
-            if ( getMoveDoublePush(move) && doublePush ) {
+            if ( (getMoveDoublePush(move) >> 21) != doublePush ) {
                 std::cerr << "wrong doublePush" << '\n';
                 break;
             }
-            if ( getMoveEnPassant(move) && enPassant ) {
+            if ( (getMoveEnPassant(move) >> 22) != enPassant ) {
                 std::cerr << "wrong enPassant" << '\n';
                 break;
             }
-            if ( getMoveCastling(move) && castling ) {
+            if ( (getMoveCastling(move) >> 23) != castling ) {
                 std::cerr << "wrong castling" << '\n';
                 break;
             }

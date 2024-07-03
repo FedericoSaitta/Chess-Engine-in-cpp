@@ -8,7 +8,7 @@
 
 #include "tests.h"
 
-// #define RUN_TESTS
+#define RUN_TESTS
 
 
 int main() {
@@ -18,31 +18,18 @@ int main() {
     // remember en-passant square must be lowercase
     const std::string starpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
     parseFEN(starpos);
-
     printBoardFancy();
 
+    MoveList moveList{ {0}, 0 };
 
-    const int move { encodeMove(E2, E7, 0, 0, 0, 0, 0, 0) };
-    printMove(move);
+    // should en-passant be consdired a capture???
 
-
+    generateMoves(moveList);
     printMovesList(moveList);
+    std::cout << moveList.count << '\n';
 
-    /*
-   // printAttackedSquares(Black);
+    // my guess would be around 4 M moves per second with bulk counting
 
-    // testing the time it takes
-    auto start = std::chrono::high_resolution_clock::now();
-
-    generateMoves();
-
-
-
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed_ms = end - start;
-    std::cout << "Elapsed time: " << elapsed_ms.count() << " milliseconds\n";
-
-*/
 
 #ifdef RUN_TESTS
     Test::countPawnAttacks();
@@ -53,17 +40,5 @@ int main() {
     Test::countRookMoves_noEdges();
 
     Test::moveEncodingAndDecoding();
-
-    BITBOARD occupancies{ 0ULL };
-    setBit(occupancies, A1);
-    setBit(occupancies, B3);
-    setBit(occupancies, C5);
-    setBit(occupancies, D7);
-    setBit(occupancies, G2);
-    setBit(occupancies, H4);
-    setBit(occupancies, B7);
-
-    printBitBoard(getRookAttacks(F3, occupancies));
-    printBitBoard(getBishopAttacks(F3, occupancies));
 #endif
 }
