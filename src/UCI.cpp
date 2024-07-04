@@ -96,7 +96,8 @@ static void handleGo(const std::vector<std::string>& tokens) {
 
     } else {
         // then we have to run our search move algorithm
-        searchPosition( 6 );
+        searchPosition( 5 );
+        printBoardFancy();
     }
 }
 

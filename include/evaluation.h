@@ -108,12 +108,12 @@ inline int evaluate() {
                 case Queen: score += queenScores[square[mirrorScore]]; break;
                 case King: score += kingScores[square[mirrorScore]]; break;
 
-                case Pawn + 6: score -= pawnScores[square]; break;
-                case Knight + 6: score -= knightScores[square]; break;
-                case Bishop + 6: score -= bishopScores[square]; break;
-                case Rook + 6: score -= rookScores[square]; break;
-                case Queen + 6: score -= queenScores[square]; break;
-                case King + 6: score -= kingScores[square]; break;
+                case (Pawn + 6): score -= pawnScores[square]; break;
+                case (Knight + 6): score -= knightScores[square]; break;
+                case (Bishop + 6): score -= bishopScores[square]; break;
+                case (Rook + 6): score -= rookScores[square]; break;
+                case (Queen + 6): score -= queenScores[square]; break;
+                case (King + 6): score -= kingScores[square]; break;
 
                 default: break;
             }

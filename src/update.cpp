@@ -123,14 +123,15 @@ int makeMove(const int move, const int onlyCaptures){
             // square is illegal so we take it back
             restoreBoard();
             return 0;
-        } else {
-            return 1;
         }
-
-    } else { // used in Quiescent search
-        if ( getMoveCapture(move) ) makeMove(move, 0); // make the move
-        else return 0; // dont make the move
+        return 1;
     }
-    return 0;
 
+    // used in Quiescent search
+    if ( getMoveCapture(move) ) {
+        return makeMove(move, 0); // make the move
+        // forgetting this return statement causes issues within the quiescence search
+    }
+
+    return 0;
 }
