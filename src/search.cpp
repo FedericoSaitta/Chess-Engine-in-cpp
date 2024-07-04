@@ -2,6 +2,7 @@
 // Created by Federico Saitta on 04/07/2024.
 //
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include "globals.h"
@@ -124,8 +125,12 @@ void searchPosition(const int depth){
     std::string movetwo { chessBoard[getMoveTargettSQ(bestMove)]};
     std::string promotedPiece{ promotedPieces[getMovePromPiece(bestMove)]};
 
-    std::printf("info score cp %d depth %d nodes %u\n", score, depth, nodes);
+    std::ofstream logFile("/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt", std::ios::app);
+
+    logFile << "info score cp " << score << " depth " << depth << " nodes " << nodes << " MNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
     std::cout << "bestmove " + move + movetwo + promotedPiece << '\n';
+
+    logFile.close();
 
   //   std::cout << "Info MNodes/s: " << nodes / (duration.count() * 1'000'000) << '\n';
 }
