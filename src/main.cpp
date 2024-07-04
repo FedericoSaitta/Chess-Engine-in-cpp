@@ -1,6 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include <cstring>
+
 
 #include "globals.h"
 #include "constants.h"
@@ -13,20 +13,26 @@
 // #define RUN_TESTS
 
 int main() {
-    // make sure to call this otherwise tests dont run
     initAll(); // Done at compile time :)
 
-    // remember en-passant square must be lowercase
-    const std::string position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-//    parseFEN(starpos);
+    UCI();
 
-    Test::perft(position, 7);
+
+
+
+
+
+
 
 
 
 
 #ifdef Perft_TESTS
-    Test::bulkPerft();
+    Test::standardizedPerft();
+    Test::standardizedPerft();
+    Test::standardizedPerft();
+    Test::standardizedPerft();
+    Test::standardizedPerft();
 #endif
 
 

@@ -3,7 +3,6 @@
 #ifndef INLINEFUNCTIONS_H
 #define INLINEFUNCTIONS_H
 
-#include <cstring>
 #include "constants.h"
 #include "globals.h"
 
@@ -92,7 +91,6 @@ inline int isSqAttacked(const int square, const int side) {
 
 inline int encodeMove(const int start, const int target, const int piece, const int promoted,
                       const int capture, const int doublePush, const int enPassant, const int castling) {
-
     return start | (target << 6) | (piece << 12) | (promoted << 16) | (capture << 20) | (doublePush << 21) | (enPassant << 22) | (castling << 23);
 }
 
@@ -110,37 +108,19 @@ inline void addMove(MoveList& moveList, const int move) {
     moveList.count++;
 }
 
-/*
-inline void copyBoard() {
-    std::memcpy(bitboardsCopy, bitboards, 96); // Copy 96 bytes (bitboards are 8 bytes each)
-    std::memcpy(occupanciesCopy, occupancies, 24); // Copy 24 bytes (occupancies are 8 bytes each)
-    sideCopy = side;
-    enPassantCopy = enPassantSQ;
-    castleCopy = castle;
-}
 
-inline void restoreBoard() {
-    std::memcpy(bitboards, bitboardsCopy, 96); // Copy 96 bytes (bitboards are 8 bytes each)
-    std::memcpy(occupancies, occupanciesCopy, 24); // Copy 24 bytes (occupancies are 8 bytes each)
-    side = sideCopy;
-    enPassantSQ = enPassantCopy;
-    castle = castleCopy;
-}
-
-*/
-
-#define copyBoard()                                                      \
-U64 bitboards_copy[12], occupancies_copy[3];                          \
-int side_copy, enpassant_copy, castle_copy;                           \
-memcpy(bitboards_copy, bitboards, 96);                                \
-memcpy(occupancies_copy, occupancies, 24);                            \
-side_copy = side, enpassant_copy = enPassantSQ, castle_copy = castle;   \
+#define copyBoard()                                              \
+U64 bitboardCopy[12], occupanciesCopy[3];                          \
+int sideCopy, enPassantCopy, castleCopy;                           \
+memcpy(bitboardCopy, bitboards, 96);                                \
+memcpy(occupanciesCopy, occupancies, 24);                            \
+sideCopy = side, enPassantCopy = enPassantSQ, castleCopy = castle;   \
 
 // restore board state
-#define restoreBoard()                                                       \
-memcpy(bitboards, bitboards_copy, 96);                                \
-memcpy(occupancies, occupancies_copy, 24);                            \
-side = side_copy, enPassantSQ = enpassant_copy, castle = castle_copy;   \
+#define restoreBoard()                                              \
+memcpy(bitboards, bitboardCopy, 96);                                \
+memcpy(occupancies, occupanciesCopy, 24);                            \
+side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
 
 
 

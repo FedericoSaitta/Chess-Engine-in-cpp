@@ -58,7 +58,7 @@ extern int castle; // 4-bit integer of the form qkQK, if bit is turned on then c
 // /////////////////// //
 //**** movegen.cpp ****//
 struct MoveList {
-    int moves[256];
+    int moves[218];
     int count;
 };
 
@@ -77,6 +77,13 @@ extern const char asciiPieces[];
 extern const int charPieces[];
 extern const char promotedPieces[];
 extern const char* unicodePieces[];
+
+// ///////////////// //
+// **** uci.cpp ****//
+// ///////////////// //
+void UCI();
+
+extern std::string FEN;
 
 
 #endif //GLOBALS_H

@@ -22,7 +22,7 @@ namespace Test{
     void moveEncodingAndDecoding();
 
     void perftDriver(int depth);
-    std::uint32_t perft(const std::string& fenString, int depth);
+    std::uint32_t perft(int depth);
     void standardizedPerft();
 
 }

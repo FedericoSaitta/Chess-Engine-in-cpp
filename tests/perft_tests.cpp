@@ -11,7 +11,6 @@
 #include "globals.h"
 #include "constants.h"
 #include "inline_functions.h"
-#include "misc.h"
 
 static const std::string testFEN[] {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -33,7 +32,7 @@ namespace Test{
             return;
         }
 
-        MoveList moveList{};
+        MoveList moveList;
         generateMoves(moveList, 0);
 
         for (int moveCount = 0; moveCount < moveList.count; moveCount++)
@@ -48,13 +47,12 @@ namespace Test{
         }
     }
 
-    std::uint32_t perft(const std::string& fenString, const int depth) {
-        parseFEN(fenString);
+    std::uint32_t perft(const int depth) {
         nodes = 0;
 
         const auto start = std::chrono::high_resolution_clock::now();
 
-        MoveList moveList{ };
+        MoveList moveList;
         generateMoves(moveList, 0);
 
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
@@ -93,16 +91,19 @@ namespace Test{
     void standardizedPerft() {
 
 
+        const auto start = std::chrono::high_resolution_clock::now();
         for (int i=0; i < 6; i++) {
 
-            if ( perft(testFEN[i], 5) == testNodes[i] ) {
-                std::cout << " FEN: " << testFEN[i] << '\n';
+            parseFEN(testFEN[i]);
+            if ( perft(5) == testNodes[i] ) {
+                std::cout << " FEN: " << testFEN[i];
 
             } else {
-                std::cerr << " FEN: " << testFEN[i] << '\n';
+                std::cerr << " FEN: " << testFEN[i];
             }
-
         }
+        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+        std::cout << "\nTest suite took: " << duration.count() << "s\n";
 
     }
 }

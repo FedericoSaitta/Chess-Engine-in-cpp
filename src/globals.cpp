@@ -112,12 +112,6 @@ int side;
 int enPassantSQ;
 int castle;
 
-BITBOARD bitboardsCopy[12];
-BITBOARD occupanciesCopy[3];
-int sideCopy;
-int enPassantCopy;
-int castleCopy;
-
 // /////////////////// //
 //**** movegen.cpp ****//
 // /////////////////// //
@@ -127,6 +121,12 @@ int castleCopy;
 //**** update.cpp ****//
 // /////////////////// //
 std::uint32_t nodes{};
+
+// /////////////////// //
+//**** uci.cpp ****//
+// /////////////////// //
+
+std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // //////////////// //
 //**** misc.cpp ****//
