@@ -108,7 +108,6 @@ const char* chessBoard[65] = {
 
 BITBOARD bitboards[12];
 BITBOARD occupancies[3];
-
 int side;
 int enPassantSQ;
 int castle;
@@ -123,6 +122,11 @@ int castleCopy;
 //**** movegen.cpp ****//
 // /////////////////// //
 
+
+// /////////////////// //
+//**** update.cpp ****//
+// /////////////////// //
+std::uint32_t nodes{};
 
 // //////////////// //
 //**** misc.cpp ****//

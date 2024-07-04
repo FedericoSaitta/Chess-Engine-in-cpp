@@ -110,7 +110,7 @@ inline void addMove(MoveList& moveList, const int move) {
     moveList.count++;
 }
 
-
+/*
 inline void copyBoard() {
     std::memcpy(bitboardsCopy, bitboards, 96); // Copy 96 bytes (bitboards are 8 bytes each)
     std::memcpy(occupanciesCopy, occupancies, 24); // Copy 24 bytes (occupancies are 8 bytes each)
@@ -127,7 +127,20 @@ inline void restoreBoard() {
     castle = castleCopy;
 }
 
+*/
 
+#define copyBoard()                                                      \
+U64 bitboards_copy[12], occupancies_copy[3];                          \
+int side_copy, enpassant_copy, castle_copy;                           \
+memcpy(bitboards_copy, bitboards, 96);                                \
+memcpy(occupancies_copy, occupancies, 24);                            \
+side_copy = side, enpassant_copy = enPassantSQ, castle_copy = castle;   \
+
+// restore board state
+#define restoreBoard()                                                       \
+memcpy(bitboards, bitboards_copy, 96);                                \
+memcpy(occupancies, occupancies_copy, 24);                            \
+side = side_copy, enPassantSQ = enpassant_copy, castle = castle_copy;   \
 
 
 

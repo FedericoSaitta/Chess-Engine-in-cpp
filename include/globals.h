@@ -45,6 +45,8 @@ void initAll();
 // //////////////// //
 extern const char* chessBoard[65];
 
+void parseFEN(const std::string& fenString);
+
 extern BITBOARD bitboards[12]; // Pawn, Knight, Bishop, Rook, Queen, King, p, n, b, r, q, k
 extern BITBOARD occupancies[3]; // white, black, both sides combined
 
@@ -52,12 +54,9 @@ extern int side; // side to move
 extern int enPassantSQ; // index from 0 to 64, 64 represents no en-passant is on the board
 extern int castle; // 4-bit integer of the form qkQK, if bit is turned on then castling is available
 
-void parseFEN(const std::string& fenString);
-
 
 // /////////////////// //
 //**** movegen.cpp ****//
-// /////////////////// //
 struct MoveList {
     int moves[256];
     int count;
@@ -66,17 +65,10 @@ struct MoveList {
 void generateMoves(MoveList& moveList, int onlyCaptures);
 
 
-// /////////////////// //
 //**** update.cpp ****//
 // /////////////////// //
-extern BITBOARD bitboardsCopy[12];
-extern BITBOARD occupanciesCopy[3];
-extern int sideCopy;
-extern int enPassantCopy;
-extern int castleCopy;
-
 int makeMove(int move, int onlyCaptures);
-
+extern std::uint32_t nodes;
 
 // ///////////////// //
 // **** misc.cpp ****//

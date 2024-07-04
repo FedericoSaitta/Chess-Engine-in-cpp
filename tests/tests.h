@@ -21,9 +21,10 @@ namespace Test{
 
     void moveEncodingAndDecoding();
 
-    extern long long int nodes;
     void perftDriver(int depth);
-    void perft(const std::string& fenString, int depth);
+    std::uint32_t perft(const std::string& fenString, int depth);
+    void standardizedPerft();
+
 }
 
 

@@ -131,5 +131,6 @@ int makeMove(const int move, const int onlyCaptures){
         if ( getMoveCapture(move) ) makeMove(move, 0); // make the move
         else return 0; // dont make the move
     }
+    return 0;
 
 }
