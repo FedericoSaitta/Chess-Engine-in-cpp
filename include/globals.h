@@ -64,10 +64,11 @@ struct MoveList {
 
 void generateMoves(MoveList& moveList, int onlyCaptures);
 
-
+// /////////////////// //
 //**** update.cpp ****//
 // /////////////////// //
 int makeMove(int move, int onlyCaptures);
+
 extern std::uint32_t nodes;
 
 // ///////////////// //
@@ -77,6 +78,16 @@ extern const char asciiPieces[];
 extern const int charPieces[];
 extern const char promotedPieces[];
 extern const char* unicodePieces[];
+
+
+
+
+// ///////////////// //
+// **** search.cpp ****//
+// ///////////////// //
+void searchPosition(int depth);
+
+
 
 // ///////////////// //
 // **** uci.cpp ****//

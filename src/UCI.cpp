@@ -58,18 +58,23 @@ static void handleUci() {
 }
 static void handleIsReady() { std::cout << "readyok" << std::endl; }
 static void handlePosition(const std::vector<std::string>& tokens) {
+
+    int shiftIndex{};
     // Example: position startpos moves e2e4 e7e5
-    if ( tokens[1] != "startpos" ) {
-        // then we have to set up the new FEN
-        // also need to check validity of the FEN
-        FEN = tokens[1]; //this does not work for now
-    }
+    if ( tokens[1] == "fen" ) {
+        shiftIndex = 6;
+        FEN = tokens[2] + ' ' + tokens[3] + ' ' + tokens[4] + ' ' + tokens[5] + ' ' + tokens[6] + ' ' + tokens[7];
+
+    } else if (tokens[1] == "startpos") {
+        FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    } else { std::cout << "could not recognize input \n"; }
+
     parseFEN(FEN);
 
-    if ( tokens.size() > 3) {
+    if ( (tokens.size() - shiftIndex) > 3) {
         int move{};
 
-        for (int index=3; index < tokens.size(); index++) {
+        for (int index=(3 + shiftIndex); index < tokens.size(); index++) {
 
             move = parseMove(tokens[index]);
 
@@ -79,20 +84,19 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
         }
     }
+
 }
 static void handleGo(const std::vector<std::string>& tokens) {
 
     if (tokens[1] == "perft") {
         const int depth = std::stoi(tokens[2]);
 
-        if (FEN != '') {
-            Test::perft(depth);
-            std::cout << '\n';
-        } else std::cout << "FEN has not been set \n";
+        Test::perft(depth);
+        std::cout << '\n';
 
-    } else if (tokens [1] == "wtime") {
+    } else {
         // then we have to run our search move algorithm
-        std::cout << "bestmove ...... \n";
+        searchPosition( 6 );
     }
 }
 
@@ -107,7 +111,8 @@ void UCI() {
 
         if ( command == "uci") handleUci();
         else if ( command == "isready") handleIsReady();
-        else if ( command == "position") handlePosition(tokens);
+        // yes ofc it can be improved though clearly should not be priority, also the time alloted should be after the position is already parsed etc.
+        else if ( command == "position") handlePosition(tokens); // though this seems expensive because of al lthe checks, 80 move game in 235 microsec
         else if ( command == "go") handleGo(tokens);
         else if ( command == "display" ) printBoardFancy();
 

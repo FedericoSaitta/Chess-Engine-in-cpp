@@ -32,6 +32,7 @@ add_executable(ChessEngine src/main.cpp
         src/globals.cpp
         tests/move_tests.cpp
         tests/perft_tests.cpp
-        src/evaluation.cpp
         src/UCI.cpp
+        include/evaluation.h
+        src/search.cpp
 )

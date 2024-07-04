@@ -79,10 +79,10 @@ namespace Test{
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
 
         // print results
-        printf("\nDepth: %d", depth);
+        printf("Depth: %d", depth);
         std::cout << " Nodes: " << nodes;
         std::cout << " Time: " << duration;
-        std::cout << " Nodes/s: " << nodes / (duration.count() * 1'000'000) << " MNodes/s";
+        std::cout << " MNodes/s: " << nodes / (duration.count() * 1'000'000);
 
         return nodes;
     }

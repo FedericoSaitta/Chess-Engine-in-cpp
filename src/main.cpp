@@ -7,6 +7,7 @@
 #include "inline_functions.h"
 #include "misc.h"
 
+#include "evaluation.h"
 #include "tests.h"
 
 // #define Perft_TESTS
@@ -15,12 +16,10 @@
 int main() {
     initAll(); // Done at compile time :)
 
-    UCI();
+     UCI();
+  //  parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-
-
-
-
+ //   std::cout << evaluate();
 
 
 
