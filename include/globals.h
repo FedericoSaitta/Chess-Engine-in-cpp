@@ -2,11 +2,10 @@
 // In this file we declare the variables and functions that are used across multiple files
 // these function and variables will have their own definition in their own .cpp file
 
-
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include "constants.h"
+#include "macros.h"
 #include <iostream>
 
 // //////////////// //
@@ -17,8 +16,6 @@ extern const int rookRelevantBits[64];
 
 extern const U64 bishopMagics[64];
 extern const U64 rookMagics[64];
-
-extern BITBOARD maskCols[64];
 
 extern BITBOARD notAFile;
 extern BITBOARD notABFile;
@@ -36,10 +33,7 @@ extern BITBOARD bitQueenAttacks[64];
 extern BITBOARD bitBishopAttacksTable[64][512];
 extern BITBOARD bitRookAttacksTable[64][4096];
 
-void initBits();
 void initAll();
-
-
 // //////////////// //
 //**** board.cpp ****//
 // //////////////// //
@@ -62,24 +56,18 @@ struct MoveList {
     int count;
 };
 
-void generateMoves(MoveList& moveList, int onlyCaptures);
+void generateMoves(MoveList& moveList);
 
 // /////////////////// //
 //**** update.cpp ****//
 // /////////////////// //
 int makeMove(int move, int onlyCaptures);
 
-extern std::uint32_t nodes;
-
 // ///////////////// //
 // **** misc.cpp ****//
 // ///////////////// //
-extern const char asciiPieces[];
-extern const int charPieces[];
 extern const char promotedPieces[];
 extern const char* unicodePieces[];
-
-
 
 
 // ///////////////// //
@@ -87,14 +75,16 @@ extern const char* unicodePieces[];
 // ///////////////// //
 void searchPosition(int depth);
 
+// /////////////////// //
+//**** movesort.cpp ****//
+// /////////////////// //
+
 
 
 // ///////////////// //
 // **** uci.cpp ****//
 // ///////////////// //
 void UCI();
-
-extern std::string FEN;
 
 
 #endif //GLOBALS_H

@@ -3,27 +3,18 @@
 #ifndef INLINEFUNCTIONS_H
 #define INLINEFUNCTIONS_H
 
-#include "constants.h"
+#include "macros.h"
 #include "globals.h"
 
 // these functions should be tested as passsing by reference might slow them down? Not sure if they are used a lot
 // outside of magic number generation which is pre-processor anyway
-inline void setBit(BITBOARD& board, const int square) {
-    board |= (1ULL << square);
-}
-inline void setBitFalse(BITBOARD& board, const int square) {
-    board &= ~(1ULL << square);
-}
-inline bool getBit(const BITBOARD& board, const int square) {
-    return (board >> square) & 1ULL;
-}
-
 inline int countBits(BITBOARD board) {
     // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
     int count{};
     while (board) { board &= (board - 1); count++; }
     return count;
 }
+
 inline int getLeastSigBitIndex(const BITBOARD board) {
     // this returned the index of the right most bit in a Bitboard
     if (board) {
@@ -36,7 +27,7 @@ inline U64 getBishopAttacks(const int square, U64 occupancy) {
     // get bishop attacks assuming current board occupancy
     occupancy &= bitBishopAttacks[square];
     occupancy *= bishopMagics[square];
-    occupancy >>= 64 - bishopRelevantBits[square];
+    occupancy >>= (64 - bishopRelevantBits[square]);
 
     return bitBishopAttacksTable[square][occupancy];
 }
@@ -44,7 +35,7 @@ inline U64 getRookAttacks(const int square, U64 occupancy) {
     // get bishop attacks assuming current board occupancy
     occupancy &= bitRookAttacks[square];
     occupancy *= rookMagics[square];
-    occupancy >>= 64 - rookRelevantBits[square];
+    occupancy >>= (64 - rookRelevantBits[square]);
 
     return bitRookAttacksTable[square][occupancy];
 }
@@ -89,38 +80,10 @@ inline int isSqAttacked(const int square, const int side) {
 }
 
 
-inline int encodeMove(const int start, const int target, const int piece, const int promoted,
-                      const int capture, const int doublePush, const int enPassant, const int castling) {
-    return start | (target << 6) | (piece << 12) | (promoted << 16) | (capture << 20) | (doublePush << 21) | (enPassant << 22) | (castling << 23);
-}
-
-inline int getMoveStartSQ(const int move) { return (move & 0x3f); }
-inline int getMoveTargettSQ(const int move) { return ((move & 0xfc0) >> 6); }
-inline int getMovePiece(const int move) { return ((move & 0xf000) >> 12); }
-inline int getMovePromPiece(const int move) { return ((move & 0xf0000) >> 16); }
-inline int getMoveCapture(const int move) { return (move & 0x100000); }
-inline int getMoveDoublePush(const int move) { return (move & 0x200000); }
-inline int getMoveEnPassant(const int move) { return (move & 0x400000); }
-inline int getMoveCastling(const int move) { return (move & 0x800000); }
-
 inline void addMove(MoveList& moveList, const int move) {
     moveList.moves[moveList.count] = move;
     moveList.count++;
 }
-
-
-#define copyBoard()                                              \
-U64 bitboardCopy[12], occupanciesCopy[3];                          \
-int sideCopy, enPassantCopy, castleCopy;                           \
-memcpy(bitboardCopy, bitboards, 96);                                \
-memcpy(occupanciesCopy, occupancies, 24);                            \
-sideCopy = side, enPassantCopy = enPassantSQ, castleCopy = castle;   \
-
-// restore board state
-#define restoreBoard()                                              \
-memcpy(bitboards, bitboardCopy, 96);                                \
-memcpy(occupancies, occupanciesCopy, 24);                            \
-side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
 
 
 

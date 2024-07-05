@@ -1,4 +1,4 @@
-#include "constants.h"
+#include "macros.h"
 #include "globals.h"
 #include "inline_functions.h"
 
@@ -6,6 +6,11 @@
 #include <sstream>
 #include <cstring>
 
+
+static constexpr int charPieces[] = {
+    ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5,   // white
+    ['p'] = 6, ['n'] = 7, ['b'] = 8, ['r'] = 9, ['q'] = 10, ['k'] = 11  // black
+};
 
 // think about using string view as you only need to read from the FEN string i think??
 void parseFEN(const std::string& fenString) {
@@ -15,6 +20,7 @@ void parseFEN(const std::string& fenString) {
     memset(occupancies, 0ULL, sizeof(occupancies));
     side = 0;
     castle = 0;
+    enPassantSQ = 0;
 
     // FEN string like: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     // is the accepted format, missing whitespaces will result in errors
@@ -25,7 +31,7 @@ void parseFEN(const std::string& fenString) {
         parts.push_back(part);
     }
 
-    const std::string boardConfig { parts[0] };
+    const std::string_view boardConfig { parts[0] };
     int rank{7}, file{};
     for (const char c : boardConfig) {
         if (c == '/') {
@@ -55,8 +61,8 @@ void parseFEN(const std::string& fenString) {
     if(parts[3][0] == '-') {
         enPassantSQ = 64; // the 64th index represents the 'outside the board' square
     } else {
-        int col { parts[3][0] - 'a'};
-        int row { 8 - (parts[3][1] - '0') };
+        const int col { parts[3][0] - 'a'};
+        const int row { 8 - (parts[3][1] - '0') };
         enPassantSQ = 56 - 8 * row + col;
     }
 

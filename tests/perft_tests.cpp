@@ -9,7 +9,7 @@
 #include <chrono>
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 
 static const std::string testFEN[] {
@@ -25,6 +25,8 @@ static constexpr std::uint32_t testNodes[] {
 
 namespace Test{
 
+    static std::uint32_t nodes{};
+
     void perftDriver(const int depth) {
 
         if (depth == 0) {
@@ -33,17 +35,17 @@ namespace Test{
         }
 
         MoveList moveList;
-        generateMoves(moveList, 0);
+        generateMoves(moveList);
 
         for (int moveCount = 0; moveCount < moveList.count; moveCount++)
         {
-            copyBoard();
+            COPY_BOARD();
 
             if (!makeMove(moveList.moves[moveCount], 0)) continue;
 
             perftDriver(depth - 1);
 
-            restoreBoard();
+            RESTORE_BOARD();
         }
     }
 
@@ -53,10 +55,10 @@ namespace Test{
         const auto start = std::chrono::high_resolution_clock::now();
 
         MoveList moveList;
-        generateMoves(moveList, 0);
+        generateMoves(moveList);
 
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
-            copyBoard();
+            COPY_BOARD();
 
             if (!makeMove(moveList.moves[moveCount], 0)) continue;
 
@@ -66,8 +68,7 @@ namespace Test{
 
             const std::uint32_t oldNodes {nodes - cumulativeNodes};
 
-            // take back
-            restoreBoard();
+            RESTORE_BOARD();
 
             // Print parent moves for debugging purposes
             //printf("     move: %s%s%c  nodes: %ld\n", chessBoard[getMoveStartSQ(moveList.moves[moveCount])],
@@ -90,20 +91,19 @@ namespace Test{
     // prints in red tests that have not passed
     void standardizedPerft() {
 
-
         const auto start = std::chrono::high_resolution_clock::now();
         for (int i=0; i < 6; i++) {
 
             parseFEN(testFEN[i]);
             if ( perft(5) == testNodes[i] ) {
-                std::cout << " FEN: " << testFEN[i];
+                std::cout << " FEN: " << testFEN[i] << '\n';
 
             } else {
-                std::cerr << " FEN: " << testFEN[i];
+                std::cerr << " FEN: " << testFEN[i] << '\n';
             }
         }
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
-        std::cout << "\nTest suite took: " << duration.count() << "s\n";
+        std::cout << "Test suite took: " << duration.count() << "s\n\n";
 
     }
 }

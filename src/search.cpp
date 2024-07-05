@@ -6,16 +6,19 @@
 #include <string>
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 #include "evaluation.h"
 
-static int ply{}; //half move counter
+static int ply{}; // used to check we are in the root node
 static int bestMove{};
+static std::uint32_t nodes{};
 
 static int quiescenceSearch(int alpha, const int beta) {
 
     const int staticEval{ evaluate() };
+
+    nodes++;
 
     if (staticEval >= beta) return beta; // known as node that fails high
 
@@ -25,10 +28,10 @@ static int quiescenceSearch(int alpha, const int beta) {
     }
 
     MoveList moveList;
-    generateMoves(moveList, 0); // second parameter not acc used
+    generateMoves(moveList); // second parameter not acc used
 
     for (int count=0; count < moveList.count; count++) {
-        copyBoard()
+        COPY_BOARD()
         ply++;
 
         // makeMove returns 1 for legal moves, we only want to look at captures
@@ -39,7 +42,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
         const int score = -quiescenceSearch(-beta, -alpha);
         ply--;
-        restoreBoard()
+        RESTORE_BOARD()
 
         // fail-hard beta cut off
         if (score >= beta) return beta; // known as node that fails high
@@ -67,11 +70,11 @@ static int negamax(int alpha, const int beta, const int depth) {
     const int oldAlpha{ alpha };
 
     MoveList moveList;
-    generateMoves(moveList, 0);
+    generateMoves(moveList);
 
     for (int count=0; count < moveList.count; count++) {
 
-        copyBoard()
+        COPY_BOARD()
         ply++;
 
         // makeMove returns 1 for legal moves
@@ -84,7 +87,7 @@ static int negamax(int alpha, const int beta, const int depth) {
 
         int score = -negamax(-beta, -alpha, depth-1);
         ply--;
-        restoreBoard()
+        RESTORE_BOARD()
 
 
         // fail-hard beta cut off
@@ -122,12 +125,12 @@ void searchPosition(const int depth){
     const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
 
     std::string move { chessBoard[getMoveStartSQ(bestMove)] };
-    std::string movetwo { chessBoard[getMoveTargettSQ(bestMove)]};
+    std::string movetwo { chessBoard[getMoveTargetSQ(bestMove)]};
     std::string promotedPiece{ promotedPieces[getMovePromPiece(bestMove)]};
 
     std::ofstream logFile("/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt", std::ios::app);
 
-    logFile << "info score cp " << score << " depth " << depth << " nodes " << nodes << " MNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
+    logFile << "info score cp " << score << " depth " << depth << " nodes " << nodes << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
     std::cout << "bestmove " + move + movetwo + promotedPiece << '\n';
 
     logFile.close();

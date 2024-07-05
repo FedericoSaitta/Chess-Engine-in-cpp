@@ -5,12 +5,9 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include "constants.h"
+#include "macros.h"
 #include "globals.h"
 
-extern const char asciiPieces[];
-extern const int charPieces[];
-extern const char* unicodePieces[];
 
 BITBOARD mirrorHorizontal (BITBOARD bb);
 

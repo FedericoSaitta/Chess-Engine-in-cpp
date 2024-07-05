@@ -3,13 +3,13 @@
 // deals with uupdating the board after a move is made, also has undo move function
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 
 #include <cstring>
 
-// this is for little endian
-const int castlingRightsConstant[64] = {
+// this is for little endian board
+static const int castlingRightsConstant[64] = {
     13, 15, 15, 15,  12, 15, 15, 14,
     15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15,
@@ -17,9 +17,7 @@ const int castlingRightsConstant[64] = {
     15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15,
-    7, 15, 15, 15, 3, 15, 15, 11
-};
-
+    7,  15, 15, 15,  3, 15, 15, 11 };
 
 
 // 0 represents illegal move, 1 represents the legal move;
@@ -27,10 +25,10 @@ int makeMove(const int move, const int onlyCaptures){
 
     // quiet moves
     if(!onlyCaptures) { // here set to 0
-        copyBoard();
+        COPY_BOARD();
 
         const int startSQ { getMoveStartSQ(move) };
-        const int targetSQ { getMoveTargettSQ(move) };
+        const int targetSQ { getMoveTargetSQ(move) };
         const int piece { getMovePiece(move) };
         const int promPiece { getMovePromPiece(move) };
         const int capture { getMoveCapture(move) };
@@ -48,12 +46,10 @@ int makeMove(const int move, const int onlyCaptures){
             else { startPiece = Pawn; endPiece = King; }
 
             for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-
                 if ( getBit(bitboards[bbPiece], targetSQ) ) {
                     setBitFalse(bitboards[bbPiece], targetSQ);
                     break;
                 }
-
             }
         }
 
@@ -100,11 +96,9 @@ int makeMove(const int move, const int onlyCaptures){
 
         }
 
-
+        // castle bit hack for updating the rights
         castle &= castlingRightsConstant[startSQ];
         castle &= castlingRightsConstant[targetSQ];
-
-
 
         // updating the occupancies by resetting them and re initializing them
         memset(occupancies, 0ULL, 24);
@@ -114,17 +108,15 @@ int makeMove(const int move, const int onlyCaptures){
             occupancies[2] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
         }
 
-        // change side
-        side ^= 1;
+        side ^= 1; // change side
 
         // make sure that the king has not been exposed into check
-        const U64 kingBitboard{ (side == White) ? bitboards[King + 6] : bitboards[King] };
-        if ( isSqAttacked(getLeastSigBitIndex(kingBitboard), side)) {
+        if (const U64 kingBitboard{ (side == White) ? bitboards[King + 6] : bitboards[King] }; isSqAttacked(getLeastSigBitIndex(kingBitboard), side)) {
             // square is illegal so we take it back
-            restoreBoard();
+            RESTORE_BOARD();
             return 0;
         }
-        return 1;
+        return 1; // this is a legal move so we return true
     }
 
     // used in Quiescent search
@@ -132,6 +124,5 @@ int makeMove(const int move, const int onlyCaptures){
         return makeMove(move, 0); // make the move
         // forgetting this return statement causes issues within the quiescence search
     }
-
     return 0;
 }

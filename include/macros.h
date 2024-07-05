@@ -26,7 +26,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-
 #include <cstdint>
 
 #define U64 std::uint64_t
@@ -121,6 +120,38 @@
 // side to move
 #define White 0
 #define Black 1
+
+
+#define setBit(board, square) ((board) |= (1ULL << (square)))
+#define setBitFalse(board, square) ((board) &= ~(1ULL << (square)))
+#define getBit(board, square) (((board) >> (square)) & 1ULL)
+
+#define encodeMove(start, target, piece, promoted, capture, doublePush, enPassant, castling) \
+((start) | ((target) << 6) | ((piece) << 12) | ((promoted) << 16) | ((capture) << 20) | \
+((doublePush) << 21) | ((enPassant) << 22) | ((castling) << 23))
+
+#define getMoveStartSQ(move) ((move) & 0x3f)
+#define getMoveTargetSQ(move) (((move) >> 6) & 0x3f)
+#define getMovePiece(move) (((move) >> 12) & 0xf)
+#define getMovePromPiece(move) (((move) >> 16) & 0xf)
+#define getMoveCapture(move) ((move) & 0x100000)
+#define getMoveDoublePush(move) ((move) & 0x200000)
+#define getMoveEnPassant(move) ((move) & 0x400000)
+#define getMoveCastling(move) ((move) & 0x800000)
+
+#define COPY_BOARD()                                              \
+U64 bitboardCopy[12], occupanciesCopy[3];                          \
+int sideCopy, enPassantCopy, castleCopy;                           \
+memcpy(bitboardCopy, bitboards, 96);                                \
+memcpy(occupanciesCopy, occupancies, 24);                            \
+sideCopy = side, enPassantCopy = enPassantSQ, castleCopy = castle;   \
+
+// restore board state
+#define RESTORE_BOARD()                                              \
+memcpy(bitboards, bitboardCopy, 96);                                \
+memcpy(occupancies, occupanciesCopy, 24);                            \
+side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
+
 
 
 #endif //CONSTANTS_H

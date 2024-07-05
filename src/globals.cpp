@@ -2,7 +2,7 @@
 // Created by Federico Saitta on 02/07/2024.
 //
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 
 
 // //////////////// //
@@ -72,14 +72,12 @@ const U64 rookMagics[64] {
     0x401001002080005ULL, 0x1A01001A04002829ULL, 0x5000210842100084ULL, 0x310810C240142ULL
 };
 
-
-BITBOARD maskCols[64]{};
 BITBOARD notAFile{18374403900871474942ULL};
 BITBOARD notABFile{18229723555195321596ULL};
 BITBOARD notHFile{9187201950435737471ULL};
 BITBOARD notHGFile{4557430888798830399ULL};
 
-BITBOARD pawnAttacks[2][64];
+BITBOARD pawnAttacks[2][64]{};
 BITBOARD bitKnightAttacks[64]{};
 BITBOARD bitKingAttacks[64]{};
 
@@ -87,9 +85,8 @@ BITBOARD bitBishopAttacks[64]{};
 BITBOARD bitRookAttacks[64]{};
 BITBOARD bitQueenAttacks[64]{};
 
-BITBOARD bitBishopAttacksTable[64][512];
-BITBOARD bitRookAttacksTable[64][4096];
-
+BITBOARD bitBishopAttacksTable[64][512]{};
+BITBOARD bitRookAttacksTable[64][4096]{};
 
 
 // //////////////// //
@@ -112,32 +109,13 @@ int side;
 int enPassantSQ;
 int castle;
 
-// /////////////////// //
-//**** movegen.cpp ****//
-// /////////////////// //
-
-
-// /////////////////// //
-//**** update.cpp ****//
-// /////////////////// //
-std::uint32_t nodes{};
-
-// /////////////////// //
-//**** uci.cpp ****//
-// /////////////////// //
-
-std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // //////////////// //
 //**** misc.cpp ****//
 // //////////////// //
-const char asciiPieces[] { "PNBRQKpkbrqk" };
 const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Knight] = 'n',
                             [Queen + 6] = 'q', [Rook + 6] = 'r', [Bishop + 6] = 'b', [Knight + 6] = 'n',
                             [0] =  ' ' }; // these are always lowercase for both colors
-
-const int charPieces[] = { ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5, // white
-                           ['p'] = 6, ['n'] = 7, ['b'] = 8, ['r'] = 9, ['q'] = 10, ['k'] = 11}; // black
 
 const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black

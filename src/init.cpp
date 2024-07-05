@@ -1,7 +1,7 @@
 //
 // Created by Federico Saitta on 29/06/2024.
 //
-#include "constants.h"
+#include "macros.h"
 #include "globals.h"
 #include "inline_functions.h"
 
@@ -207,19 +207,7 @@ static void initSliderAttacks(const int bishop) {
     }
 }
 
-void initBits() {
-    for (int i = 0; i < 64; i++) {
-        for (int j = 0; j < 64; j++) {
-            // checking that i and j are the same column
-            if ((i % 8) == (j % 8)) {
-                setBit(maskCols[i], j);
-            }
-        }
-    }
-} // maybe you can delete this later
-
 void initAll() {
-    initBits();
     initLeaperPiecesAttacks();
 
     initSliderAttacks(1);

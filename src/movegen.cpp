@@ -1,10 +1,9 @@
 //
 // Created by Federico Saitta on 28/06/2024.
 //
-#include <__algorithm/ranges_move.h>
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 
 // for now we just generate all moves, later on when we will do quiescent search we will introduce
@@ -16,15 +15,12 @@
 /// and will hence eliminate those moves
 
 // captures only == 1 if you only want captures
-void generateMoves(MoveList& moveList, const int onlyCaptures) {
-
-    // is this really needed though?
-    moveList.count = 0;
-
+void generateMoves(MoveList& moveList) {
+    moveList.count = 0; // this is needed
     int startSquare{};
     int targetSquare{};
 
-    // make a copy of the bitboards
+    // make copies of bitboards because as we loop through them we remove the leftmost bits.
     U64 bitboard{};
     U64 attacks{};
 
@@ -91,7 +87,6 @@ void generateMoves(MoveList& moveList, const int onlyCaptures) {
                             addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
-
                     setBitFalse(bitboard, startSquare);
                 }
             } // this works

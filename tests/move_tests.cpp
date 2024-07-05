@@ -9,7 +9,7 @@
 #include <chrono>
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 #include "misc.h"
 
@@ -40,7 +40,7 @@ namespace Test{
                 std::cerr << "wrong startSQ" << '\n';
                 break;
             }
-            if ( getMoveTargettSQ(move) != target ) {
+            if ( getMoveTargetSQ(move) != target ) {
                 std::cerr << "wrong targetSQ" << '\n';
                 break;
             }
@@ -70,10 +70,8 @@ namespace Test{
             }
         }
 
-        std::cout << "test successful" << '\n';
-
+        std::cout << "moveEncodingAndDecoding Test successful" << '\n';
 
     }
-
 }
 

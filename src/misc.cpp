@@ -5,14 +5,13 @@
 #include "misc.h"
 
 #include "globals.h"
-#include "constants.h"
+#include "macros.h"
 #include "inline_functions.h"
 
 #include <iostream>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
 // these could go under tests but I will put more rigorous testing functions there.
-
 
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
@@ -42,6 +41,9 @@ void printBitBoard(const BITBOARD bb, const bool mirrored) {
 }
 
 
+
+static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
+static constexpr std::string_view playingSides[2] = {"White", "Black"};
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
 
     // we first have to mirror all our bitboards
@@ -54,7 +56,6 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
         }
     }
 
-    
     for (int square=63; square >= 0; --square) {
         if ((square + 1) % 8 == 0) std::cout << '\n' << (square + 1) / 8 << "| ";
 
@@ -68,14 +69,17 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
             }
         }
 
-        const char* emptySymbol = ".";
-        const char* symbol{ (piece == -1) ? emptySymbol : unicodePieces[piece] };
+        const char* symbol{ (piece == -1) ? "." : unicodePieces[piece] };
         std::cout << ' ' << symbol << ' ';
     }
-    std::cout << '\n';
-    std::cout << "    A  B  C  D  E  F  G  H \n";
-    std::cout << std::boolalpha;
-    std::cout << "White to move: "<< !side << ", Castling: " << std::bitset<4>(castle)
+
+    std::string castleRightsString{};
+    for (int i = 0; i < 4; ++i) {
+        if (castle & (1 << i)) { castleRightsString += castlePieces[i]; }
+    }
+
+    std::cout << "\n     A  B  C  D  E  F  G  H \n";
+    std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
               << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
 }
 
@@ -94,7 +98,7 @@ void printAttackedSquares(const int side) {
 // for UCI protocol
 void printMove(const int move) {
     std::printf("%s%s%c\n", chessBoard[getMoveStartSQ(move)],
-                          chessBoard[getMoveTargettSQ(move)],
+                          chessBoard[getMoveTargetSQ(move)],
                           promotedPieces[getMovePromPiece(move)] );
 }
 
@@ -106,7 +110,7 @@ void printMovesList(const MoveList& moveList) {
     for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
         const int move {moveList.moves[moveCount]};
         std::printf("%s%s%c   ", chessBoard[getMoveStartSQ(move)],
-                          chessBoard[getMoveTargettSQ(move)],
+                          chessBoard[getMoveTargetSQ(move)],
                           promotedPieces[getMovePromPiece(move)] );
 
         std::cout << ( unicodePieces[getMovePiece(move)] ) << "      ";
