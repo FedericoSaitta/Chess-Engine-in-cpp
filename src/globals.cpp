@@ -109,6 +109,11 @@ int side;
 int enPassantSQ;
 int castle;
 
+// //////////////// //
+//**** movesort.cpp ****//
+// //////////////// //
+int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
+int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
 // //////////////// //
 //**** misc.cpp ****//

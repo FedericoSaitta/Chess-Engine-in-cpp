@@ -78,7 +78,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
         if (castle & (1 << i)) { castleRightsString += castlePieces[i]; }
     }
 
-    std::cout << "\n     A  B  C  D  E  F  G  H \n";
+    std::cout << "\n    A  B  C  D  E  F  G  H \n";
     std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
               << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
 }
@@ -97,7 +97,7 @@ void printAttackedSquares(const int side) {
 
 // for UCI protocol
 void printMove(const int move) {
-    std::printf("%s%s%c\n", chessBoard[getMoveStartSQ(move)],
+    std::printf("%s%s%c", chessBoard[getMoveStartSQ(move)],
                           chessBoard[getMoveTargetSQ(move)],
                           promotedPieces[getMovePromPiece(move)] );
 }

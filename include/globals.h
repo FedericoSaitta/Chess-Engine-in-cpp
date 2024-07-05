@@ -75,10 +75,16 @@ extern const char* unicodePieces[];
 // ///////////////// //
 void searchPosition(int depth);
 
+
+
 // /////////////////// //
 //**** movesort.cpp ****//
 // /////////////////// //
+extern int killerMoves[2][128]; // [number of moves][number of plies]
+extern int historyMoves[12][64]; // [piece type][square it was on]
 
+int scoreMove(int move, int ply);
+void sortMoves(MoveList& moveList, int ply);
 
 
 // ///////////////// //

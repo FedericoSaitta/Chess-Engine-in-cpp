@@ -97,7 +97,7 @@ static void handleGo(const std::vector<std::string>& tokens) {
     else if (tokens[1] == "depth") searchPosition(std::stoi(tokens[2]));
 
     else { // also look at how your GUI tells you the time
-        searchPosition( 3 );
+        searchPosition( 6 );
         // here we would run our own iterative deepening with the time controls
     }
 

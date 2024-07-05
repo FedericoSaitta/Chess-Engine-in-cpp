@@ -18,8 +18,8 @@
 // once you get to asymetterical boards make sure to find a little endian version
 
 // later on you can add more complicated evaluation tables
-constexpr int materialScore[12] { 100, 320, 330, 500, 900, 20'000,   // for white
-                               -100, -320, -330, -500, -900, -20'000};  // for black
+constexpr int materialScore[12] { 100, 300, 350, 500, 900, 20'000,   // for white
+                               -100, -300, -350, -500, -900, -20'000};  // for black
 
 constexpr int pawnScores[64] { 0,  0,  0,  0,  0,  0,  0,  0,
                               50, 50, 50, 50, 50, 50, 50, 50,

@@ -73,5 +73,27 @@ namespace Test{
         std::cout << "moveEncodingAndDecoding Test successful" << '\n';
 
     }
+
+
+    void moveSorting() {
+
+        parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        MoveList moveList{};
+        generateMoves(moveList);
+
+
+        for (int count=0; count < moveList.count; count++) {
+            printMove(moveList.moves[count]);
+            std::cout << " score: " << scoreMove(moveList.moves[count], 0) << '\n';
+        }
+
+        sortMoves(moveList, 0);
+        std::cout << "\nSorted moves\n";
+        for (int count=0; count < moveList.count; count++) {
+            printMove(moveList.moves[count]);
+            std::cout << " score: " << scoreMove(moveList.moves[count], 0) << '\n';
+        }
+    }
+
 }
 

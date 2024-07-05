@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <fstream>
+#include <signal.h>
 #include <string>
 
 #include "globals.h"
@@ -10,7 +11,7 @@
 #include "inline_functions.h"
 #include "evaluation.h"
 
-static int ply{}; // used to check we are in the root node
+static int ply{};
 static int bestMove{};
 static std::uint32_t nodes{};
 
@@ -29,6 +30,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     MoveList moveList;
     generateMoves(moveList); // second parameter not acc used
+    sortMoves(moveList, ply);
 
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
@@ -71,6 +73,7 @@ static int negamax(int alpha, const int beta, const int depth) {
 
     MoveList moveList;
     generateMoves(moveList);
+    sortMoves(moveList, ply);
 
     for (int count=0; count < moveList.count; count++) {
 
@@ -91,10 +94,16 @@ static int negamax(int alpha, const int beta, const int depth) {
 
 
         // fail-hard beta cut off
-        if (score >= beta) return beta; // known as node that fails high
+        if (score >= beta) {
+            killerMoves[1][ply] = killerMoves[0][ply];
+            killerMoves[0][ply] = moveList.moves[count]; // store killer moves
+            return beta; // known as node that fails high
+        }
 
         // found a better move
-        if (score > alpha) { // Known as PV node (principal variatio)
+        if (score > alpha) { // Known as PV node (principal variation)
+            // store history moves
+            historyMoves[getMovePiece(moveList.moves[count])][getMoveTargetSQ(moveList.moves[count])] += depth; // this can be dropped doesnt give much anyway
             alpha = score;
 
             // ply is used to know if we are at the parent node (root node)
@@ -116,6 +125,8 @@ static int negamax(int alpha, const int beta, const int depth) {
 
 void searchPosition(const int depth){
 
+    memset(killerMoves, 0ULL, sizeof(killerMoves));
+    memset(historyMoves, 0ULL, sizeof(historyMoves));
     nodes = 0; // the global variable, similar to perft
 
     const auto start = std::chrono::high_resolution_clock::now();
@@ -130,7 +141,7 @@ void searchPosition(const int depth){
 
     std::ofstream logFile("/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt", std::ios::app);
 
-    logFile << "info score cp " << score << " depth " << depth << " nodes " << nodes << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
+    logFile << "bestmove " + move + movetwo + promotedPiece << " info score cp " << score << " depth " << depth << " nodes " << nodes << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
     std::cout << "bestmove " + move + movetwo + promotedPiece << '\n';
 
     logFile.close();

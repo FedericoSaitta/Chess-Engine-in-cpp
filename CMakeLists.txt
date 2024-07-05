@@ -36,4 +36,5 @@ add_executable(ChessEngine src/main.cpp
         include/evaluation.h
         src/search.cpp
         src/movesort.cpp
+        tests/puzzle_tests.cpp
 )

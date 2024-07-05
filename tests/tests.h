@@ -20,6 +20,7 @@ namespace Test{
     void countRookMoves_noEdges();
 
     void moveEncodingAndDecoding();
+    void moveSorting();
 
     void perftDriver(int depth);
     std::uint32_t perft(int depth);
