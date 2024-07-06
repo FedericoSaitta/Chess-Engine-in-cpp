@@ -7,6 +7,7 @@
 
 #include "macros.h"
 #include <iostream>
+#include <fstream>
 
 // //////////////// //
 //**** init.cpp ****//
@@ -76,12 +77,18 @@ extern const char* unicodePieces[];
 int scoreMove(int move, int ply);
 void sortMoves(MoveList& moveList, int ply);
 
-void iterativeDeepening(int depth);
+void iterativeDeepening(int depth, bool timeConstraint=false);
 
 // ///////////////// //
 // **** uci.cpp ****//
 // ///////////////// //
 void UCI();
+extern std::ofstream logFile;
+
+// both are in milliseconds
+extern int gameLengthTime;
+extern int whiteClockTime;
+extern int blackClockTime;
 
 
 #endif //GLOBALS_H

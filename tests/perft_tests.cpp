@@ -62,15 +62,13 @@ namespace Test{
 
             if (!makeMove(moveList.moves[moveCount], 0)) continue;
 
-            const std::uint32_t cumulativeNodes {nodes};
+            //const std::uint32_t cumulativeNodes {nodes};
 
             perftDriver(depth - 1);
 
-            const std::uint32_t oldNodes {nodes - cumulativeNodes};
-
             RESTORE_BOARD();
-
             // Print parent moves for debugging purposes
+            //const std::uint32_t oldNodes {nodes - cumulativeNodes};
             //printf("     move: %s%s%c  nodes: %ld\n", chessBoard[getMoveStartSQ(moveList.moves[moveCount])],
             // chessBoard[getMoveTargettSQ(moveList.moves[moveCount])],
             // promotedPieces[getMovePromPiece(moveList.moves[moveCount])],

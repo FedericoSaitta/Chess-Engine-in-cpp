@@ -119,3 +119,12 @@ const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Kn
 
 const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
+
+int gameLengthTime{};
+int whiteClockTime{};
+int blackClockTime{};
+
+// //////////////// //
+//**** uci.cpp ****//
+// //////////////// //
+std::ofstream logFile{};

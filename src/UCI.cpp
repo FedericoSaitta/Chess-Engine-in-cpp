@@ -13,6 +13,8 @@
 #include "tests.h"
 
 
+static bool isNewGame{true};
+
 // Helper function to split a string by space
 static std::vector<std::string> split(const std::string& str) {
     std::vector<std::string> tokens;
@@ -78,7 +80,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
     if ( (tokens.size() - shiftIndex) > 3) {
 
-        for (int index=(3 + shiftIndex); index < tokens.size(); index++) {
+        for (int index=(3 + shiftIndex); index < static_cast<int>(tokens.size()); index++) {
 
             const int move = parseMove(tokens[index]);
 
@@ -94,19 +96,44 @@ static void handleGo(const std::vector<std::string>& tokens) {
         Test::perft(std::stoi(tokens[2]));
         std::cout << '\n';
     }
-    else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]));
+    else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]), false);
 
-    else { // also look at how your GUI tells you the time
-        iterativeDeepening( 5 );
-        // here we would run our own iterative deepening with the time controls
+    else if ( ( (tokens[1] == "wtime") && (tokens[3] == "btime")) ) {
+        whiteClockTime = std::stoi(tokens[2]);
+        blackClockTime = std::stoi(tokens[4]);
+
+        if (isNewGame) {
+            gameLengthTime = whiteClockTime;
+            isNewGame = false;
+        }
+        iterativeDeepening(64, true);
+    }
+    else if (tokens[1] == "movetime") {
+        // need to fix this
+        /*
+        if (side == White) whiteClockTime = std::stoi(tokens[2]);
+        else blackClockTime = std::stoi(tokens[2]);
+
+        if (isNewGame) {
+            gameLengthTime = (side == White) ? whiteClockTime : blackClockTime;
+            isNewGame = false;
+        }
+        */
+
+        iterativeDeepening(7, true); // for now just does a 7 ply search
     }
 
+    else { // also look at how your GUI tells you the time
+        std::cout << "Input could not be recognised\n";
+        logFile << "Unrecognized input " << tokens[1] << '\n';
+    }
 }
 
 void UCI() {
     std::string line{};
 
     while (std::getline(std::cin, line)) {
+        logFile << line << '\n';
         std::vector<std::string> tokens = split(line);
         if (tokens.empty()) { continue; }
 
@@ -119,8 +146,8 @@ void UCI() {
         else if ( command == "display" ) printBoardFancy();
 
         else if ( command == "quit") break;
-        else if ( command == "newgame") {
-            // need to implement this
+        else if ( command == "ucinewgame") {
+            isNewGame = true;
         }
 
     }

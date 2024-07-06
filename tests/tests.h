@@ -26,6 +26,17 @@ namespace Test{
     std::uint32_t perft(int depth);
     void standardizedPerft();
 
+
+    struct Puzzle {
+        std::string FEN;
+        std::string matingMove;
+        int depth;
+
+        Puzzle(const std::string& f, const std::string& m, int d)
+            : FEN(f), matingMove(m), depth(d) {}
+    };
+    void matingPuzzles();
+
 }
 
 

@@ -17,8 +17,6 @@ static int ply{};
 constexpr int maxPly{64};
 static std::uint32_t nodes{};
 
-static std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
-
 static int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
 static int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
@@ -45,20 +43,21 @@ static int scorePV{};
 */
 
 static int mvv_lva[12][12] = {
- 	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
-	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
-	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
-	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
-	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
-	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
 
-	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
-	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
-	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
-	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
-	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
-	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
 };
+
 
 // we will add different scorings for PV etc
 int scoreMove(const int move, const int ply) {
@@ -98,7 +97,7 @@ int scoreMove(const int move, const int ply) {
 }
 
 void sortMoves(MoveList& moveList, const int ply) {
-	int moveScores[moveList.count];
+	int *moveScores = static_cast<int *>(malloc(moveList.count * 4)); // as int has size of 4 bytes
 
 	// scoring the moves
 	for (int count=0; count < moveList.count; count++) {
@@ -121,6 +120,7 @@ void sortMoves(MoveList& moveList, const int ply) {
 			}
 		}
 	}
+	free(moveScores); // remember to free the memory at the end
 }
 
 static void enablePVscoring(const MoveList& moveList) {
@@ -183,6 +183,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 static int negamax(int alpha, const int beta, const int depth) {
 
+	int foundPV = 0; // set to false at the start
+
     pvLength[ply] = ply;
 
     if (depth == 0) return quiescenceSearch(alpha, beta);
@@ -213,11 +215,19 @@ static int negamax(int alpha, const int beta, const int depth) {
         }
         // increment legalMoves
         legalMoves++;
+    	int score{};
 
-        int score = -negamax(-beta, -alpha, depth-1);
+    	if (foundPV) {
+    		score = -negamax(-alpha -1, -alpha, depth-1); // do zero-width window search
+    		if ( (score > alpha) && (score < beta)) {  // check for failure
+    			score = -negamax(-beta, -alpha, depth - 1);  // if we fail redo the search with normal window
+    		}
+    	} else {
+    		score = -negamax(-beta, -alpha, depth-1);
+    	}
+
         ply--;
         RESTORE_BOARD()
-
 
         // fail-hard beta cut off
         if (score >= beta) {
@@ -244,6 +254,7 @@ static int negamax(int alpha, const int beta, const int depth) {
             }
 
             pvLength[ply] = pvLength[ply + 1];
+        	foundPV = 1;
         }
     }
 
@@ -257,7 +268,31 @@ static int negamax(int alpha, const int beta, const int depth) {
     return alpha; // known as fail-low node
 }
 
-void iterativeDeepening(const int depth){
+
+static int getMoveTime(const bool timeConstraint) {
+
+	if (!timeConstraint) return 180'000;
+
+	const int timeAlloted = (side == White) ? whiteClockTime : blackClockTime;
+	const int idealTimePerMove = gameLengthTime / 40; // lets say each game is 50 moves long
+
+	int timePerMove{};
+
+	// mostly done with the idea of blitz and bullet in mind
+	if (timeAlloted > (gameLengthTime * 0.75)) timePerMove = idealTimePerMove / 2;
+	else if (timeAlloted > (gameLengthTime * 0.50)) timePerMove = idealTimePerMove / 3;
+	else if (timeAlloted > (gameLengthTime * 0.25)) timePerMove = idealTimePerMove / 5;
+	else if (timeAlloted > (gameLengthTime * 0.05)) timePerMove = idealTimePerMove / 10;
+	else timePerMove = idealTimePerMove / 20;
+
+	return timePerMove;
+}
+
+
+// this time management kind of makes sense but you should really implement a stopping function
+// also you should calculate the time from the beggining of the iterative deepening not the single search
+
+void iterativeDeepening(const int depth, const bool timeConstraint){
 
     memset(killerMoves, 0, sizeof(killerMoves));
     memset(historyMoves, 0, sizeof(historyMoves));
@@ -269,33 +304,39 @@ void iterativeDeepening(const int depth){
     scorePV = 0;
 
     int bestMove{};
-    std::ofstream logFile(logFilePath, std::ios::app);
+	int currentDepth{ 1 };
 
-    for (int currentDepth=1; currentDepth <= depth; currentDepth++) {
+	const int timePerMove { getMoveTime(timeConstraint) };
+	logFile << "Time per move: " << timePerMove << '\n';
 
+
+	const auto startSearchTime = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float> searchDuration{ 0 };
+
+	while ( (currentDepth <= depth) && ( (searchDuration.count() * 1'000) < timePerMove) ){
         followPV = 1;
-        const auto start = std::chrono::high_resolution_clock::now();
-        const int score = negamax(-50'000, 50'000, currentDepth);
-        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+
+        const auto startDepthTime = std::chrono::high_resolution_clock::now();
+
+        const int score { negamax(-50'000, 50'000, currentDepth) };
+
+		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
+		searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
 
         bestMove = pvTable[0][0];
 
+		// extracting the PV line and printing out in the terminal and logging file
         std::string pvString{};
-        for (int count=0;  count < pvLength[0]; count++) {
-            pvString += algebraicNotation(pvTable[0][count]) + ' ';
-        }
+        for (int count=0;  count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
-        std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " pv " << pvString << '\n';
+        std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
+        logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
 
-        logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " pv " << pvString << '\n';
-        logFile << "bestmove " + algebraicNotation(bestMove) << " in " << duration.count() * 1'000 << " ms" << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n'; ;
+		currentDepth++;
     }
 
     // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(bestMove) << '\n';
-
-    logFile.close();
-
-    //   std::cout << "Info MNodes/s: " << nodes / (duration.count() * 1'000'000) << '\n';
 }
 
+// for now this bot is made to play bullet and blitz, it is not for doing constant move time games etc.
