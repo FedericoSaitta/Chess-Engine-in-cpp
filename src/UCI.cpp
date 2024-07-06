@@ -94,10 +94,10 @@ static void handleGo(const std::vector<std::string>& tokens) {
         Test::perft(std::stoi(tokens[2]));
         std::cout << '\n';
     }
-    else if (tokens[1] == "depth") searchPosition(std::stoi(tokens[2]));
+    else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]));
 
     else { // also look at how your GUI tells you the time
-        searchPosition( 6 );
+        iterativeDeepening( 5 );
         // here we would run our own iterative deepening with the time controls
     }
 

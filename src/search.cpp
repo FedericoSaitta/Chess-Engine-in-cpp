@@ -3,19 +3,141 @@
 //
 #include <iostream>
 #include <fstream>
-#include <signal.h>
 #include <string>
+#include <vector>
 
 #include "globals.h"
 #include "macros.h"
 #include "inline_functions.h"
 #include "evaluation.h"
+#include "misc.h"
+
 
 static int ply{};
-static int bestMove{};
+constexpr int maxPly{64};
 static std::uint32_t nodes{};
 
+static std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
+
+static int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
+static int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
+
+static int pvLength[64]{};
+static int pvTable[64][64]{};
+
+static int followPV{}; // if it is true then we follow the principal variation
+static int scorePV{};
+
+///// MOVES ARE SORTED IN THIS ORDER ////
+
+
+/*
+
+	(Victims) Pawn Knight Bishop   Rook  Queen   King
+  (Attackers)
+		Pawn   105    205    305    405    505    605
+	  Knight   104    204    304    404    504    604
+	  Bishop   103    203    303    403    503    603
+		Rook   102    202    302    402    502    602
+	   Queen   101    201    301    401    501    601
+		King   100    200    300    400    500    600
+
+*/
+
+static int mvv_lva[12][12] = {
+ 	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+
+	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
+};
+
+// we will add different scorings for PV etc
+int scoreMove(const int move, const int ply) {
+
+	if (scorePV) {
+		if (pvTable[0][ply] == move) {
+			scorePV = 0; // as there is only one principal move in a moveList
+	// for debugging		std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
+			return 20'000;
+		}
+	}
+
+	if (getMoveCapture(move)) {
+
+		int targetPiece{ Pawn }; // in case we make an enPassant capture, which our loop would miss
+
+		// copied from makeMove function
+		int startPiece, endPiece;
+		if (side == White ) { startPiece = Pawn + 6; endPiece = King + 6; }
+		else { startPiece = Pawn; endPiece = King; }
+
+		for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
+			if ( getBit(bitboards[bbPiece], getMoveTargetSQ(move)) ) {
+				targetPiece = bbPiece;
+				break;
+			}
+		}
+
+		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
+		return mvv_lva[getMovePiece(move)][targetPiece] + 10'000; // important as we score MVV-LVA as better than killer
+	}
+	if (killerMoves[0][ply] == move) return 9000;
+
+	if (killerMoves[1][ply] == move) return 8000;
+
+	return historyMoves[getMovePiece(move)][getMoveTargetSQ(move)];
+}
+
+void sortMoves(MoveList& moveList, const int ply) {
+	int moveScores[moveList.count];
+
+	// scoring the moves
+	for (int count=0; count < moveList.count; count++) {
+		moveScores[count] = scoreMove(moveList.moves[count], ply);
+	}
+
+	// sorting the moves
+	for (int current=0; current < moveList.count; current++) {
+		for (int next=(current + 1); next < moveList.count; next++) {
+			// comparing current and next
+			if (moveScores[current] < moveScores[next]) {
+				const int tempScore{ moveScores[current] };
+				const int tempMove{ moveList.moves[current] };
+
+				moveScores[current] = moveScores[next];
+				moveList.moves[current] = moveList.moves[next];
+
+				moveScores[next] = tempScore;
+				moveList.moves[next] = tempMove;
+			}
+		}
+	}
+}
+
+static void enablePVscoring(const MoveList& moveList) {
+
+    followPV = 0;
+    for (int count=0; count < moveList.count; count++) {
+        if ( moveList.moves[count] == pvTable[0][ply] ) {
+            scorePV = 1; // if we do find a move
+            followPV = 1; // we are in principal variation so we want to follow it
+            // maybe we should break here
+        }
+    }
+}
+
 static int quiescenceSearch(int alpha, const int beta) {
+
+    if ( ply > (maxPly - 1) ) return evaluate();
 
     const int staticEval{ evaluate() };
 
@@ -61,18 +183,22 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 static int negamax(int alpha, const int beta, const int depth) {
 
+    pvLength[ply] = ply;
+
     if (depth == 0) return quiescenceSearch(alpha, beta);
 
     nodes++;
 
-    int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
+    const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
     int legalMoves{};
-
-    int bestMoveSoFar{};
-    const int oldAlpha{ alpha };
 
     MoveList moveList;
     generateMoves(moveList);
+
+    if (followPV) { // if we are following PV line, we enable scoring
+        enablePVscoring(moveList);
+    }
+
     sortMoves(moveList, ply);
 
     for (int count=0; count < moveList.count; count++) {
@@ -95,21 +221,32 @@ static int negamax(int alpha, const int beta, const int depth) {
 
         // fail-hard beta cut off
         if (score >= beta) {
-            killerMoves[1][ply] = killerMoves[0][ply];
-            killerMoves[0][ply] = moveList.moves[count]; // store killer moves
+            // helps with better move ordering in branches at the same depth
+            if (!getMoveCapture(moveList.moves[count])) {
+                killerMoves[1][ply] = killerMoves[0][ply];
+                killerMoves[0][ply] = moveList.moves[count]; // store killer moves
+            }
             return beta; // known as node that fails high
         }
 
         // found a better move
         if (score > alpha) { // Known as PV node (principal variation)
             // store history moves
-            historyMoves[getMovePiece(moveList.moves[count])][getMoveTargetSQ(moveList.moves[count])] += depth; // this can be dropped doesnt give much anyway
+            if (!getMoveCapture(moveList.moves[count])) {
+                historyMoves[getMovePiece(moveList.moves[count])][getMoveTargetSQ(moveList.moves[count])] += depth; // this can be dropped doesnt give much anyway
+            }
             alpha = score;
 
-            // ply is used to know if we are at the parent node (root node)
-            if (ply == 0) bestMoveSoFar = moveList.moves[count];
+            pvTable[ply][ply] = moveList.moves[count];
+            // copy move from deeper plies to curernt ply
+            for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
+                pvTable[ply][nextPly] = pvTable[ply + 1][nextPly];
+            }
+
+            pvLength[ply] = pvLength[ply + 1];
         }
     }
+
     if (legalMoves == 0) {
         if (inCheck) {
             return -49'000 + ply; // we want to return the mating score, (slightly above negative infinity, +ply scores faster mates as better moves)
@@ -117,34 +254,48 @@ static int negamax(int alpha, const int beta, const int depth) {
         return 0; // we are in stalemate
     }
 
-    if (oldAlpha != alpha) bestMove = bestMoveSoFar;
-
     return alpha; // known as fail-low node
 }
 
+void iterativeDeepening(const int depth){
 
-void searchPosition(const int depth){
+    memset(killerMoves, 0, sizeof(killerMoves));
+    memset(historyMoves, 0, sizeof(historyMoves));
+    memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
+    memset(pvTable, 0, sizeof(pvTable));
 
-    memset(killerMoves, 0ULL, sizeof(killerMoves));
-    memset(historyMoves, 0ULL, sizeof(historyMoves));
-    nodes = 0; // the global variable, similar to perft
+    nodes = 0;
+    followPV = 0;
+    scorePV = 0;
 
-    const auto start = std::chrono::high_resolution_clock::now();
+    int bestMove{};
+    std::ofstream logFile(logFilePath, std::ios::app);
 
-    int score = negamax(-50'000, 50'000, depth);
+    for (int currentDepth=1; currentDepth <= depth; currentDepth++) {
 
-    const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+        followPV = 1;
+        const auto start = std::chrono::high_resolution_clock::now();
+        const int score = negamax(-50'000, 50'000, currentDepth);
+        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
 
-    std::string move { chessBoard[getMoveStartSQ(bestMove)] };
-    std::string movetwo { chessBoard[getMoveTargetSQ(bestMove)]};
-    std::string promotedPiece{ promotedPieces[getMovePromPiece(bestMove)]};
+        bestMove = pvTable[0][0];
 
-    std::ofstream logFile("/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt", std::ios::app);
+        std::string pvString{};
+        for (int count=0;  count < pvLength[0]; count++) {
+            pvString += algebraicNotation(pvTable[0][count]) + ' ';
+        }
 
-    logFile << "bestmove " + move + movetwo + promotedPiece << " info score cp " << score << " depth " << depth << " nodes " << nodes << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n';
-    std::cout << "bestmove " + move + movetwo + promotedPiece << '\n';
+        std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " pv " << pvString << '\n';
+
+        logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " pv " << pvString << '\n';
+        logFile << "bestmove " + algebraicNotation(bestMove) << " in " << duration.count() * 1'000 << " ms" << " KNodes/s " << (nodes / (duration.count() * 1'000) ) << '\n'; ;
+    }
+
+    // search time is up so we return the bestMove
+    std::cout << "bestmove " + algebraicNotation(bestMove) << '\n';
 
     logFile.close();
 
-  //   std::cout << "Info MNodes/s: " << nodes / (duration.count() * 1'000'000) << '\n';
+    //   std::cout << "Info MNodes/s: " << nodes / (duration.count() * 1'000'000) << '\n';
 }
+

@@ -18,6 +18,7 @@ void printAttackedSquares(int side);
 void printMove(int move);
 void printMovesList(const MoveList& moveList);
 
+std::string algebraicNotation(int move);
 
 
 #endif //MISC_H

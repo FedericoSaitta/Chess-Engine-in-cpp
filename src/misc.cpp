@@ -102,6 +102,14 @@ void printMove(const int move) {
                           promotedPieces[getMovePromPiece(move)] );
 }
 
+std::string algebraicNotation(const int move) {
+    std::string a { chessBoard[getMoveStartSQ(move)] };
+    std::string b { chessBoard[getMoveTargetSQ(move)]};
+    std::string c{ promotedPieces[getMovePromPiece(move)]};
+
+    return a + b + c;
+}
+
 
 // mainly for debugging purposes
 void printMovesList(const MoveList& moveList) {

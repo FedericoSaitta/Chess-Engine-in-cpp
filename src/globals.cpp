@@ -77,16 +77,16 @@ BITBOARD notABFile{18229723555195321596ULL};
 BITBOARD notHFile{9187201950435737471ULL};
 BITBOARD notHGFile{4557430888798830399ULL};
 
-BITBOARD pawnAttacks[2][64]{};
-BITBOARD bitKnightAttacks[64]{};
-BITBOARD bitKingAttacks[64]{};
+BITBOARD pawnAttacks[2][64];
+BITBOARD bitKnightAttacks[64];
+BITBOARD bitKingAttacks[64];
 
-BITBOARD bitBishopAttacks[64]{};
-BITBOARD bitRookAttacks[64]{};
-BITBOARD bitQueenAttacks[64]{};
+BITBOARD bitBishopAttacks[64];
+BITBOARD bitRookAttacks[64];
+BITBOARD bitQueenAttacks[64];
 
-BITBOARD bitBishopAttacksTable[64][512]{};
-BITBOARD bitRookAttacksTable[64][4096]{};
+BITBOARD bitBishopAttacksTable[64][512];
+BITBOARD bitRookAttacksTable[64][4096];
 
 
 // //////////////// //
@@ -109,11 +109,6 @@ int side;
 int enPassantSQ;
 int castle;
 
-// //////////////// //
-//**** movesort.cpp ****//
-// //////////////// //
-int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
 // //////////////// //
 //**** misc.cpp ****//
