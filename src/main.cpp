@@ -23,7 +23,7 @@ int main() {
 
     initAll(); // Done at compile time :)
 
-    UCI();
+  //  UCI();
 
     // need to press quit to properly save this file
 //    logFile.close();

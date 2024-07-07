@@ -236,7 +236,7 @@ static int negamax(int alpha, const int beta, const int depth) {
     	int score{};
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
-    	if(movesSearched == 0) // First move, use full-window search
+    	if(movesSearched == 0) // First move, use full-window search // this is the principal variation move
     		score = -negamax(-beta, -alpha, depth-1);
     	else {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
@@ -303,9 +303,10 @@ static int negamax(int alpha, const int beta, const int depth) {
     return alpha; // known as fail-low node
 }
 
+// this could really do with some more sosphisticated and robust implementation from a better engine
 static int getMoveTime(const bool timeConstraint) {
 
-	if (!timeConstraint) return 180'000;
+	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	const int timeAlloted = (side == White) ? whiteClockTime : blackClockTime;
 	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
@@ -324,40 +325,51 @@ static int getMoveTime(const bool timeConstraint) {
 	return timePerMove + increment * 0.75;
 }
 
+constexpr int windowWidth{ 50 };
 
-// this time management kind of makes sense but you should really implement a stopping function
-void iterativeDeepening(const int depth, const bool timeConstraint){
 
-    memset(killerMoves, 0, sizeof(killerMoves));
-    memset(historyMoves, 0, sizeof(historyMoves));
-    memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
-    memset(pvTable, 0, sizeof(pvTable));
+void iterativeDeepening(const int depth, const bool timeConstraint) {
+	memset(killerMoves, 0, sizeof(killerMoves));
+	memset(historyMoves, 0, sizeof(historyMoves));
+	memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
+	memset(pvTable, 0, sizeof(pvTable));
 
-    nodes = 0;
-    followPV = 0;
-    scorePV = 0;
-
-    int bestMove{};
-	int currentDepth{ 1 };
+	nodes = 0;
+	followPV = 0;
+	scorePV = 0;
 
 	const int timePerMove { getMoveTime(timeConstraint) };
-//	logFile << "Time per move: " << timePerMove << '\n';
+	//	logFile << "Time per move: " << timePerMove << '\n';
 
+	int alpha { -50'000 };
+	int beta { 50'000 };
 
 	const auto startSearchTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<float> searchDuration{ 0 };
 
-	while ( (currentDepth <= depth) && ( (searchDuration.count() * 1'000) < timePerMove) ){
+	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
+
 
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
-        const int score { negamax(-50'000, 50'000, currentDepth) };
+        const int score { negamax(alpha, beta, currentDepth) };
 
 		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
 		searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
 
-        bestMove = pvTable[0][0];
+		if ( (searchDuration.count() * 1'000) > timePerMove) break;
+
+        if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
+	        alpha = -50'000;
+        	beta = 50'000;
+        	continue; // we redo the search at the same depth
+        }
+		// otherwise we set up the window for the next iteration
+		alpha = score - windowWidth;
+		beta = score + windowWidth;
+
+
 
 		// extracting the PV line and printing out in the terminal and logging file
         std::string pvString{};
@@ -365,9 +377,9 @@ void iterativeDeepening(const int depth, const bool timeConstraint){
 
         std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
     //    logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
-
-		currentDepth++;
+		currentDepth++; // we can proceed to the next iteration
     }
+
     // search time is up so we return the bestMove
-    std::cout << "bestmove " + algebraicNotation(bestMove) << '\n';
+    std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
 }
