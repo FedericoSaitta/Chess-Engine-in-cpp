@@ -184,12 +184,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 constexpr int FullDepthMoves { 4 }; // searching the first 4 moves at the full depth
 constexpr int ReductionLimit { 3 };
 
-static int canReduce(const int move) {
-
-	if ( getMoveCapture(move) ) return 0; // no we cannot reduce this node of the search tree
-	if ( getMovePromPiece(move) ) return 0;
-	return 1;
-}
 
 static int negamax(int alpha, const int beta, const int depth) {
 
@@ -230,7 +224,11 @@ static int negamax(int alpha, const int beta, const int depth) {
     	if(movesSearched == 0) // First move, use full-window search
     		score = -negamax(-beta, -alpha, depth-1);
     	else {
-    		if( (movesSearched >= FullDepthMoves) && (depth >= ReductionLimit) && canReduce(moveList.moves[count]) )
+    		if( (movesSearched >= FullDepthMoves) && (depth >= ReductionLimit)
+    			&& !getMoveCapture(moveList.moves[count])
+    			&& (getMovePromPiece(moveList.moves[count]) == 0)
+    			&& !inCheck )
+
     				score = -negamax(-(alpha+1), -alpha, depth-2); // Search this move with reduced depth:
 
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
