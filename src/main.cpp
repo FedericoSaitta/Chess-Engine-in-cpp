@@ -19,14 +19,14 @@ int main() {
     // cmk is  r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9
     // killer is 6k1/3q1pp1/pp5p/1r5n/8/1P3PP1/PQ4BP/2R3K1 w - - 0 1
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
-    logFile.open(logFilePath, std::ios::app);
+  //  logFile.open(logFilePath, std::ios::app);
 
     initAll(); // Done at compile time :)
 
     UCI();
 
     // need to press quit to properly save this file
-    logFile.close();
+//    logFile.close();
 
     // nice article: https://web.archive.org/web/20071030220825/http://www.brucemo.com/compchess/programming/pvs.htm
 

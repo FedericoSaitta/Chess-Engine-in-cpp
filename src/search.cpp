@@ -274,16 +274,16 @@ static int getMoveTime(const bool timeConstraint) {
 	if (!timeConstraint) return 180'000;
 
 	const int timeAlloted = (side == White) ? whiteClockTime : blackClockTime;
-	const int idealTimePerMove = gameLengthTime / 40; // lets say each game is 50 moves long
+	const int idealTimePerMove = gameLengthTime / 35; // lets say each game is 50 moves long
 
 	int timePerMove{};
 
 	// mostly done with the idea of blitz and bullet in mind
-	if (timeAlloted > (gameLengthTime * 0.75)) timePerMove = idealTimePerMove / 2;
-	else if (timeAlloted > (gameLengthTime * 0.50)) timePerMove = idealTimePerMove / 3;
-	else if (timeAlloted > (gameLengthTime * 0.25)) timePerMove = idealTimePerMove / 5;
-	else if (timeAlloted > (gameLengthTime * 0.05)) timePerMove = idealTimePerMove / 10;
-	else timePerMove = idealTimePerMove / 20;
+	if (timeAlloted > (gameLengthTime * 0.75)) timePerMove = idealTimePerMove;
+	else if (timeAlloted > (gameLengthTime * 0.50)) timePerMove = idealTimePerMove / 2;
+	else if (timeAlloted > (gameLengthTime * 0.25)) timePerMove = idealTimePerMove / 3;
+	else if (timeAlloted > (gameLengthTime * 0.05)) timePerMove = idealTimePerMove / 4;
+	else timePerMove = idealTimePerMove / 5;
 
 	return timePerMove;
 }
@@ -307,7 +307,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint){
 	int currentDepth{ 1 };
 
 	const int timePerMove { getMoveTime(timeConstraint) };
-	logFile << "Time per move: " << timePerMove << '\n';
+//	logFile << "Time per move: " << timePerMove << '\n';
 
 
 	const auto startSearchTime = std::chrono::high_resolution_clock::now();
@@ -330,7 +330,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint){
         for (int count=0;  count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
         std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
-        logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
+    //    logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
 
 		currentDepth++;
     }

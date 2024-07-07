@@ -110,7 +110,7 @@ static void handleGo(const std::vector<std::string>& tokens) {
     }
     else if (tokens[1] == "movetime") {
         // need to fix this
-        /*
+
         if (side == White) whiteClockTime = std::stoi(tokens[2]);
         else blackClockTime = std::stoi(tokens[2]);
 
@@ -118,14 +118,13 @@ static void handleGo(const std::vector<std::string>& tokens) {
             gameLengthTime = (side == White) ? whiteClockTime : blackClockTime;
             isNewGame = false;
         }
-        */
 
-        iterativeDeepening(7, true); // for now just does a 7 ply search
+        iterativeDeepening(64, true); // for now just does a 7 ply search
     }
 
     else { // also look at how your GUI tells you the time
-        std::cout << "Input could not be recognised\n";
-        logFile << "Unrecognized input " << tokens[1] << '\n';
+    //    std::cout << "Input could not be recognised\n";
+    //    logFile << "Unrecognized input " << tokens[1] << '\n';
     }
 }
 
@@ -133,7 +132,6 @@ void UCI() {
     std::string line{};
 
     while (std::getline(std::cin, line)) {
-        logFile << line << '\n';
         std::vector<std::string> tokens = split(line);
         if (tokens.empty()) { continue; }
 
