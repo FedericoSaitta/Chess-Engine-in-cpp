@@ -181,9 +181,17 @@ static int quiescenceSearch(int alpha, const int beta) {
     return alpha;
 }
 
-static int negamax(int alpha, const int beta, const int depth) {
+constexpr int FullDepthMoves { 4 }; // searching the first 4 moves at the full depth
+constexpr int ReductionLimit { 3 };
 
-	int foundPV = 0; // set to false at the start
+static int canReduce(const int move) {
+
+	if ( getMoveCapture(move) ) return 0; // no we cannot reduce this node of the search tree
+	if ( getMovePromPiece(move) ) return 0;
+	return 1;
+}
+
+static int negamax(int alpha, const int beta, const int depth) {
 
     pvLength[ply] = ply;
 
@@ -203,6 +211,7 @@ static int negamax(int alpha, const int beta, const int depth) {
 
     sortMoves(moveList, ply);
 
+	int movesSearched{};
     for (int count=0; count < moveList.count; count++) {
 
         COPY_BOARD()
@@ -217,17 +226,30 @@ static int negamax(int alpha, const int beta, const int depth) {
         legalMoves++;
     	int score{};
 
-    	if (foundPV) {
-    		score = -negamax(-alpha -1, -alpha, depth-1); // do zero-width window search
-    		if ( (score > alpha) && (score < beta)) {  // check for failure
-    			score = -negamax(-beta, -alpha, depth - 1);  // if we fail redo the search with normal window
-    		}
-    	} else {
+    	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
+    	if(movesSearched == 0) // First move, use full-window search
     		score = -negamax(-beta, -alpha, depth-1);
+    	else {
+    		if( (movesSearched >= FullDepthMoves) && (depth >= ReductionLimit) && canReduce(moveList.moves[count]) )
+    				score = -negamax(-(alpha+1), -alpha, depth-2); // Search this move with reduced depth:
+
+    		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
+
+    		// principal variation search (PVS)
+    		if(score > alpha) {
+    			score = -negamax(-(alpha+1), -alpha, depth-1);
+
+    			if(score > alpha && score < beta)
+    				score = -negamax(-beta, -alpha, depth-1);
+    		}
     	}
+
+
 
         ply--;
         RESTORE_BOARD()
+
+    	movesSearched++;
 
         // fail-hard beta cut off
         if (score >= beta) {
@@ -254,7 +276,6 @@ static int negamax(int alpha, const int beta, const int depth) {
             }
 
             pvLength[ply] = pvLength[ply + 1];
-        	foundPV = 1;
         }
     }
 
@@ -268,13 +289,13 @@ static int negamax(int alpha, const int beta, const int depth) {
     return alpha; // known as fail-low node
 }
 
-
 static int getMoveTime(const bool timeConstraint) {
 
 	if (!timeConstraint) return 180'000;
 
 	const int timeAlloted = (side == White) ? whiteClockTime : blackClockTime;
-	const int idealTimePerMove = gameLengthTime / 35; // lets say each game is 50 moves long
+	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
+	const int idealTimePerMove = gameLengthTime / 35; // lets say each game is 35 moves long
 
 	int timePerMove{};
 
@@ -283,15 +304,14 @@ static int getMoveTime(const bool timeConstraint) {
 	else if (timeAlloted > (gameLengthTime * 0.50)) timePerMove = idealTimePerMove / 2;
 	else if (timeAlloted > (gameLengthTime * 0.25)) timePerMove = idealTimePerMove / 3;
 	else if (timeAlloted > (gameLengthTime * 0.05)) timePerMove = idealTimePerMove / 4;
-	else timePerMove = idealTimePerMove / 5;
+	else timePerMove = timeAlloted / 10; // switch to using the time alloted so we dont flag
 
-	return timePerMove;
+	// we want to use up about 75% of the increment
+	return timePerMove + increment * 0.75;
 }
 
 
 // this time management kind of makes sense but you should really implement a stopping function
-// also you should calculate the time from the beggining of the iterative deepening not the single search
-
 void iterativeDeepening(const int depth, const bool timeConstraint){
 
     memset(killerMoves, 0, sizeof(killerMoves));
@@ -334,9 +354,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint){
 
 		currentDepth++;
     }
-
     // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(bestMove) << '\n';
 }
-
-// for now this bot is made to play bullet and blitz, it is not for doing constant move time games etc.

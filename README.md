@@ -2,9 +2,11 @@
 
 To play against this engine head to: https://lichess.org/@/Aramis-Bot.
 
-This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 -1500 ELO.
-Because of the performance improvement brought by the C++ compiler, this engine is able has already surpassed its predecessor with 
-V_1 achieving a rating of 2050 ELO in bullet. If you are also thinking on embarking on the journey of building a chess engine
+This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
+Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor with 
+version 1 achieving a rating of 2050 ELO in bullet. Please contact me for any advice, critique or question about the bot :) 
+
+If you are also thinking on embarking on the journey of building a chess engine
 I'd advise to take is slowly and enjoy watching a stupid machine learn to play some decent moves, furthermore I advise to start
 by implementing simple algorithms at first, and only once speed matters, to change them. Move generation speed might seem like 
 a deciding factor of a chess engine's strength, but it only accounts for around 5 - 10% of the time spent by the program, 
@@ -46,16 +48,16 @@ This test consists of searching for a mate in 5 (10 plies), FEN: "N1bk3r/P5pp/3b
 Here is the UCI output of the iterative deepening search, we know the mate has been successfully found as the
 evaluation shoots up to (50'000 - 9) = 48991.
 
-info score cp -620 depth 1 nodes 63 nps 1863574 pv h4e1  
-info score cp -620 depth 2 nodes 336 nps 1767211 pv h4e1  h1e1  
-info score cp -620 depth 3 nodes 2298 nps 5086017 pv h4e1  h1e1  d4c2  
-info score cp -615 depth 4 nodes 10869 nps 1655877 pv h4e1  h1e1  d4c2  e1c1  
-info score cp -600 depth 5 nodes 68036 nps 5800927 pv h4e1  h1e1  d4c2  e1c1  c2e3  
-info score cp -415 depth 6 nodes 293208 nps 1552472 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  
-info score cp -415 depth 7 nodes 1590135 nps 4861336 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  e3d5  
-info score cp -225 depth 8 nodes 6215900 nps 1572247 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  
-info score cp -225 depth 9 nodes 28527536 nps 5212807 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  f3e1  
-info score cp 48991 depth 10 nodes 98297385 nps 1607238 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  e6g4  
+info score cp -620 depth 1 nodes 63 nps 1'863'574 pv h4e1  
+info score cp -620 depth 2 nodes 336 nps 1'767'211 pv h4e1  h1e1  
+info score cp -620 depth 3 nodes 2'298 nps 5'086'017 pv h4e1  h1e1  d4c2  
+info score cp -615 depth 4 nodes 10'869 nps 1'655'877 pv h4e1  h1e1  d4c2  e1c1  
+info score cp -600 depth 5 nodes 68'036 nps 5'800'927 pv h4e1  h1e1  d4c2  e1c1  c2e3  
+info score cp -415 depth 6 nodes 293'208 nps 1'552'472 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  
+info score cp -415 depth 7 nodes 1'590'135 nps 4'861'336 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  e3d5  
+info score cp -225 depth 8 nodes 6'215'900 nps 1'572'247 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  
+info score cp -225 depth 9 nodes 28'527'536 nps 5'212'807 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  f3e1  
+info score cp 48991 depth 10 nodes 98'297'385 nps 1'607'238 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  e6g4  
 bestmove h4h3
 
 Mating Move: h4h3 Time taken: 71.1204ss

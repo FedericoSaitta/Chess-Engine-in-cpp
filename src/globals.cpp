@@ -123,6 +123,8 @@ const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
 int gameLengthTime{};
 int whiteClockTime{};
 int blackClockTime{};
+int whiteIncrementTime{};
+int blackIncrementTime{};
 
 // //////////////// //
 //**** uci.cpp ****//

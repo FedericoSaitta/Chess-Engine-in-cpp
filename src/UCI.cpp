@@ -98,9 +98,16 @@ static void handleGo(const std::vector<std::string>& tokens) {
     }
     else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]), false);
 
-    else if ( ( (tokens[1] == "wtime") && (tokens[3] == "btime")) ) {
+    else if ( ((tokens[1] == "wtime") && (tokens[3] == "btime")) ) {
         whiteClockTime = std::stoi(tokens[2]);
         blackClockTime = std::stoi(tokens[4]);
+        if (tokens.size() > 5) {
+            if ((tokens[5] == "winc") && (tokens[7] == "binc")) {
+                whiteIncrementTime = std::stoi(tokens[6]);
+                blackIncrementTime = std::stoi(tokens[8]);
+            }
+        }
+
 
         if (isNewGame) {
             gameLengthTime = whiteClockTime;
@@ -146,6 +153,12 @@ void UCI() {
         else if ( command == "quit") break;
         else if ( command == "ucinewgame") {
             isNewGame = true;
+            // resetting all the time-controls just in case
+            gameLengthTime = 0;
+            whiteClockTime = 0;
+            blackClockTime = 0;
+            whiteIncrementTime = 0;
+            blackIncrementTime = 0;
         }
 
     }

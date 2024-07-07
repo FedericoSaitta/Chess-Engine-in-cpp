@@ -89,6 +89,8 @@ extern std::ofstream logFile;
 extern int gameLengthTime;
 extern int whiteClockTime;
 extern int blackClockTime;
+extern int whiteIncrementTime;
+extern int blackIncrementTime;
 
 
 #endif //GLOBALS_H
