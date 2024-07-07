@@ -181,20 +181,35 @@ static int quiescenceSearch(int alpha, const int beta) {
     return alpha;
 }
 
-constexpr int FullDepthMoves { 4 }; // searching the first 4 moves at the full depth
-constexpr int ReductionLimit { 3 };
+constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
+constexpr int reductionLimit { 3 };
+constexpr int nullMoveReduction { 2 };
 
 
 static int negamax(int alpha, const int beta, const int depth) {
+	pvLength[ply] = ply;
 
-    pvLength[ply] = ply;
+	if (depth == 0) return quiescenceSearch(alpha, beta);
 
-    if (depth == 0) return quiescenceSearch(alpha, beta);
+	nodes++;
 
-    nodes++;
+	const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
+	int legalMoves{};
 
-    const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
-    int legalMoves{};
+	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
+	if (depth >= 3 && !inCheck && ply) {
+		COPY_BOARD()
+
+		side ^= 1; // make null move
+		enPassantSQ = 64; // resetting en-passant to null-square
+
+		const int score = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
+
+		RESTORE_BOARD() // un-making the null move
+
+		if (score >= beta)
+			return beta;
+	}
 
     MoveList moveList;
     generateMoves(moveList);
@@ -224,10 +239,11 @@ static int negamax(int alpha, const int beta, const int depth) {
     	if(movesSearched == 0) // First move, use full-window search
     		score = -negamax(-beta, -alpha, depth-1);
     	else {
-    		if( (movesSearched >= FullDepthMoves) && (depth >= ReductionLimit)
-    			&& !getMoveCapture(moveList.moves[count])
-    			&& (getMovePromPiece(moveList.moves[count]) == 0)
-    			&& !inCheck )
+    		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
+    			&& !getMoveCapture(moveList.moves[count]) // will not reduce captures
+    			&& !getMovePromPiece(moveList.moves[count]) // will not reduce promotions
+    			&& !inCheck )   // will not reduce in case we are in check
+    				// some other heuristics can also be implemented though they are more complicated
 
     				score = -negamax(-(alpha+1), -alpha, depth-2); // Search this move with reduced depth:
 
