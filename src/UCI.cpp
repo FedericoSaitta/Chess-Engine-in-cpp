@@ -38,7 +38,9 @@ static int parseMove(const std::string_view move) {
         if ( (getMoveStartSQ(moveList.moves[count]) == startSquare) &&  (getMoveTargetSQ(moveList.moves[count]) == endSquare) ){
             const int promotedPiece{ getMovePromPiece(moveList.moves[count]) };
 
+
             if (promotedPiece) {
+
                 if ( ((promotedPiece % 6) == Queen) && (move[4] == 'q') ) return moveList.moves[count];
                 if ( ((promotedPiece % 6) == Rook) && (move[4] == 'r') ) return moveList.moves[count];
                 if ( ((promotedPiece % 6) == Bishop) && (move[4] == 'b') ) return moveList.moves[count];
@@ -86,7 +88,9 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
             if (move) { //so if the move is != 0
                 if (!makeMove(move, 0)) { std::cout << "Move is illegal \n"; }
-            } else { std::cout << "Move is not on the board \n"; }
+            } else { std::cout << tokens[index];
+                std::cout << "Move is not on the board \n";
+            }
         }
     }
 }

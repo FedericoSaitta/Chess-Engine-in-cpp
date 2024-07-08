@@ -7,9 +7,9 @@
 #include "evaluation.h"
 #include "tests.h"
 
-//#define Perft_TESTS
+#define Perft_TESTS
 // #define Move_TESTS
-#define Puzzle_TESTS
+//#define Puzzle_TESTS
 //#define Init_TESTS
 
 
@@ -23,7 +23,8 @@ int main() {
 
     initAll(); // Done at compile time :)
 
-  //  UCI();
+//
+    UCI();
 
     // need to press quit to properly save this file
 //    logFile.close();

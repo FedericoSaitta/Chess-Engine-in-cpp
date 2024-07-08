@@ -38,7 +38,8 @@ void generateMoves(MoveList& moveList) {
 
                     targetSquare = startSquare + 8;
 
-                    if ( (targetSquare < H8) && !getBit(occupancies[2], targetSquare) ) {
+                    // make sure the target is smaller or equal to start of the board
+                    if ( (targetSquare <= H8) && !getBit(occupancies[2], targetSquare) ) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
@@ -122,7 +123,8 @@ void generateMoves(MoveList& moveList) {
 
                     targetSquare = startSquare - 8;
 
-                    if ( (targetSquare > A1) && !getBit(occupancies[2], targetSquare) ) {
+                    // make sure the target is larger or equal to start of the board
+                    if ( (targetSquare >= A1) && !getBit(occupancies[2], targetSquare) ) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
