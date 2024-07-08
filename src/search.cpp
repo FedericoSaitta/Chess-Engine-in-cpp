@@ -185,6 +185,17 @@ constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full d
 constexpr int reductionLimit { 3 };
 constexpr int nullMoveReduction { 2 };
 
+// This does cause some slow down clearly, but improves search stability
+// should definetely be tested in many games
+static int canReduce(const int move) {
+	COPY_BOARD()
+	makeMove(move, 0);
+
+	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , !side) };
+
+	RESTORE_BOARD()
+	return !opponentInCheck;
+}
 
 static int negamax(int alpha, const int beta, const int depth) {
 	pvLength[ply] = ply;
@@ -242,9 +253,10 @@ static int negamax(int alpha, const int beta, const int depth) {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& !getMoveCapture(moveList.moves[count]) // will not reduce captures
     			&& !getMovePromPiece(moveList.moves[count]) // will not reduce promotions
-    			&& !inCheck )   // will not reduce in case we are in check
-    				// some other heuristics can also be implemented though they are more complicated
+    			&& !inCheck            // will not reduce in case we are in check
+    			&& canReduce(moveList.moves[count]))    // will not reduce in case we put opponent in check, is this worth the speed loss?
 
+    				// some other heuristics can also be implemented though they are more complicated
     				score = -negamax(-(alpha+1), -alpha, depth-2); // Search this move with reduced depth:
 
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves

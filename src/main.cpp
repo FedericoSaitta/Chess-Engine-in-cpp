@@ -9,7 +9,7 @@
 
 //#define Perft_TESTS
 // #define Move_TESTS
-// #define Puzzle_TESTS
+#define Puzzle_TESTS
 //#define Init_TESTS
 
 
