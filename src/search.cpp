@@ -1,3 +1,4 @@
+
 //
 // Created by Federico Saitta on 04/07/2024.
 //
@@ -25,6 +26,10 @@ static int pvTable[64][64]{};
 
 static int followPV{}; // if it is true then we follow the principal variation
 static int scorePV{};
+
+constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
+constexpr int reductionLimit { 3 };
+constexpr int nullMoveReduction { 2 };
 
 ///// MOVES ARE SORTED IN THIS ORDER ////
 
@@ -65,7 +70,9 @@ int scoreMove(const int move, const int ply) {
 	if (scorePV) {
 		if (pvTable[0][ply] == move) {
 			scorePV = 0; // as there is only one principal move in a moveList
-	// for debugging		std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
+			// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
+			// note that because of null move and late more pruning this will not print nicely because higher depths plies are
+			// not considered because of the early pruning, PV is still followed  though.
 			return 20'000;
 		}
 	}
@@ -124,13 +131,13 @@ void sortMoves(MoveList& moveList, const int ply) {
 }
 
 static void enablePVscoring(const MoveList& moveList) {
-
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
         if ( moveList.moves[count] == pvTable[0][ply] ) {
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
-            // maybe we should break here
+
+        	break; // I think this breaking condition is correct
         }
     }
 }
@@ -181,13 +188,9 @@ static int quiescenceSearch(int alpha, const int beta) {
     return alpha;
 }
 
-constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
-constexpr int reductionLimit { 3 };
-constexpr int nullMoveReduction { 2 };
-
-// This does cause some slow down clearly, but improves search stability
-// should definetely be tested in many games
-static int canReduce(const int move) {
+static int canReduceMove(const int move) {
+	// This does cause some slow down clearly, but improves search stability
+	// should definetely be tested in many games
 	COPY_BOARD()
 	makeMove(move, 0);
 
@@ -200,12 +203,13 @@ static int canReduce(const int move) {
 static int negamax(int alpha, const int beta, const int depth) {
 	pvLength[ply] = ply;
 
-	if (depth == 0) return quiescenceSearch(alpha, beta);
+	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
 
 	const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
 	int legalMoves{};
+
 
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 	if (depth >= 3 && !inCheck && ply) {
@@ -242,36 +246,35 @@ static int negamax(int alpha, const int beta, const int depth) {
             ply--;
             continue;
         }
+
         // increment legalMoves
         legalMoves++;
     	int score{};
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
-    	if(movesSearched == 0) // First move, use full-window search // this is the principal variation move
+    	if(movesSearched == 0) {
+    		// First move, use full-window search // this is the principal variation move
     		score = -negamax(-beta, -alpha, depth-1);
-    	else {
+    	} else {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& !getMoveCapture(moveList.moves[count]) // will not reduce captures
     			&& !getMovePromPiece(moveList.moves[count]) // will not reduce promotions
     			&& !inCheck            // will not reduce in case we are in check
-    			&& canReduce(moveList.moves[count]))    // will not reduce in case we put opponent in check, is this worth the speed loss?
+    			&& canReduceMove(moveList.moves[count]))    // will not reduce in case we put opponent in check, is this worth the speed loss?
 
     				// some other heuristics can also be implemented though they are more complicated
-    				score = -negamax(-(alpha+1), -alpha, depth-2); // Search this move with reduced depth:
+    				score = -negamax(-alpha-1, -alpha, depth-2); // Search this move with reduced depth:
 
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
 
     		// principal variation search (PVS)
     		if(score > alpha) {
-    			score = -negamax(-(alpha+1), -alpha, depth-1);
+    			score = -negamax(-alpha-1, -alpha, depth-1);
 
     			if(score > alpha && score < beta)
     				score = -negamax(-beta, -alpha, depth-1);
     		}
     	}
-
-
-
         ply--;
         RESTORE_BOARD()
 
@@ -305,7 +308,7 @@ static int negamax(int alpha, const int beta, const int depth) {
         }
     }
 
-    if (legalMoves == 0) {
+    if (!legalMoves) { // we dont have any legal moves to make in this position
         if (inCheck) {
             return -49'000 + ply; // we want to return the mating score, (slightly above negative infinity, +ply scores faster mates as better moves)
         }
