@@ -71,6 +71,21 @@ extern const char promotedPieces[];
 extern const char* unicodePieces[];
 
 
+// ////////////////////// //
+// **** hashtable.cpp ****//
+// ////////////////////// //
+
+extern U64 randomPieceKeys[12][64];
+extern U64 randomEnPassantKeys[64];
+extern U64 randomCastlingKeys[16];
+extern U64 sideKey;
+
+extern U64 hashKey; // of the position
+
+void initRandomKeys();
+U64 generateHashKey();
+
+
 // ///////////////// //
 // **** search.cpp ****//
 // ///////////////// //
@@ -91,6 +106,7 @@ extern int whiteClockTime;
 extern int blackClockTime;
 extern int whiteIncrementTime;
 extern int blackIncrementTime;
+
 
 
 #endif //GLOBALS_H

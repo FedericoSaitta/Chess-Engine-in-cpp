@@ -1,5 +1,7 @@
 #include "globals.h"
 #include <fstream>
+#include <__hash_table>
+
 #include "macros.h"
 #include "inline_functions.h"
 #include "misc.h"
@@ -22,9 +24,13 @@ int main() {
   //  logFile.open(logFilePath, std::ios::app);
 
     initAll(); // Done at compile time :)
+    initRandomKeys();
+
+    Test::standardizedPerft();
 
 
-    UCI();
+
+  //  UCI();
 
     // need to press quit to properly save this file
 //    logFile.close();

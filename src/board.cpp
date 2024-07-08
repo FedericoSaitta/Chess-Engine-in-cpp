@@ -73,4 +73,7 @@ void parseFEN(const std::string& fenString) {
         occupancies[1] |= bitboards[bbPiece + 6]; // for black
         occupancies[2] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
     }
+
+    // Now we initialize the zobrist hash key
+    hashKey = generateHashKey();
 }

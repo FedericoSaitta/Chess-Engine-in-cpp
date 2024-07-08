@@ -8,6 +8,8 @@
 
 #include <cstring>
 
+#include "misc.h"
+
 // this is for little endian board
 static const int castlingRightsConstant[64] = {
     13, 15, 15, 15,  12, 15, 15, 14,
@@ -36,8 +38,13 @@ int makeMove(const int move, const int onlyCaptures){
         const int enPassant { getMoveEnPassant(move) };
         const int castling { getMoveCastling(move) };
 
+        // moving the piece
         setBitFalse(bitboards[piece], startSQ);
         setBit(bitboards[piece], targetSQ);
+
+        // hashing the piece
+        hashKey ^= randomPieceKeys[piece][startSQ];
+        hashKey ^= randomPieceKeys[piece][targetSQ];
 
         if ( capture ) {
             int startPiece, endPiece;
@@ -47,26 +54,54 @@ int makeMove(const int move, const int onlyCaptures){
 
             for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
                 if ( getBit(bitboards[bbPiece], targetSQ) ) {
+                    // remove piece from bitboard
                     setBitFalse(bitboards[bbPiece], targetSQ);
+
+                    // remove piece from hashkey
+                    hashKey ^= randomPieceKeys[bbPiece][targetSQ];
+
                     break;
                 }
             }
         }
 
         if ( promPiece ) {
-            setBitFalse(bitboards[piece], targetSQ);
+            setBitFalse( bitboards[piece], targetSQ);
             setBit( bitboards[promPiece], targetSQ);
+
+            // hash the removal of the pawn and add the new piece
+            hashKey ^= randomPieceKeys[piece][targetSQ]; // removal of the pawn
+            hashKey ^= randomPieceKeys[promPiece][targetSQ]; // addition of promoted piece
         }
 
         if ( enPassant ) {
-            (side == White) ? setBitFalse( bitboards[Pawn + 6], targetSQ - 8) : setBitFalse( bitboards[Pawn], targetSQ + 8);
+            if (side == White) {
+                setBitFalse( bitboards[Pawn + 6], targetSQ - 8 );
+
+                // hash the removal of the opponent's pawn
+                hashKey ^= randomPieceKeys[Pawn + 6][targetSQ - 8];
+
+            } else {
+                setBitFalse( bitboards[Pawn], targetSQ + 8 );
+                hashKey ^= randomPieceKeys[Pawn][targetSQ + 8];
+            }
         }
+
+        // hash en-passant square
+        if (enPassantSQ != 64) { hashKey ^= randomEnPassantKeys[enPassantSQ]; }
+
         // need to reset enPassant square
         enPassantSQ = 64;
 
         if ( doublePush ) {
-            // here we need to update the enPassant square
-            enPassantSQ = (side == White) ? (targetSQ - 8) : (targetSQ + 8);
+            if (side == White) {
+                enPassantSQ = targetSQ - 8;
+                // update hashKey
+                hashKey ^= randomEnPassantKeys[targetSQ - 8];
+            } else {
+                enPassantSQ = targetSQ + 8;
+                hashKey ^= randomEnPassantKeys[targetSQ + 8];
+            }
         }
 
         // here you should set castling to false
@@ -75,30 +110,48 @@ int makeMove(const int move, const int onlyCaptures){
                 case (G1):
                     setBitFalse(bitboards[Rook], H1);
                     setBit(bitboards[Rook], F1);
+
+                    // hash rook:
+                    hashKey ^= randomPieceKeys[Rook][H1];
+                    hashKey ^= randomPieceKeys[Rook][F1];
                     break;
 
                 case (C1):
                     setBitFalse(bitboards[Rook], A1);
                     setBit(bitboards[Rook], D1);
+                    // hash rook:
+                    hashKey ^= randomPieceKeys[Rook][A1];
+                    hashKey ^= randomPieceKeys[Rook][D1];
                     break;
 
                 case (G8):
                     setBitFalse(bitboards[Rook + 6], H8);
                     setBit(bitboards[Rook + 6], F8);
+                    // hash rook:
+                    hashKey ^= randomPieceKeys[Rook + 6][H8];
+                    hashKey ^= randomPieceKeys[Rook + 6][F8];
                     break;
                 case (C8):
                     setBitFalse(bitboards[Rook + 6], A8);
                     setBit(bitboards[Rook + 6], D8);
+                    // hash rook:
+                    hashKey ^= randomPieceKeys[Rook + 6][A8];
+                    hashKey ^= randomPieceKeys[Rook + 6][D8];
                     break;
 
                 default: break;
             }
 
         }
+        // hash castling
+        hashKey ^= randomCastlingKeys[castle]; // get trid of castling
 
         // castle bit hack for updating the rights
         castle &= castlingRightsConstant[startSQ];
         castle &= castlingRightsConstant[targetSQ];
+
+        hashKey ^= randomCastlingKeys[castle]; // re-insert castling rights
+
 
         // updating the occupancies by resetting them and re initializing them
         memset(occupancies, 0ULL, 24);
@@ -109,6 +162,18 @@ int makeMove(const int move, const int onlyCaptures){
         }
 
         side ^= 1; // change side
+        hashKey ^= sideKey;
+
+        /* FOR ZOBRITST DEBUGGING PURPOSES
+        U64 new_hasKey = generateHashKey();
+        // if this doesnt match we output an error
+        if (new_hasKey != hashKey) {
+            printMove(move);
+            printBoardFancy();
+            std::cout << "This does not match, true hash is: " << new_hasKey << '\n';
+        }
+        */
+
 
         // make sure that the king has not been exposed into check
         if (const U64 kingBitboard{ (side == White) ? bitboards[King + 6] : bitboards[King] }; isSqAttacked(getLeastSigBitIndex(kingBitboard), side)) {

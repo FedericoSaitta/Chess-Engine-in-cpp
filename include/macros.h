@@ -143,13 +143,15 @@
 U64 bitboardCopy[12], occupanciesCopy[3];                          \
 int sideCopy, enPassantCopy, castleCopy;                           \
 memcpy(bitboardCopy, bitboards, 96);                                \
-memcpy(occupanciesCopy, occupancies, 24);                            \
+memcpy(occupanciesCopy, occupancies, 24);                          \
+U64 hashKeyCopy = hashKey;                                          \
 sideCopy = side, enPassantCopy = enPassantSQ, castleCopy = castle;   \
 
 // restore board state
 #define RESTORE_BOARD()                                              \
 memcpy(bitboards, bitboardCopy, 96);                                \
 memcpy(occupancies, occupanciesCopy, 24);                            \
+hashKey = hashKeyCopy;                                                \
 side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
 
 

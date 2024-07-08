@@ -81,6 +81,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
     std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
               << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
+    std::cout << "HashKey: " << hashKey << '\n';
 }
 
 void printAttackedSquares(const int side) {
