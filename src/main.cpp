@@ -11,7 +11,7 @@
 
 // #define Perft_TESTS
 // #define Move_TESTS
-// #define Puzzle_TESTS
+#define Puzzle_TESTS
 //#define Init_TESTS
 
 
@@ -24,16 +24,12 @@ int main() {
   //  logFile.open(logFilePath, std::ios::app);
 
     initAll(); // Done at compile time :)
-    initRandomKeys();
-
-    parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 
+   // parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
+   // UCI();
 
-//    Test::standardizedPerft();
-
-  //  UCI();
 
     // need to press quit to properly save this file
 //    logFile.close();

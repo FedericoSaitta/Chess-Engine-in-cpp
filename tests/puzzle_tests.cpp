@@ -29,6 +29,7 @@ namespace Test {
 
         for (const auto& puzzle : matePuzzles) {
 
+            clearTranspositionTable();
             parseFEN(puzzle.FEN);
 
             const auto start = std::chrono::high_resolution_clock::now();

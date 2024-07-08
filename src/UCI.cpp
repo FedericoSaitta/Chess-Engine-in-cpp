@@ -163,6 +163,8 @@ void UCI() {
             blackClockTime = 0;
             whiteIncrementTime = 0;
             blackIncrementTime = 0;
+            // reset the hash Table
+            clearTranspositionTable();
         }
 
     }

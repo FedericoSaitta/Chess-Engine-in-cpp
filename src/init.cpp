@@ -212,4 +212,8 @@ void initAll() {
 
     initSliderAttacks(1);
     initSliderAttacks(0);
+
+    initRandomKeys();
+
+    clearTranspositionTable();
 } // this only takes 100 ms at startup in DEBUG mode

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "globals.h"
@@ -143,22 +144,19 @@ static void enablePVscoring(const MoveList& moveList) {
 }
 
 static int quiescenceSearch(int alpha, const int beta) {
+	nodes++;
 
     if ( ply > (maxPly - 1) ) return evaluate();
 
     const int staticEval{ evaluate() };
 
-    nodes++;
-
     if (staticEval >= beta) return beta; // known as node that fails high
 
-    // found a better move
-    if (staticEval > alpha) { // Known as PV node (principal variatio)
-        alpha = staticEval;
-    }
+
+    if (staticEval > alpha) alpha = staticEval; // Known as PV node (principal variation)
 
     MoveList moveList;
-    generateMoves(moveList); // second parameter not acc used
+    generateMoves(moveList);
     sortMoves(moveList, ply);
 
     for (int count=0; count < moveList.count; count++) {
@@ -175,17 +173,16 @@ static int quiescenceSearch(int alpha, const int beta) {
         ply--;
         RESTORE_BOARD()
 
-        // fail-hard beta cut off
-        if (score >= beta) return beta; // known as node that fails high
-
         // found a better move
         if (score > alpha) { // Known as PV node (principal variatio)
             alpha = score;
+
+        	// fail-hard beta cut off
+        	if (score >= beta) return beta; // known as node that fails high
         }
     }
 
-    // node that fails low
-    return alpha;
+    return alpha; // node that fails low
 }
 
 static int canReduceMove(const int move) {
@@ -200,9 +197,19 @@ static int canReduceMove(const int move) {
 	return !opponentInCheck;
 }
 
-static int negamax(int alpha, const int beta, const int depth) {
-	pvLength[ply] = ply;
+static int negamax(int alpha, const int beta, int depth) {
 
+	int score{};
+	int hashFlag{ HASH_FLAG_ALPHA };
+
+	// to figure ot if the current node is a principal variation node
+	const int pv_node = beta - alpha > 1;
+
+	// reading the TT table, if we the move has already been searched, we return its evaluation
+	// ply && used to ensure we dont read from the transposition table at the root node
+	if (ply && (score = probeHash(alpha, beta, depth)) != NO_HASH_ENTRY && !pv_node) return score;
+
+	pvLength[ply] = ply;
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
@@ -210,20 +217,28 @@ static int negamax(int alpha, const int beta, const int depth) {
 	const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
 	int legalMoves{};
 
+	// increase search depth if the king has been exposed into a check
+	if (inCheck) depth++;
 
+	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 	if (depth >= 3 && !inCheck && ply) {
 		COPY_BOARD()
 
+		hashKey ^= sideKey;
+		if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
+
 		side ^= 1; // make null move
 		enPassantSQ = 64; // resetting en-passant to null-square
 
-		const int score = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
+		// we change plies so white and black killers remain in sync for negamax search
+		ply++;
+		const int nullMoveScore = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
+		ply--;
 
 		RESTORE_BOARD() // un-making the null move
 
-		if (score >= beta)
-			return beta;
+		if (nullMoveScore >= beta) return beta;
 	}
 
     MoveList moveList;
@@ -249,7 +264,6 @@ static int negamax(int alpha, const int beta, const int depth) {
 
         // increment legalMoves
         legalMoves++;
-    	int score{};
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
@@ -271,7 +285,7 @@ static int negamax(int alpha, const int beta, const int depth) {
     		if(score > alpha) {
     			score = -negamax(-alpha-1, -alpha, depth-1);
 
-    			if(score > alpha && score < beta)
+    			if( (score > alpha) && (score < beta) )
     				score = -negamax(-beta, -alpha, depth-1);
     		}
     	}
@@ -280,22 +294,13 @@ static int negamax(int alpha, const int beta, const int depth) {
 
     	movesSearched++;
 
-        // fail-hard beta cut off
-        if (score >= beta) {
-            // helps with better move ordering in branches at the same depth
-            if (!getMoveCapture(moveList.moves[count])) {
-                killerMoves[1][ply] = killerMoves[0][ply];
-                killerMoves[0][ply] = moveList.moves[count]; // store killer moves
-            }
-            return beta; // known as node that fails high
-        }
-
         // found a better move
         if (score > alpha) { // Known as PV node (principal variation)
             // store history moves
             if (!getMoveCapture(moveList.moves[count])) {
                 historyMoves[getMovePiece(moveList.moves[count])][getMoveTargetSQ(moveList.moves[count])] += depth; // this can be dropped doesnt give much anyway
             }
+        	hashFlag = HASH_FLAG_EXACT;
             alpha = score;
 
             pvTable[ply][ply] = moveList.moves[count];
@@ -305,7 +310,20 @@ static int negamax(int alpha, const int beta, const int depth) {
             }
 
             pvLength[ply] = pvLength[ply + 1];
+
+        	// fail-hard beta cut off
+        	if (score >= beta) {
+        		// helps with better move ordering in branches at the same depth
+        		if (!getMoveCapture(moveList.moves[count])) {
+        			killerMoves[1][ply] = killerMoves[0][ply];
+        			killerMoves[0][ply] = moveList.moves[count]; // store killer moves
+        		}
+
+        		recordHash(beta, HASH_FLAG_BETA, depth);
+        		return beta; // known as node that fails high
+        	}
         }
+
     }
 
     if (!legalMoves) { // we dont have any legal moves to make in this position
@@ -315,6 +333,7 @@ static int negamax(int alpha, const int beta, const int depth) {
         return 0; // we are in stalemate
     }
 
+	recordHash(alpha, hashFlag, depth);
     return alpha; // known as fail-low node
 }
 
@@ -350,6 +369,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	nodes = 0;
 	followPV = 0;
 	scorePV = 0;
+	ply = 0;
 
 	const int timePerMove { getMoveTime(timeConstraint) };
 	//	logFile << "Time per move: " << timePerMove << '\n';
@@ -381,7 +401,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		// otherwise we set up the window for the next iteration
 		alpha = score - windowWidth;
 		beta = score + windowWidth;
-
 
 
 		// extracting the PV line and printing out in the terminal and logging file

@@ -139,7 +139,7 @@ void clearTranspositionTable() {
     }
 }
 // value for when no hash is found
-#define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
+
 
 int probeHash(const int alpha, const int beta, const int depth)
 {
@@ -152,7 +152,6 @@ int probeHash(const int alpha, const int beta, const int depth)
 
             if (hashEntry->flag == HASH_FLAG_EXACT)
                 return hashEntry->score;
-
 
             // do some reading on why we are returning alpha and beta
             if ((hashEntry->flag == HASH_FLAG_ALPHA) && (hashEntry->score <= alpha))
@@ -170,7 +169,6 @@ int probeHash(const int alpha, const int beta, const int depth)
 tt transpositionTable[HASH_SIZE] {};
 
 void recordHash(const int score, const int flag, const int depth)
-
 {
     tt* hashEntry = &transpositionTable[hashKey % HASH_SIZE];
 
