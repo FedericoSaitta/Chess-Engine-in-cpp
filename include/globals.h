@@ -82,6 +82,28 @@ extern U64 sideKey;
 
 extern U64 hashKey; // of the position
 
+#define HASH_SIZE 0x800000 // 8 Mega Byte transposition table, statically allocated
+
+// https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
+#define    HASH_FLAG_EXACT   0 // evaluation from evaluation function
+#define    HASH_FLAG_ALPHA   1 // evaluation from alpha
+#define    HASH_FLAG_BETA    2 // evaluation from beta
+
+// transposition table data structure
+typedef struct tagHASHE {
+    U64 hashKey;
+    int depth;
+    int flag;
+    int score;
+    //	int bestMove;  you can also put the best move in the transposition table
+}   tt;
+
+extern tt transpositionTable[HASH_SIZE];
+
+void clearTranspositionTable();
+int probeHash(int alpha, int beta, int depth);
+void recordHash(int score, int flag, int depth);
+
 void initRandomKeys();
 U64 generateHashKey();
 

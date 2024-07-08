@@ -26,9 +26,12 @@ int main() {
     initAll(); // Done at compile time :)
     initRandomKeys();
 
-    Test::standardizedPerft();
+    parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 
+
+
+//    Test::standardizedPerft();
 
   //  UCI();
 
@@ -36,6 +39,9 @@ int main() {
 //    logFile.close();
 
     // nice article: https://web.archive.org/web/20071030220825/http://www.brucemo.com/compchess/programming/pvs.htm
+    // nice transposition table: https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
+    // you can use transposition table for pruning the tree, try and do this in the late future when engine is already very strong
+    // maybe also do a dynamic allocated version
 
 #ifdef Perft_TESTS
     Test::standardizedPerft();

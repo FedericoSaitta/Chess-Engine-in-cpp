@@ -30,8 +30,9 @@ constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full d
 constexpr int reductionLimit { 3 };
 constexpr int nullMoveReduction { 2 };
 
-///// MOVES ARE SORTED IN THIS ORDER ////
+constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 
+///// MOVES ARE SORTED IN THIS ORDER ////
 
 /*
 
@@ -338,8 +339,6 @@ static int getMoveTime(const bool timeConstraint) {
 	// we want to use up about 75% of the increment
 	return timePerMove + increment * 0.75;
 }
-
-constexpr int windowWidth{ 50 };
 
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {

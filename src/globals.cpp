@@ -2,6 +2,9 @@
 // Created by Federico Saitta on 02/07/2024.
 //
 #include "globals.h"
+
+#include <variant>
+
 #include "macros.h"
 
 
@@ -125,6 +128,60 @@ int whiteClockTime{};
 int blackClockTime{};
 int whiteIncrementTime{};
 int blackIncrementTime{};
+
+
+void clearTranspositionTable() {
+    for (int index=0; index < HASH_SIZE; index++) {
+        transpositionTable[index].hashKey=0;
+        transpositionTable[index].depth=0;
+        transpositionTable[index].flag=0;
+        transpositionTable[index].score=0;
+    }
+}
+// value for when no hash is found
+#define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
+
+int probeHash(const int alpha, const int beta, const int depth)
+{
+    // creates a pointer to the hash entry
+    tt* hashEntry { &transpositionTable[hashKey % HASH_SIZE] };
+
+    // make sure we have the correct hashKey
+    if (hashEntry->hashKey == hashKey) {
+        if (hashEntry->depth >= depth) { // only look at same or higher depths evaluations
+
+            if (hashEntry->flag == HASH_FLAG_EXACT)
+                return hashEntry->score;
+
+
+            // do some reading on why we are returning alpha and beta
+            if ((hashEntry->flag == HASH_FLAG_ALPHA) && (hashEntry->score <= alpha))
+                return alpha;
+
+            if ((hashEntry->flag == HASH_FLAG_BETA) && (hashEntry->score >= beta))
+                return beta;
+        }
+        // RememberBestMove(); you can add this in the future
+    }
+    return NO_HASH_ENTRY;
+}
+
+
+tt transpositionTable[HASH_SIZE] {};
+
+void recordHash(const int score, const int flag, const int depth)
+
+{
+    tt* hashEntry = &transpositionTable[hashKey % HASH_SIZE];
+
+    hashEntry->hashKey = hashKey;
+    hashEntry->score = score;
+    hashEntry->flag = flag;
+    hashEntry->depth = depth;
+    //hashEntry->best = BestMove(); can add this later
+}
+
+
 
 // //////////////// //
 //**** uci.cpp ****//
