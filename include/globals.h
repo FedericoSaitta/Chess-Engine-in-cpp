@@ -95,7 +95,7 @@ typedef struct tagHASHE {
     int depth;
     int flag;
     int score;
-    //	int bestMove;  you can also put the best move in the transposition table
+    int bestMove;
 }   tt;
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
@@ -104,8 +104,8 @@ typedef struct tagHASHE {
 extern tt transpositionTable[HASH_SIZE];
 
 void clearTranspositionTable();
-int probeHash(int alpha, int beta, int depth);
-void recordHash(int score, int flag, int depth);
+int probeHash(int alpha, int beta, int* best_move, int depth);
+void recordHash(int score, int best_move, int flag, int depth);
 
 void initRandomKeys();
 U64 generateHashKey();

@@ -104,11 +104,17 @@ int scoreMove(const int move, const int ply) {
 	return historyMoves[getMovePiece(move)][getMoveTargetSQ(move)];
 }
 
-void sortMoves(MoveList& moveList, const int ply) {
-	int *moveScores = static_cast<int *>(malloc(moveList.count * 4)); // as int has size of 4 bytes
+void sortMoves(MoveList& moveList, const int ply, const int best_move) {
+	int *moveScores = static_cast<int*>(malloc(moveList.count * 4)); // as int has size of 4 bytes
 
 	// scoring the moves
 	for (int count=0; count < moveList.count; count++) {
+		// if we have a hash move available
+		if (best_move == moveList.moves[count])
+			// score move
+			moveScores[count] = 30000;
+
+		else
 		moveScores[count] = scoreMove(moveList.moves[count], ply);
 	}
 
@@ -157,7 +163,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     MoveList moveList;
     generateMoves(moveList);
-    sortMoves(moveList, ply);
+    sortMoves(moveList, ply, 0);
 
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
@@ -199,7 +205,9 @@ static int canReduceMove(const int move) {
 
 static int negamax(int alpha, const int beta, int depth) {
 
+	pvLength[ply] = ply;
 	int score{};
+	int bestMove {};
 	int hashFlag{ HASH_FLAG_ALPHA };
 
 	// to figure ot if the current node is a principal variation node
@@ -207,9 +215,8 @@ static int negamax(int alpha, const int beta, int depth) {
 
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
-	if (ply && (score = probeHash(alpha, beta, depth)) != NO_HASH_ENTRY && !pv_node) return score;
+	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pv_node) return score;
 
-	pvLength[ply] = ply;
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
@@ -248,7 +255,7 @@ static int negamax(int alpha, const int beta, int depth) {
         enablePVscoring(moveList);
     }
 
-    sortMoves(moveList, ply);
+    sortMoves(moveList, ply, bestMove);
 
 	int movesSearched{};
     for (int count=0; count < moveList.count; count++) {
@@ -303,6 +310,9 @@ static int negamax(int alpha, const int beta, int depth) {
         	hashFlag = HASH_FLAG_EXACT;
             alpha = score;
 
+        	// store best move (for TT)
+        	bestMove = moveList.moves[count];
+
             pvTable[ply][ply] = moveList.moves[count];
             // copy move from deeper plies to curernt ply
             for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
@@ -319,7 +329,7 @@ static int negamax(int alpha, const int beta, int depth) {
         			killerMoves[0][ply] = moveList.moves[count]; // store killer moves
         		}
 
-        		recordHash(beta, HASH_FLAG_BETA, depth);
+        		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         		return beta; // known as node that fails high
         	}
         }
@@ -333,7 +343,7 @@ static int negamax(int alpha, const int beta, int depth) {
         return 0; // we are in stalemate
     }
 
-	recordHash(alpha, hashFlag, depth);
+	recordHash(alpha, bestMove, hashFlag, depth);
     return alpha; // known as fail-low node
 }
 

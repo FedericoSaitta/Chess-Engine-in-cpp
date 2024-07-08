@@ -141,7 +141,7 @@ void clearTranspositionTable() {
 // value for when no hash is found
 
 
-int probeHash(const int alpha, const int beta, const int depth)
+int probeHash(const int alpha, const int beta, int* best_move, const int depth)
 {
     // creates a pointer to the hash entry
     tt* hashEntry { &transpositionTable[hashKey % HASH_SIZE] };
@@ -160,7 +160,8 @@ int probeHash(const int alpha, const int beta, const int depth)
             if ((hashEntry->flag == HASH_FLAG_BETA) && (hashEntry->score >= beta))
                 return beta;
         }
-        // RememberBestMove(); you can add this in the future
+        // store best move
+        *best_move = hashEntry->bestMove;
     }
     return NO_HASH_ENTRY;
 }
@@ -168,7 +169,7 @@ int probeHash(const int alpha, const int beta, const int depth)
 
 tt transpositionTable[HASH_SIZE] {};
 
-void recordHash(const int score, const int flag, const int depth)
+void recordHash(const int score, const int bestMove, const int flag, const int depth)
 {
     tt* hashEntry = &transpositionTable[hashKey % HASH_SIZE];
 
@@ -176,7 +177,7 @@ void recordHash(const int score, const int flag, const int depth)
     hashEntry->score = score;
     hashEntry->flag = flag;
     hashEntry->depth = depth;
-    //hashEntry->best = BestMove(); can add this later
+    hashEntry->bestMove = bestMove;
 }
 
 

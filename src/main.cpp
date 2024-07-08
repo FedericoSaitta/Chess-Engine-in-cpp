@@ -1,6 +1,5 @@
 #include "globals.h"
 #include <fstream>
-#include <__hash_table>
 
 #include "macros.h"
 #include "inline_functions.h"
@@ -11,7 +10,7 @@
 
 // #define Perft_TESTS
 // #define Move_TESTS
-#define Puzzle_TESTS
+// #define Puzzle_TESTS
 //#define Init_TESTS
 
 
@@ -28,7 +27,7 @@ int main() {
 
    // parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-   // UCI();
+    UCI();
 
 
     // need to press quit to properly save this file
