@@ -76,7 +76,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
     } else if (tokens[1] == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    } else { std::cerr << "Could not recognize input \n"; }
+    } else { logFile << "Could not recognize input \n"; }
 
     parseFEN(FEN);
 
@@ -87,13 +87,18 @@ static void handlePosition(const std::vector<std::string>& tokens) {
             const int move = parseMove(tokens[index]);
 
             if (move) { //so if the move is != 0
-                if (!makeMove(move, 0)) { std::cout << "Move is illegal \n"; }
+                repetitionIndex++;
+                repetitionTable[repetitionIndex] = hashKey;
+                if (!makeMove(move, 0)) { logFile << "Move is illegal \n";  repetitionIndex--; }
+
             } else { std::cout << tokens[index];
-                std::cout << "Move is not on the board \n";
+                logFile << "Move is not on the board \n";
             }
         }
     }
 }
+
+
 static void handleGo(const std::vector<std::string>& tokens) {
 
     if (tokens[1] == "perft") {
@@ -148,6 +153,7 @@ void UCI() {
 
         const std::string command = tokens[0];
 
+        logFile << line << '\n';
         if ( command == "uci") handleUci();
         else if ( command == "isready") handleIsReady();
         else if ( command == "position") handlePosition(tokens); // though this seems expensive because of al lthe checks, 80 move game in 235 microsec
@@ -165,6 +171,9 @@ void UCI() {
             blackIncrementTime = 0;
             // reset the hash Table
             clearTranspositionTable();
+
+            repetitionIndex = 0;
+            repetitionTable[150] = 0;
         }
 
     }

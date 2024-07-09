@@ -109,9 +109,13 @@ void clearTranspositionTable();
 int probeHash(int alpha, int beta, int* best_move, int depth);
 void recordHash(int score, int best_move, int flag, int depth);
 
+int checkHashOccupancy();
+
 void initRandomKeys();
 U64 generateHashKey();
 
+extern U64 repetitionTable[1'000];
+extern int repetitionIndex;
 
 // ///////////////// //
 // **** search.cpp ****//

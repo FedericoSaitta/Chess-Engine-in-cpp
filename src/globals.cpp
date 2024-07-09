@@ -131,6 +131,7 @@ int blackIncrementTime{};
 
 
 void clearTranspositionTable() {
+    hashFUll = 0;
     for (int index=0; index < HASH_SIZE; index++) {
         transpositionTable[index].hashKey=0;
         transpositionTable[index].depth=0;
@@ -191,8 +192,20 @@ void recordHash(int score, const int bestMove, const int flag, const int depth)
     hashFUll++;
 }
 
+int checkHashOccupancy() {
+    float count{};
+    for (const tt position: transpositionTable) {
+        if ( position.hashKey != 0) {
+            count++;
+        }
+    }
+    return static_cast<int>( 1'000 * ((count) / HASH_SIZE) );
+}
+
 int hashFUll{};
 
+U64 repetitionTable[1'000]{};
+int repetitionIndex{};
 // //////////////// //
 //**** uci.cpp ****//
 // //////////////// //

@@ -34,6 +34,12 @@ constexpr int nullMoveReduction { 2 };
 
 constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 
+static int stopSearch { 0 };
+static int timePerMove { 0 };
+
+auto startSearchTime = std::chrono::high_resolution_clock::now();
+std::chrono::duration<float> searchDuration{ 0 };
+
 ///// MOVES ARE SORTED IN THIS ORDER ////
 
 /*
@@ -75,8 +81,11 @@ static void resetStates() {
 	followPV = 0;
 	scorePV = 0;
 	ply = 0;
+
+	stopSearch = 0;
 }
 
+// currently this is very wrong
 static int probeHashOccupation() {
 	// returning an int from 0 to 1'000
 	return static_cast<int>( 1'000 * (static_cast<float>(hashFUll) / HASH_SIZE) );
@@ -166,8 +175,23 @@ static void enablePVscoring(const MoveList& moveList) {
     }
 }
 
+
+static void isTimeUp() {
+	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
+	if ( (searchDuration.count() * 1'000) > timePerMove)
+		stopSearch = 1;
+}
+
+static int isRepetition() {
+	for (int index=0; index < repetitionIndex; index++) { if (repetitionTable[index] == hashKey) return 1; } // repetition found
+	return 0; // if no repetition found
+}
+
+
 static int quiescenceSearch(int alpha, const int beta) {
 	nodes++;
+	if ((nodes & 2047) == 0)
+		isTimeUp();
 
     if ( ply > (maxPly - 1) ) return evaluate();
 
@@ -185,16 +209,23 @@ static int quiescenceSearch(int alpha, const int beta) {
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
         ply++;
+    	repetitionIndex++;
+    	repetitionTable[repetitionIndex] = hashKey;
 
         // makeMove returns 1 for legal moves, we only want to look at captures
         if( !makeMove(moveList.moves[count], 1) ) { // meaning its illegal or its not a capture
             ply--;
+        	repetitionIndex--;
             continue;
         }
 
         const int score = -quiescenceSearch(-beta, -alpha);
         ply--;
+    	repetitionIndex--;
         RESTORE_BOARD()
+
+    	if (stopSearch)
+    		return 0;
 
         // found a better move
         if (score > alpha) { // Known as PV node (principal variatio)
@@ -220,6 +251,7 @@ static int canReduceMove(const int move) {
 	return !opponentInCheck;
 }
 
+
 static int negamax(int alpha, const int beta, int depth) {
 
 	pvLength[ply] = ply;
@@ -227,10 +259,17 @@ static int negamax(int alpha, const int beta, int depth) {
 	int bestMove {};
 	int hashFlag{ HASH_FLAG_ALPHA };
 
+
+	if (ply && isRepetition()) return 0; // we return draw score if we detect a draw
+
 	// to figure ot if the current node is a principal variation node
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
 	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !(beta - alpha > 1)) return score;
+
+	if ((nodes & 2047) == 0)
+		isTimeUp();
+
 
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
 
@@ -256,10 +295,16 @@ static int negamax(int alpha, const int beta, int depth) {
 
 		// we change plies so white and black killers remain in sync for negamax search
 		ply++;
+		repetitionIndex++;
+		repetitionTable[repetitionIndex] = hashKey;
 		const int nullMoveScore = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
 		ply--;
+		repetitionIndex--;
 
 		RESTORE_BOARD() // un-making the null move
+
+		if (stopSearch)
+			return 0;
 
 		if (nullMoveScore >= beta) return beta;
 	}
@@ -280,10 +325,13 @@ static int negamax(int alpha, const int beta, int depth) {
 
         COPY_BOARD()
         ply++;
+    	repetitionIndex++;
+    	repetitionTable[repetitionIndex] = hashKey;
 
         // makeMove returns 1 for legal moves
         if( !makeMove(moveList.moves[count], 0) ) { // meaning its illegal
             ply--;
+        	repetitionIndex--;
             continue;
         }
 
@@ -315,7 +363,11 @@ static int negamax(int alpha, const int beta, int depth) {
     		}
     	}
         ply--;
+    	repetitionIndex--;
         RESTORE_BOARD()
+
+    	if (stopSearch)
+    		return 0;
 
     	movesSearched++;
 
@@ -373,7 +425,7 @@ static int getMoveTime(const bool timeConstraint) {
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// adding a delay of 50 milliseconds
-	const int timeAlloted = (side == White) ? whiteClockTime - 50 : blackClockTime - 50;
+	const int timeAlloted = (side == White) ? whiteClockTime - 100 : blackClockTime - 100;
 	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
 
 	int timePerMove{ timeAlloted / 30 + increment };
@@ -383,28 +435,32 @@ static int getMoveTime(const bool timeConstraint) {
 }
 
 
+
 void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	resetStates();
 
-	const int timePerMove { getMoveTime(timeConstraint) };
-	//	logFile << "Time per move: " << timePerMove << '\n';
+	timePerMove = getMoveTime(timeConstraint);
+	//logFile << "Time per move: " << timePerMove << '\n';
+	if (timePerMove < 0) logFile << "NEGATIVE TIME********\n";
 
 	int alpha { -MAX_VALUE };
 	int beta { MAX_VALUE };
 
-	const auto startSearchTime = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> searchDuration{ 0 };
+	startSearchTime = std::chrono::high_resolution_clock::now();
 
+	//logFile << "Starting Iterative deepening\n";
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
+
+		if (stopSearch)
+			break;
 
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
         const int score { negamax(alpha, beta, currentDepth) };
 
 		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
-		searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
 
 		if ( (searchDuration.count() * 1'000) > timePerMove) break;
 
@@ -437,6 +493,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
     }
 
+//	logFile << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
     // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
 }

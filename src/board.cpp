@@ -22,6 +22,9 @@ void parseFEN(const std::string& fenString) {
     castle = 0;
     enPassantSQ = 0;
 
+    repetitionIndex = 0;
+    memset(repetitionTable, 0, sizeof(repetitionTable));
+
     // FEN string like: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     // is the accepted format, missing whitespaces will result in errors
     std::istringstream iss(fenString);
