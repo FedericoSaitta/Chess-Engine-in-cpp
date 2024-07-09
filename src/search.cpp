@@ -14,7 +14,8 @@
 #include "misc.h"
 
 
-static int ply{};
+
+int ply{};
 constexpr int maxPly{64};
 static std::uint32_t nodes{};
 
@@ -64,6 +65,22 @@ static int mvv_lva[12][12] = {
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
 };
 
+static void resetStates() {
+	memset(killerMoves, 0, sizeof(killerMoves));
+	memset(historyMoves, 0, sizeof(historyMoves));
+	memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
+	memset(pvTable, 0, sizeof(pvTable));
+
+	nodes = 0;
+	followPV = 0;
+	scorePV = 0;
+	ply = 0;
+}
+
+static int probeHashOccupation() {
+	// returning an int from 0 to 1'000
+	return static_cast<int>( 1'000 * (static_cast<float>(hashFUll) / HASH_SIZE) );
+}
 
 // we will add different scorings for PV etc
 int scoreMove(const int move, const int ply) {
@@ -211,11 +228,9 @@ static int negamax(int alpha, const int beta, int depth) {
 	int hashFlag{ HASH_FLAG_ALPHA };
 
 	// to figure ot if the current node is a principal variation node
-	const int pv_node = beta - alpha > 1;
-
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
-	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pv_node) return score;
+	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !(beta - alpha > 1)) return score;
 
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
 
@@ -229,6 +244,7 @@ static int negamax(int alpha, const int beta, int depth) {
 
 	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
+	// position fen 8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1, in this position if we disable null move pruning it finds the correct sequence
 	if (depth >= 3 && !inCheck && ply) {
 		COPY_BOARD()
 
@@ -247,6 +263,8 @@ static int negamax(int alpha, const int beta, int depth) {
 
 		if (nullMoveScore >= beta) return beta;
 	}
+	// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
+
 
     MoveList moveList;
     generateMoves(moveList);
@@ -338,7 +356,9 @@ static int negamax(int alpha, const int beta, int depth) {
 
     if (!legalMoves) { // we dont have any legal moves to make in this position
         if (inCheck) {
-            return -49'000 + ply; // we want to return the mating score, (slightly above negative infinity, +ply scores faster mates as better moves)
+        	// we need to adjust this before sending it to the transposition table to make it independent of the path
+        	// from the root node to the mating node
+            return -MATE_VALUE+ ply; // we want to return the mating score, (slightly above negative MAX_VALUE, +ply scores faster mates as better moves)
         }
         return 0; // we are in stalemate
     }
@@ -352,47 +372,32 @@ static int getMoveTime(const bool timeConstraint) {
 
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
-	const int timeAlloted = (side == White) ? whiteClockTime : blackClockTime;
+	// adding a delay of 50 milliseconds
+	const int timeAlloted = (side == White) ? whiteClockTime - 50 : blackClockTime - 50;
 	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
-	const int idealTimePerMove = gameLengthTime / 35; // lets say each game is 35 moves long
 
-	int timePerMove{};
+	int timePerMove{ timeAlloted / 30 + increment };
+	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
 
-	// mostly done with the idea of blitz and bullet in mind
-	if (timeAlloted > (gameLengthTime * 0.75)) timePerMove = idealTimePerMove;
-	else if (timeAlloted > (gameLengthTime * 0.50)) timePerMove = idealTimePerMove / 2;
-	else if (timeAlloted > (gameLengthTime * 0.25)) timePerMove = idealTimePerMove / 3;
-	else if (timeAlloted > (gameLengthTime * 0.05)) timePerMove = idealTimePerMove / 4;
-	else timePerMove = timeAlloted / 10; // switch to using the time alloted so we dont flag
-
-	// we want to use up about 75% of the increment
-	return timePerMove + increment * 0.75;
+	return timePerMove;
 }
 
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {
-	memset(killerMoves, 0, sizeof(killerMoves));
-	memset(historyMoves, 0, sizeof(historyMoves));
-	memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
-	memset(pvTable, 0, sizeof(pvTable));
 
-	nodes = 0;
-	followPV = 0;
-	scorePV = 0;
-	ply = 0;
+	resetStates();
 
 	const int timePerMove { getMoveTime(timeConstraint) };
 	//	logFile << "Time per move: " << timePerMove << '\n';
 
-	int alpha { -50'000 };
-	int beta { 50'000 };
+	int alpha { -MAX_VALUE };
+	int beta { MAX_VALUE };
 
 	const auto startSearchTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<float> searchDuration{ 0 };
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
-
 
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
@@ -404,24 +409,35 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		if ( (searchDuration.count() * 1'000) > timePerMove) break;
 
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
-	        alpha = -50'000;
-        	beta = 50'000;
+	        alpha = -MAX_VALUE;
+        	beta = MAX_VALUE;
         	continue; // we redo the search at the same depth
         }
 		// otherwise we set up the window for the next iteration
 		alpha = score - windowWidth;
 		beta = score + windowWidth;
 
-
 		// extracting the PV line and printing out in the terminal and logging file
         std::string pvString{};
         for (int count=0;  count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
-        std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
-    //    logFile << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count()) << " pv " << pvString << '\n';
+		// check if we need to send mating scores
+		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
+			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+		} else if( score > MATE_SCORE && score < MATE_VALUE) {
+			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+		} else {
+			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+		}
+
 		currentDepth++; // we can proceed to the next iteration
+
     }
 
     // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
 }
+

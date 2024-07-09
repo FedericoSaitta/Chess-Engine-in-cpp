@@ -144,20 +144,25 @@ void clearTranspositionTable() {
 int probeHash(const int alpha, const int beta, int* best_move, const int depth)
 {
     // creates a pointer to the hash entry
-    tt* hashEntry { &transpositionTable[hashKey % HASH_SIZE] };
+    const tt* hashEntry { &transpositionTable[hashKey % HASH_SIZE] };
 
     // make sure we have the correct hashKey
     if (hashEntry->hashKey == hashKey) {
         if (hashEntry->depth >= depth) { // only look at same or higher depths evaluations
 
+            // extracted stores score fmor transposition table
+            int score = hashEntry->score;
+            if (score < -MATE_SCORE) score += ply;
+            if (score > MATE_SCORE) score -= ply;
+
             if (hashEntry->flag == HASH_FLAG_EXACT)
-                return hashEntry->score;
+                return score;
 
             // do some reading on why we are returning alpha and beta
-            if ((hashEntry->flag == HASH_FLAG_ALPHA) && (hashEntry->score <= alpha))
+            if ((hashEntry->flag == HASH_FLAG_ALPHA) && (score <= alpha))
                 return alpha;
 
-            if ((hashEntry->flag == HASH_FLAG_BETA) && (hashEntry->score >= beta))
+            if ((hashEntry->flag == HASH_FLAG_BETA) && (score >= beta))
                 return beta;
         }
         // store best move
@@ -169,18 +174,24 @@ int probeHash(const int alpha, const int beta, int* best_move, const int depth)
 
 tt transpositionTable[HASH_SIZE] {};
 
-void recordHash(const int score, const int bestMove, const int flag, const int depth)
+void recordHash(int score, const int bestMove, const int flag, const int depth)
 {
     tt* hashEntry = &transpositionTable[hashKey % HASH_SIZE];
+
+    // independent from distance of path taken from root node to current mating position
+    if (score < -MATE_SCORE) score += ply;
+    if (score > MATE_SCORE) score -= ply;
 
     hashEntry->hashKey = hashKey;
     hashEntry->score = score;
     hashEntry->flag = flag;
     hashEntry->depth = depth;
     hashEntry->bestMove = bestMove;
+
+    hashFUll++;
 }
 
-
+int hashFUll{};
 
 // //////////////// //
 //**** uci.cpp ****//

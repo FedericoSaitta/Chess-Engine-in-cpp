@@ -82,7 +82,7 @@ extern U64 sideKey;
 
 extern U64 hashKey; // of the position
 
-#define HASH_SIZE 0x4000000 // 64 Mega Byte transposition table, statically allocated
+#define HASH_SIZE 2'666'666 // 64 Mega Byte transposition table, statically allocated
 
 // https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
 #define    HASH_FLAG_EXACT   0 // evaluation from evaluation function
@@ -99,7 +99,9 @@ typedef struct tagHASHE {
 }   tt;
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
-
+#define MAX_VALUE 50'000
+#define MATE_VALUE 49'000
+#define MATE_SCORE 48'000 // this is more like a boundary to the scores
 
 extern tt transpositionTable[HASH_SIZE];
 
@@ -119,6 +121,7 @@ void sortMoves(MoveList& moveList, int ply);
 
 void iterativeDeepening(int depth, bool timeConstraint=false);
 
+extern int ply;
 // ///////////////// //
 // **** uci.cpp ****//
 // ///////////////// //
@@ -132,5 +135,5 @@ extern int blackClockTime;
 extern int whiteIncrementTime;
 extern int blackIncrementTime;
 
-
+extern int hashFUll;
 #endif //GLOBALS_H

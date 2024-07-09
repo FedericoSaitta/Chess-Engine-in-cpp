@@ -1,17 +1,13 @@
 #include "globals.h"
 #include <fstream>
 
-#include "macros.h"
-#include "inline_functions.h"
-#include "misc.h"
-
 #include "evaluation.h"
 #include "tests.h"
 
 // #define Perft_TESTS
 // #define Move_TESTS
 // #define Puzzle_TESTS
-//#define Init_TESTS
+// #define Init_TESTS
 
 
 int main() {
@@ -23,9 +19,8 @@ int main() {
   //  logFile.open(logFilePath, std::ios::app);
 
     initAll(); // Done at compile time :)
+    clearTranspositionTable();
 
-
-   // parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     UCI();
 
