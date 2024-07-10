@@ -268,6 +268,11 @@ static int quiescenceSearch(int alpha, const int beta) {
     return alpha; // node that fails low
 }
 
+static inline U64 nonPawnMat() {
+	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
+}
+
+
 static int negamax(int alpha, const int beta, int depth) {
 
 	pvLength[ply] = ply;
@@ -300,7 +305,7 @@ static int negamax(int alpha, const int beta, int depth) {
 	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 	// position fen 8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1, in this position if we disable null move pruning it finds the correct sequence
-	if (depth >= 3 && !inCheck && ply) {
+	if (depth >= 3 && !inCheck && ply && nonPawnMat() ) { // we do not attempt null move pruning in case our side only has pawns on the board
 		COPY_BOARD()
 
 		hashKey ^= sideKey;
