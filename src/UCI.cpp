@@ -6,13 +6,24 @@
 #include <vector>
 #include <sstream>
 
-#include "globals.h"
+#include "uci.h"
+
+#include "update.h"
+#include "hashtable.h"
+#include "search.h"
+#include "board.h"
 #include "macros.h"
-#include "inline_functions.h"
 #include "misc.h"
 #include "tests.h"
 
 
+
+std::ofstream logFile{};
+int gameLengthTime{};
+int whiteClockTime{};
+int blackClockTime{};
+int whiteIncrementTime{};
+int blackIncrementTime{};
 static bool isNewGame{true};
 
 // Helper function to split a string by space

@@ -6,9 +6,9 @@
 #include <iostream>
 #include <random>
 #include <cmath>
-#include <chrono>
 
-#include "globals.h"
+#include "search.h"
+#include "board.h"
 #include "macros.h"
 #include "inline_functions.h"
 #include "misc.h"
@@ -34,7 +34,7 @@ namespace Test{
             int enPassant{ (num > 0.5) ? 1 : 0 };
             int castling{ (num > 0.5) ? 1 : 0 };
 
-            int move = encodeMove(start, target, piece, promPiece, capture, doublePush, enPassant, castling);
+            int move = ENCODE_MOVE(start, target, piece, promPiece, capture, doublePush, enPassant, castling);
 
             if ( getMoveStartSQ(move) != start ) {
                 std::cerr << "wrong startSQ" << '\n';
@@ -71,7 +71,6 @@ namespace Test{
         }
 
         std::cout << "moveEncodingAndDecoding Test successful" << '\n';
-
     }
 
 
@@ -81,13 +80,12 @@ namespace Test{
         MoveList moveList{};
         generateMoves(moveList);
 
-
         for (int count=0; count < moveList.count; count++) {
             printMove(moveList.moves[count]);
             std::cout << " score: " << scoreMove(moveList.moves[count], 0) << '\n';
         }
 
-        sortMoves(moveList, 0);
+        sortMoves(moveList, 0, 0);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
             printMove(moveList.moves[count]);

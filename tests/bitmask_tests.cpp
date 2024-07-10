@@ -7,7 +7,7 @@
 #include <bit>
 #include <iostream>
 
-#include "globals.h"
+#include "init.h"
 #include "misc.h"
 #include "macros.h"
 

@@ -2,7 +2,10 @@
 // Created by Federico Saitta on 28/06/2024.
 // deals with uupdating the board after a move is made, also has undo move function
 
-#include "globals.h"
+#include "update.h"
+
+#include "board.h"
+#include "hashtable.h"
 #include "macros.h"
 #include "inline_functions.h"
 
@@ -39,8 +42,8 @@ int makeMove(const int move, const int onlyCaptures){
         const int castling { getMoveCastling(move) };
 
         // moving the piece
-        setBitFalse(bitboards[piece], startSQ);
-        setBit(bitboards[piece], targetSQ);
+        SET_BIT_FALSE(bitboards[piece], startSQ);
+        SET_BIT(bitboards[piece], targetSQ);
 
         // hashing the piece
         hashKey ^= randomPieceKeys[piece][startSQ];
@@ -53,9 +56,9 @@ int makeMove(const int move, const int onlyCaptures){
             else { startPiece = Pawn; endPiece = King; }
 
             for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-                if ( getBit(bitboards[bbPiece], targetSQ) ) {
+                if ( GET_BIT(bitboards[bbPiece], targetSQ) ) {
                     // remove piece from bitboard
-                    setBitFalse(bitboards[bbPiece], targetSQ);
+                    SET_BIT_FALSE(bitboards[bbPiece], targetSQ);
 
                     // remove piece from hashkey
                     hashKey ^= randomPieceKeys[bbPiece][targetSQ];
@@ -66,8 +69,8 @@ int makeMove(const int move, const int onlyCaptures){
         }
 
         if ( promPiece ) {
-            setBitFalse( bitboards[piece], targetSQ);
-            setBit( bitboards[promPiece], targetSQ);
+            SET_BIT_FALSE( bitboards[piece], targetSQ);
+            SET_BIT( bitboards[promPiece], targetSQ);
 
             // hash the removal of the pawn and add the new piece
             hashKey ^= randomPieceKeys[piece][targetSQ]; // removal of the pawn
@@ -76,13 +79,13 @@ int makeMove(const int move, const int onlyCaptures){
 
         if ( enPassant ) {
             if (side == White) {
-                setBitFalse( bitboards[Pawn + 6], targetSQ - 8 );
+                SET_BIT_FALSE( bitboards[Pawn + 6], targetSQ - 8 );
 
                 // hash the removal of the opponent's pawn
                 hashKey ^= randomPieceKeys[Pawn + 6][targetSQ - 8];
 
             } else {
-                setBitFalse( bitboards[Pawn], targetSQ + 8 );
+                SET_BIT_FALSE( bitboards[Pawn], targetSQ + 8 );
                 hashKey ^= randomPieceKeys[Pawn][targetSQ + 8];
             }
         }
@@ -108,8 +111,8 @@ int makeMove(const int move, const int onlyCaptures){
         if ( castling ) {
             switch(targetSQ) {
                 case (G1):
-                    setBitFalse(bitboards[Rook], H1);
-                    setBit(bitboards[Rook], F1);
+                    SET_BIT_FALSE(bitboards[Rook], H1);
+                    SET_BIT(bitboards[Rook], F1);
 
                     // hash rook:
                     hashKey ^= randomPieceKeys[Rook][H1];
@@ -117,23 +120,23 @@ int makeMove(const int move, const int onlyCaptures){
                     break;
 
                 case (C1):
-                    setBitFalse(bitboards[Rook], A1);
-                    setBit(bitboards[Rook], D1);
+                    SET_BIT_FALSE(bitboards[Rook], A1);
+                    SET_BIT(bitboards[Rook], D1);
                     // hash rook:
                     hashKey ^= randomPieceKeys[Rook][A1];
                     hashKey ^= randomPieceKeys[Rook][D1];
                     break;
 
                 case (G8):
-                    setBitFalse(bitboards[Rook + 6], H8);
-                    setBit(bitboards[Rook + 6], F8);
+                    SET_BIT_FALSE(bitboards[Rook + 6], H8);
+                    SET_BIT(bitboards[Rook + 6], F8);
                     // hash rook:
                     hashKey ^= randomPieceKeys[Rook + 6][H8];
                     hashKey ^= randomPieceKeys[Rook + 6][F8];
                     break;
                 case (C8):
-                    setBitFalse(bitboards[Rook + 6], A8);
-                    setBit(bitboards[Rook + 6], D8);
+                    SET_BIT_FALSE(bitboards[Rook + 6], A8);
+                    SET_BIT(bitboards[Rook + 6], D8);
                     // hash rook:
                     hashKey ^= randomPieceKeys[Rook + 6][A8];
                     hashKey ^= randomPieceKeys[Rook + 6][D8];

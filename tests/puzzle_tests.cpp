@@ -8,7 +8,9 @@
 #include <cmath>
 #include <chrono>
 
-#include "globals.h"
+#include "hashtable.h"
+#include "board.h"
+#include "search.h"
 #include "macros.h"
 #include "inline_functions.h"
 

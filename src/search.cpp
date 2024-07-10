@@ -7,13 +7,22 @@
 #include <variant>
 #include <vector>
 
-#include "globals.h"
+#include "search.h"
+
+#include "update.h"
+#include "hashtable.h"
+#include "uci.h"
 #include "macros.h"
 #include "inline_functions.h"
 #include "evaluation.h"
 #include "misc.h"
 
 
+
+int hashFull{};
+
+U64 repetitionTable[1'000]{};
+int repetitionIndex{};
 
 int ply{};
 constexpr int maxPly{64};
@@ -88,7 +97,7 @@ static void resetStates() {
 // currently this is very wrong
 static int probeHashOccupation() {
 	// returning an int from 0 to 1'000
-	return static_cast<int>( 1'000 * (static_cast<float>(hashFUll) / HASH_SIZE) );
+	return static_cast<int>( 1'000 * (static_cast<float>(hashFull) / HASH_SIZE) );
 }
 
 // we will add different scorings for PV etc
@@ -114,7 +123,7 @@ int scoreMove(const int move, const int ply) {
 		else { startPiece = Pawn; endPiece = King; }
 
 		for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-			if ( getBit(bitboards[bbPiece], getMoveTargetSQ(move)) ) {
+			if ( GET_BIT(bitboards[bbPiece], getMoveTargetSQ(move)) ) {
 				targetPiece = bbPiece;
 				break;
 			}
@@ -175,6 +184,19 @@ static void enablePVscoring(const MoveList& moveList) {
     }
 }
 
+static int getMoveTime(const bool timeConstraint) {
+
+	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
+
+	// adding a delay of 50 milliseconds
+	const int timeAlloted = (side == White) ? whiteClockTime - 100 : blackClockTime - 100;
+	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
+
+	int timePerMove{ timeAlloted / 30 + increment };
+	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
+
+	return timePerMove;
+}
 
 static void isTimeUp() {
 	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
@@ -185,6 +207,18 @@ static void isTimeUp() {
 static int isRepetition() {
 	for (int index=0; index < repetitionIndex; index++) { if (repetitionTable[index] == hashKey) return 1; } // repetition found
 	return 0; // if no repetition found
+}
+
+static int canReduceMove(const int move) {
+	// This does cause some slow down clearly, but improves search stability
+	// should definetely be tested in many games
+	COPY_BOARD()
+	makeMove(move, 0);
+
+	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , !side) };
+
+	RESTORE_BOARD()
+	return !opponentInCheck;
 }
 
 
@@ -238,19 +272,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     return alpha; // node that fails low
 }
-
-static int canReduceMove(const int move) {
-	// This does cause some slow down clearly, but improves search stability
-	// should definetely be tested in many games
-	COPY_BOARD()
-	makeMove(move, 0);
-
-	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , !side) };
-
-	RESTORE_BOARD()
-	return !opponentInCheck;
-}
-
 
 static int negamax(int alpha, const int beta, int depth) {
 
@@ -419,23 +440,6 @@ static int negamax(int alpha, const int beta, int depth) {
     return alpha; // known as fail-low node
 }
 
-// this could really do with some more sosphisticated and robust implementation from a better engine
-static int getMoveTime(const bool timeConstraint) {
-
-	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
-
-	// adding a delay of 50 milliseconds
-	const int timeAlloted = (side == White) ? whiteClockTime - 100 : blackClockTime - 100;
-	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
-
-	int timePerMove{ timeAlloted / 30 + increment };
-	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
-
-	return timePerMove;
-}
-
-
-
 void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	resetStates();
@@ -480,13 +484,13 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		// check if we need to send mating scores
 		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
 			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
 			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else {
 			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashfull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		}
 
 		currentDepth++; // we can proceed to the next iteration

@@ -8,7 +8,6 @@
 #include <bit>
 #include <iostream>
 
-#include "globals.h"
 #include "misc.h"
 #include "macros.h"
 

@@ -5,18 +5,22 @@
 #ifndef MISC_H
 #define MISC_H
 
+#include <iostream>
+
 #include "macros.h"
-#include "globals.h"
+#include "movegen.h"
 
+U64 mirrorHorizontal (U64 bb);
 
-BITBOARD mirrorHorizontal (BITBOARD bb);
-
-void printBitBoard(BITBOARD bb, bool mirrored=false);
+void printBitBoard(U64 bb, bool mirrored=false);
 void printBoardFancy();
 
 void printAttackedSquares(int side);
 void printMove(int move);
 void printMovesList(const MoveList& moveList);
+
+extern const char promotedPieces[];
+extern const char* unicodePieces[];
 
 std::string algebraicNotation(int move);
 

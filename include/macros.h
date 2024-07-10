@@ -29,7 +29,6 @@
 #include <cstdint>
 
 #define U64 std::uint64_t
-#define BITBOARD std::uint64_t
 
 #define A1  0
 #define B1  1
@@ -122,11 +121,11 @@
 #define Black 1
 
 
-#define setBit(board, square) ((board) |= (1ULL << (square)))
-#define setBitFalse(board, square) ((board) &= ~(1ULL << (square)))
-#define getBit(board, square) (((board) >> (square)) & 1ULL)
+#define SET_BIT(board, square) ((board) |= (1ULL << (square)))
+#define SET_BIT_FALSE(board, square) ((board) &= ~(1ULL << (square)))
+#define GET_BIT(board, square) (((board) >> (square)) & 1ULL)
 
-#define encodeMove(start, target, piece, promoted, capture, doublePush, enPassant, castling) \
+#define ENCODE_MOVE(start, target, piece, promoted, capture, doublePush, enPassant, castling) \
 ((start) | ((target) << 6) | ((piece) << 12) | ((promoted) << 16) | ((capture) << 20) | \
 ((doublePush) << 21) | ((enPassant) << 22) | ((castling) << 23))
 
@@ -153,7 +152,5 @@ memcpy(bitboards, bitboardCopy, 96);                                \
 memcpy(occupancies, occupanciesCopy, 24);                            \
 hashKey = hashKeyCopy;                                                \
 side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
-
-
 
 #endif //CONSTANTS_H

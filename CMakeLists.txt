@@ -20,21 +20,26 @@ add_executable(ChessEngine src/main.cpp
         src/main.cpp
         src/movegen.cpp
         src/board.cpp
-        include/globals.h
         src/update.cpp
         src/init.cpp
         src/misc.cpp
         include/misc.h
         tests/bitmask_tests.cpp
         tests/tests.h
+        src/search.cpp
         include/macros.h
         include/inline_functions.h
-        src/globals.cpp
         tests/move_tests.cpp
         tests/perft_tests.cpp
         src/UCI.cpp
         include/evaluation.h
-        src/search.cpp
         tests/puzzle_tests.cpp
         src/hashtable.cpp
+        include/search.h
+        include/uci.h
+        include/hashtable.h
+        include/init.h
+        include/board.h
+        include/update.h
+        include/movegen.h
 )

@@ -4,18 +4,20 @@
 #define INLINEFUNCTIONS_H
 
 #include "macros.h"
-#include "globals.h"
+#include "init.h"
+#include "board.h"
+#include "movegen.h"
 
 // these functions should be tested as passsing by reference might slow them down? Not sure if they are used a lot
 // outside of magic number generation which is pre-processor anyway
-inline int countBits(BITBOARD board) {
+inline int countBits(U64 board) {
     // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
     int count{};
     while (board) { board &= (board - 1); count++; }
     return count;
 }
 
-inline int getLeastSigBitIndex(const BITBOARD board) {
+inline int getLeastSigBitIndex(const U64 board) {
     // this returned the index of the right most bit in a Bitboard
     if (board) {
         return countBits((board & -board) - 1);

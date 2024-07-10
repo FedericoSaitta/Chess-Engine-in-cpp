@@ -8,8 +8,10 @@
 #include <cmath>
 #include <chrono>
 
-#include "globals.h"
+#include "update.h"
 #include "macros.h"
+#include "hashtable.h"
+#include "board.h"
 #include "inline_functions.h"
 
 static const std::string testFEN[] {

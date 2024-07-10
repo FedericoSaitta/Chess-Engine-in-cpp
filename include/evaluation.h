@@ -6,8 +6,7 @@
 #define EVALUATION_H
 
 #include <iostream>
-
-#include "globals.h"
+#include "board.h"
 #include "macros.h"
 #include "inline_functions.h"
 #include "misc.h"
@@ -118,7 +117,7 @@ inline int evaluate() {
                 default: break;
             }
 
-            setBitFalse(bitboardCopy, square);
+            SET_BIT_FALSE(bitboardCopy, square);
         }
 
     }

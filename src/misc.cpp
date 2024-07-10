@@ -3,8 +3,8 @@
 //
 
 #include "misc.h"
-
-#include "globals.h"
+#include "board.h"
+#include "hashtable.h"
 #include "macros.h"
 #include "inline_functions.h"
 
@@ -14,8 +14,15 @@
 // these could go under tests but I will put more rigorous testing functions there.
 
 
+const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Knight] = 'n',
+                            [Queen + 6] = 'q', [Rook + 6] = 'r', [Bishop + 6] = 'b', [Knight + 6] = 'n',
+                            [0] =  ' ' }; // these are always lowercase for both colors
+
+const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
+                              "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
+
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
-BITBOARD mirrorHorizontal (BITBOARD bb) {
+U64 mirrorHorizontal (U64 bb) {
     constexpr U64 k1 = 0x5555555555555555;
     constexpr U64 k2 = 0x3333333333333333;
     constexpr U64 k4 = 0x0f0f0f0f0f0f0f0f;
@@ -26,7 +33,7 @@ BITBOARD mirrorHorizontal (BITBOARD bb) {
     return bb;
 }
 
-void printBitBoard(const BITBOARD bb, const bool mirrored) {
+void printBitBoard(const U64 bb, const bool mirrored) {
     std::cout << '\n';
     for (int square = 63; square >= 0; --square) {
         if ((square + 1) % 8 == 0){ std::cout << (1 + square / 8) << "| "; }
@@ -49,7 +56,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
     // we first have to mirror all our bitboards
 
     //before you were mirroring in place, very problematic!!!!
-    BITBOARD mirrorredBB[12]{};
+    U64 mirrorredBB[12]{};
     for (int piece=0; piece < 12; piece++) {
         if (bitboards[piece]) {
             mirrorredBB[piece] = mirrorHorizontal(bitboards[piece]);
@@ -63,7 +70,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
 
         for (int bbPiece=0; bbPiece < 12; bbPiece++) {
 
-            if ( getBit(mirrorredBB[bbPiece], square) ) {
+            if ( GET_BIT(mirrorredBB[bbPiece], square) ) {
                 piece = bbPiece;
                 break;
             }

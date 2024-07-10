@@ -1,8 +1,10 @@
 //
 // Created by Federico Saitta on 28/06/2024.
 //
+#include "movegen.h"
 
-#include "globals.h"
+#include "board.h"
+#include "init.h"
 #include "macros.h"
 #include "inline_functions.h"
 
@@ -39,22 +41,22 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = startSquare + 8;
 
                     // make sure the target is smaller or equal to start of the board
-                    if ( (targetSquare <= H8) && !getBit(occupancies[2], targetSquare) ) {
+                    if ( (targetSquare <= H8) && !GET_BIT(occupancies[2], targetSquare) ) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight, 0, 0, 0, 0) );
 
 
                         } else {
                             // one square ahead
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
                             // two squares ahead
-                            if ( (startSquare >= A2) && (startSquare <= H2) && !getBit(occupancies[2], targetSquare + 8)) {
-                                addMove(moveList, encodeMove(startSquare, targetSquare + 8, piece, 0, 0, 1, 0, 0) );
+                            if ( (startSquare >= A2) && (startSquare <= H2) && !GET_BIT(occupancies[2], targetSquare + 8)) {
+                                addMove(moveList, ENCODE_MOVE(startSquare, targetSquare + 8, piece, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -67,16 +69,16 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight, 1, 0, 0, 0) );
 
                         } else {
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
 
-                        setBitFalse(attacks, targetSquare);
+                        SET_BIT_FALSE(attacks, targetSquare);
                     }
 
                     // generate enPassantCaptures
@@ -85,10 +87,10 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
-                    setBitFalse(bitboard, startSquare);
+                    SET_BIT_FALSE(bitboard, startSquare);
                 }
             } // this works
 
@@ -96,9 +98,9 @@ void generateMoves(MoveList& moveList) {
                 // king side castling
                 if (castle & WK) {
                     // checking that the space is empty
-                    if( !getBit(occupancies[2], F1) && !getBit(occupancies[2], G1)) {
+                    if( !GET_BIT(occupancies[2], F1) && !GET_BIT(occupancies[2], G1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(F1, Black) ) {
-                            addMove(moveList, encodeMove(E1, G1, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, ENCODE_MOVE(E1, G1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -106,9 +108,9 @@ void generateMoves(MoveList& moveList) {
                 //queen side castling
                 if (castle & WQ) {
                     // checking that the space is empty
-                    if( !getBit(occupancies[2], B1) && !getBit(occupancies[2], C1) && !getBit(occupancies[2], D1)) {
+                    if( !GET_BIT(occupancies[2], B1) && !GET_BIT(occupancies[2], C1) && !GET_BIT(occupancies[2], D1)) {
                         if ( !isSqAttacked(E1, Black) && !isSqAttacked(D1, Black) ) {
-                            addMove(moveList, encodeMove(E1, C1, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, ENCODE_MOVE(E1, C1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -124,22 +126,22 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = startSquare - 8;
 
                     // make sure the target is larger or equal to start of the board
-                    if ( (targetSquare >= A1) && !getBit(occupancies[2], targetSquare) ) {
+                    if ( (targetSquare >= A1) && !GET_BIT(occupancies[2], targetSquare) ) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop + 6, 0, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight + 6, 0, 0, 0, 0) );
 
                         } else {
                             // one square ahead
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                             // two squares ahead
-                            if ( (startSquare >= A7) && (startSquare <= H7) && !getBit(occupancies[2], targetSquare - 8)) {
-                                addMove(moveList, encodeMove(startSquare, targetSquare - 8, piece, 0, 0, 1, 0, 0) );
+                            if ( (startSquare >= A7) && (startSquare <= H7) && !GET_BIT(occupancies[2], targetSquare - 8)) {
+                                addMove(moveList, ENCODE_MOVE(startSquare, targetSquare - 8, piece, 0, 0, 1, 0, 0) );
                             }
                         }
                     }
@@ -151,15 +153,15 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Queen + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Rook + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Bishop + 6, 1, 0, 0, 0) );
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, Knight + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight + 6, 1, 0, 0, 0) );
                         } else {
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
 
-                        setBitFalse(attacks, targetSquare);
+                        SET_BIT_FALSE(attacks, targetSquare);
                     }
                     // generate enPassantCaptures
                     if (enPassantSQ != 64) {
@@ -167,11 +169,11 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
-                            addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
 
-                    setBitFalse(bitboard, startSquare);
+                    SET_BIT_FALSE(bitboard, startSquare);
                 }
             } // this works
 
@@ -179,9 +181,9 @@ void generateMoves(MoveList& moveList) {
                 // king side castling
                 if (castle & BK) {
                     // checking that the space is empty
-                    if( !getBit(occupancies[2], F8) && !getBit(occupancies[2], G8)) {
+                    if( !GET_BIT(occupancies[2], F8) && !GET_BIT(occupancies[2], G8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(F8, White) ) {
-                            addMove(moveList, encodeMove(E8, G8, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, ENCODE_MOVE(E8, G8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -189,9 +191,9 @@ void generateMoves(MoveList& moveList) {
                 //queen side castling
                 if (castle & BQ) {
                     // checking that the space is empty
-                    if( !getBit(occupancies[2], B8) && !getBit(occupancies[2], C8) && !getBit(occupancies[2], D8)) {
+                    if( !GET_BIT(occupancies[2], B8) && !GET_BIT(occupancies[2], C8) && !GET_BIT(occupancies[2], D8)) {
                         if ( !isSqAttacked(E8, White) && !isSqAttacked(D8, White) ) {
-                            addMove(moveList, encodeMove(E8, C8, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, ENCODE_MOVE(E8, C8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
@@ -212,16 +214,16 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = getLeastSigBitIndex(attacks);
 
                     // quiet moves
-                    if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
-                    setBitFalse(attacks, targetSquare);
+                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                setBitFalse(bitboard, startSquare);
+                SET_BIT_FALSE(bitboard, startSquare);
             }
         }
 
@@ -238,16 +240,16 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = getLeastSigBitIndex(attacks);
 
                     // quiet moves
-                    if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
-                    setBitFalse(attacks, targetSquare);
+                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                setBitFalse(bitboard, startSquare);
+                SET_BIT_FALSE(bitboard, startSquare);
             }
         }
 
@@ -264,16 +266,16 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = getLeastSigBitIndex(attacks);
 
                     // quiet moves
-                    if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
-                    setBitFalse(attacks, targetSquare);
+                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                setBitFalse(bitboard, startSquare);
+                SET_BIT_FALSE(bitboard, startSquare);
             }
         }
 
@@ -289,16 +291,16 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = getLeastSigBitIndex(attacks);
 
                     // quiet moves
-                    if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
-                    setBitFalse(attacks, targetSquare);
+                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                setBitFalse(bitboard, startSquare);
+                SET_BIT_FALSE(bitboard, startSquare);
             }
         }
 
@@ -314,16 +316,16 @@ void generateMoves(MoveList& moveList) {
                     targetSquare = getLeastSigBitIndex(attacks);
 
                     // quiet moves
-                    if ( !getBit( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
-                        addMove(moveList, encodeMove(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
 
-                    setBitFalse(attacks, targetSquare);
+                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                setBitFalse(bitboard, startSquare);
+                SET_BIT_FALSE(bitboard, startSquare);
             }
         }
     }

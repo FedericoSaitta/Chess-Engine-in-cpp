@@ -1,17 +1,18 @@
-#include "globals.h"
+
 #include <fstream>
 
-#include "evaluation.h"
+#include "uci.h"
+#include "init.h"
+#include "hashtable.h"
+#include "search.h"
 #include "tests.h"
 
-// #define Perft_TESTS
-// #define Move_TESTS
-// #define Puzzle_TESTS
-// #define Init_TESTS
+#define Perft_TESTS
+#define Move_TESTS
+#define Puzzle_TESTS
+#define Init_TESTS
 
 #include <iostream>
-#include <fstream>
-
 
 int main() {
     // startpos is rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
