@@ -4,15 +4,16 @@
 #include "uci.h"
 #include "init.h"
 #include "hashtable.h"
-#include "search.h"
 #include "tests.h"
 
-#define Perft_TESTS
-#define Move_TESTS
-#define Puzzle_TESTS
-#define Init_TESTS
+//#define Perft_TESTS
+//#define Move_TESTS
+// #define Puzzle_TESTS
+//#define Init_TESTS
 
 #include <iostream>
+#include "evaluation.h"
+#include "board.h"
 
 int main() {
     // startpos is rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
@@ -21,7 +22,6 @@ int main() {
     // killer is 6k1/3q1pp1/pp5p/1r5n/8/1P3PP1/PQ4BP/2R3K1 w - - 0 1
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
-
 
     initAll(); // Done at compile time :)
     clearTranspositionTable();

@@ -3,13 +3,11 @@
 //
 #include "movegen.h"
 
-#include "board.h"
-#include "init.h"
 #include "macros.h"
+#include "init.h"
+#include "board.h"
 #include "inline_functions.h"
 
-// for now we just generate all moves, later on when we will do quiescent search we will introduce
-// specificaitons to distinguish between captures and quiet moves
 
 
 ///*** little subtlelty, we are not checking the landing square of the castling eg g1 for white with isSQAttacked
@@ -62,7 +60,7 @@ void generateMoves(MoveList& moveList) {
                     }
 
                     // need to initialize the attack bitboard, can only capture black piececs
-                    attacks = pawnAttacks[White][startSquare] & occupancies[Black];
+                    attacks = bitPawnAttacks[White][startSquare] & occupancies[Black];
 
                     while (attacks) {
                         targetSquare = getLeastSigBitIndex(attacks);
@@ -83,7 +81,7 @@ void generateMoves(MoveList& moveList) {
 
                     // generate enPassantCaptures
                     if (enPassantSQ != 64) {
-                        U64 enPassantAttacks = pawnAttacks[White][startSquare] & (1ULL << enPassantSQ);
+                        U64 enPassantAttacks = bitPawnAttacks[White][startSquare] & (1ULL << enPassantSQ);
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);
@@ -146,7 +144,7 @@ void generateMoves(MoveList& moveList) {
                         }
                     }
                     // need to initialize the attack bitboard, can only capture white piececs
-                    attacks = pawnAttacks[Black][startSquare] & occupancies[White];
+                    attacks = bitPawnAttacks[Black][startSquare] & occupancies[White];
 
                     while (attacks) {
                         targetSquare = getLeastSigBitIndex(attacks);
@@ -165,7 +163,7 @@ void generateMoves(MoveList& moveList) {
                     }
                     // generate enPassantCaptures
                     if (enPassantSQ != 64) {
-                        U64 enPassantAttacks = pawnAttacks[Black][startSquare] & (1ULL << enPassantSQ);
+                        U64 enPassantAttacks = bitPawnAttacks[Black][startSquare] & (1ULL << enPassantSQ);
 
                         if (enPassantAttacks) {
                             targetSquare = getLeastSigBitIndex(enPassantAttacks);

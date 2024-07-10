@@ -7,7 +7,6 @@
 #include "hashtable.h"
 #include "macros.h"
 #include "inline_functions.h"
-
 #include <iostream>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
@@ -18,11 +17,11 @@ const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Kn
                             [Queen + 6] = 'q', [Rook + 6] = 'r', [Bishop + 6] = 'b', [Knight + 6] = 'n',
                             [0] =  ' ' }; // these are always lowercase for both colors
 
-const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
+static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
-U64 mirrorHorizontal (U64 bb) {
+static U64 mirrorHorizontal (U64 bb) {
     constexpr U64 k1 = 0x5555555555555555;
     constexpr U64 k2 = 0x3333333333333333;
     constexpr U64 k4 = 0x0f0f0f0f0f0f0f0f;

@@ -42,7 +42,6 @@ void recordHash(int score, int best_move, int flag, int depth);
 
 int checkHashOccupancy();
 
-void initRandomKeys();
 U64 generateHashKey();
 
 

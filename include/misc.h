@@ -10,7 +10,6 @@
 #include "macros.h"
 #include "movegen.h"
 
-U64 mirrorHorizontal (U64 bb);
 
 void printBitBoard(U64 bb, bool mirrored=false);
 void printBoardFancy();
@@ -20,7 +19,6 @@ void printMove(int move);
 void printMovesList(const MoveList& moveList);
 
 extern const char promotedPieces[];
-extern const char* unicodePieces[];
 
 std::string algebraicNotation(int move);
 

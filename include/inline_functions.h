@@ -1,15 +1,14 @@
-// In this file functions that are called very often by the init and movegen modules are inlined to boost performance
+//
+// Created by Federico Saitta on 10/07/2024.
+//
 
-#ifndef INLINEFUNCTIONS_H
-#define INLINEFUNCTIONS_H
+#ifndef INLINE_FUNCTIONS_H
+#define INLINE_FUNCTIONS_H
 
 #include "macros.h"
-#include "init.h"
 #include "board.h"
-#include "movegen.h"
+#include "init.h"
 
-// these functions should be tested as passsing by reference might slow them down? Not sure if they are used a lot
-// outside of magic number generation which is pre-processor anyway
 inline int countBits(U64 board) {
     // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
     int count{};
@@ -60,8 +59,8 @@ inline U64 getQueenAttacks(const int square, U64 occupancy) {
 inline int isSqAttacked(const int square, const int side) {
 
     // attacked by pawns
-    if ( (side == White) && (pawnAttacks[Black][square] & bitboards[Pawn]) ) return 1;
-    if ( (side == Black) && (pawnAttacks[White][square] & bitboards[Pawn + 6]) ) return 1;
+    if ( (side == White) && (bitPawnAttacks[Black][square] & bitboards[Pawn]) ) return 1;
+    if ( (side == Black) && (bitPawnAttacks[White][square] & bitboards[Pawn + 6]) ) return 1;
 
     // attacked by knight
     if ( bitKnightAttacks[square] & ((side == White) ? bitboards[Knight] : bitboards[Knight + 6] ) ) return 1;
@@ -82,11 +81,4 @@ inline int isSqAttacked(const int square, const int side) {
 }
 
 
-inline void addMove(MoveList& moveList, const int move) {
-    moveList.moves[moveList.count] = move;
-    moveList.count++;
-}
-
-
-
-#endif //INLINEFUNCTIONS_H
+#endif //INLINE_FUNCTIONS_H

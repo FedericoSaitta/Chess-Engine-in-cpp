@@ -19,8 +19,8 @@ namespace Test{
         // Range is restricted as pawns can only captures between rank 1 and 7 inclusive
         for(int i=8; i < 56; i++) {
 
-            const int whiteCount{ std::popcount(pawnAttacks[0][i]) };
-            const int blackCount{ std::popcount(pawnAttacks[1][i]) };
+            const int whiteCount{ std::popcount(bitPawnAttacks[0][i]) };
+            const int blackCount{ std::popcount(bitPawnAttacks[1][i]) };
 
             // checks that pawn is not on A or H file
             if ( (i % 8 == 0) | (i % 8 == 7)) {

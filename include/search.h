@@ -8,8 +8,8 @@
 #include "movegen.h"
 #include "hashtable.h"
 
+// these need to be reset when starting new games or parsing a new FEN
 extern int ply;
-extern int hashFull;
 extern U64 repetitionTable[1'000];
 extern int repetitionIndex;
 

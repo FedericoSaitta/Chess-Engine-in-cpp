@@ -4,14 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <random>
+
 #include <vector>
 #include <cstdint>
 
 #include "macros.h"
+#include "board.h"
 #include "inline_functions.h"
-#include "evaluation.h"
-#include "misc.h"
 
 #include "hashtable.h"
 #include "search.h"
@@ -25,25 +24,6 @@ U64 sideKey{};
 U64 hashKey{};
 
 
-void initRandomKeys() {
-//    std::random_device rd;
-    constexpr unsigned int seed = 12345;
-
-    std::mt19937 gen(seed);
-    std::uniform_int_distribution<U64> dis(0, UINT64_MAX);
-
-
-    for (int piece=0; piece < 12; piece++) {
-        for(int square=0; square < 64; square++) {
-            randomPieceKeys[piece][square] = dis(gen);
-        }
-    }
-
-    for(int square=0; square < 64; square++) { randomEnPassantKeys[square] = dis(gen); }
-    for(int bit=0; bit < 16; bit++) { randomCastlingKeys[bit] = dis(gen); }
-
-    sideKey = dis(gen);
-}
 
 U64 generateHashKey() { // to uniquely identify a position
     U64 key{};
@@ -68,7 +48,6 @@ U64 generateHashKey() { // to uniquely identify a position
 }
 
 void clearTranspositionTable() {
-    hashFull = 0;
     for (int index=0; index < HASH_SIZE; index++) {
         transpositionTable[index].hashKey=0;
         transpositionTable[index].depth=0;
@@ -125,8 +104,6 @@ void recordHash(int score, const int bestMove, const int flag, const int depth)
     hashEntry->flag = flag;
     hashEntry->depth = depth;
     hashEntry->bestMove = bestMove;
-
-    hashFull++;
 }
 
 int checkHashOccupancy() {

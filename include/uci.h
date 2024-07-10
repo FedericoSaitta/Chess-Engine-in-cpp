@@ -7,15 +7,16 @@
 
 #include <fstream>
 
-void UCI();
 extern std::ofstream logFile;
 
-// both are in milliseconds
+// All are in milliseconds
 extern int gameLengthTime;
 extern int whiteClockTime;
 extern int blackClockTime;
 extern int whiteIncrementTime;
 extern int blackIncrementTime;
+
+void UCI();
 
 
 #endif //UCI_H

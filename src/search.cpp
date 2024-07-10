@@ -7,25 +7,25 @@
 #include <variant>
 #include <vector>
 
-#include "search.h"
+#include "macros.h"
+#include "inline_functions.h"
 
+#include "search.h"
 #include "update.h"
 #include "hashtable.h"
 #include "uci.h"
-#include "macros.h"
-#include "inline_functions.h"
+#include "board.h"
 #include "evaluation.h"
 #include "misc.h"
 
+#define MAX_PLY 64
 
 
-int hashFull{};
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
 
 int ply{};
-constexpr int maxPly{64};
 static std::uint32_t nodes{};
 
 static int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
@@ -94,11 +94,6 @@ static void resetStates() {
 	stopSearch = 0;
 }
 
-// currently this is very wrong
-static int probeHashOccupation() {
-	// returning an int from 0 to 1'000
-	return static_cast<int>( 1'000 * (static_cast<float>(hashFull) / HASH_SIZE) );
-}
 
 // we will add different scorings for PV etc
 int scoreMove(const int move, const int ply) {
@@ -227,7 +222,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 	if ((nodes & 2047) == 0)
 		isTimeUp();
 
-    if ( ply > (maxPly - 1) ) return evaluate();
+    if ( ply > (MAX_PLY - 1) ) return evaluate();
 
     const int staticEval{ evaluate() };
 
@@ -484,13 +479,13 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		// check if we need to send mating scores
 		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
 			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
 			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else {
 			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
-			<< " hashFull " << probeHashOccupation() << " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		}
 
 		currentDepth++; // we can proceed to the next iteration

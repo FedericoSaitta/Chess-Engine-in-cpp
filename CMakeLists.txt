@@ -18,6 +18,7 @@ include_directories(tests)
 
 add_executable(ChessEngine src/main.cpp
         src/main.cpp
+        include/movegen.h
         src/movegen.cpp
         src/board.cpp
         src/update.cpp
@@ -28,7 +29,6 @@ add_executable(ChessEngine src/main.cpp
         tests/tests.h
         src/search.cpp
         include/macros.h
-        include/inline_functions.h
         tests/move_tests.cpp
         tests/perft_tests.cpp
         src/UCI.cpp
@@ -41,5 +41,6 @@ add_executable(ChessEngine src/main.cpp
         include/init.h
         include/board.h
         include/update.h
-        include/movegen.h
+        include/inline_functions.h
+        src/evaluation.cpp
 )

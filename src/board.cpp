@@ -1,5 +1,4 @@
 #include "macros.h"
-#include "inline_functions.h"
 
 #include <vector>
 #include <sstream>
@@ -19,11 +18,11 @@ const char* chessBoard[65] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", "--" //represents empty square
 };
 
-U64 bitboards[12];
-U64 occupancies[3];
-int side;
-int enPassantSQ;
-int castle;
+U64 bitboards[12]{};
+U64 occupancies[3]{};
+int side{};
+int enPassantSQ{};
+int castle{};
 
 static constexpr int charPieces[] = {
     ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5,   // white

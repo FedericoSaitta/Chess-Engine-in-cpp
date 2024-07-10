@@ -23,10 +23,11 @@
 // 8   9   10  11  12  13  14  15
 // 0   1   2   3   4   5   6   7
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef MACROS_H
+#define MACROS_H
 
 #include <cstdint>
+
 
 #define U64 std::uint64_t
 
@@ -153,4 +154,7 @@ memcpy(occupancies, occupanciesCopy, 24);                            \
 hashKey = hashKeyCopy;                                                \
 side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
 
-#endif //CONSTANTS_H
+
+#endif //MACROS_H
+
+

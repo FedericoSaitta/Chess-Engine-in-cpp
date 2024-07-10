@@ -12,7 +12,6 @@
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
-#include "inline_functions.h"
 
 static const std::string testFEN[] {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",

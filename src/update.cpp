@@ -7,10 +7,9 @@
 #include "board.h"
 #include "hashtable.h"
 #include "macros.h"
-#include "inline_functions.h"
 
 #include <cstring>
-
+#include "inline_functions.h"
 #include "misc.h"
 
 // this is for little endian board

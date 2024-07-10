@@ -2,12 +2,10 @@
 // Created by Federico Saitta on 29/06/2024.
 //
 #include "macros.h"
+#include <random>
 #include "inline_functions.h"
-
-
 #include "hashtable.h"
-
-
+#include "evaluation.h"
 
 
 // ARRAYS NEEDED FOR MAGIC U64 APPROACH //
@@ -35,7 +33,6 @@ constexpr int rookRelevantBits[64] {
 
 // from this https://www.reddit.com/row/chessprogramming/comments/wsrf3s/is_there_any_place_i_can_copy_fancy_magic_numbers/
 constexpr U64 bishopMagics[64] {
-
     0xC00204004A0449ULL, 0x3020A20A02202000ULL, 0x4282881002004ULL, 0x8244250200140020ULL,
     0x2442021008840010ULL, 0x822020080004ULL, 0x2010801042040D0ULL, 0x2020110311104006ULL,
     0x1020041022880104ULL, 0x12204104008C8EULL, 0x2002044C04005100ULL, 0x2084180600445C80ULL,
@@ -78,7 +75,7 @@ U64 notABFile{18229723555195321596ULL};
 U64 notHFile{9187201950435737471ULL};
 U64 notHGFile{4557430888798830399ULL};
 
-U64 pawnAttacks[2][64];
+U64 bitPawnAttacks[2][64];
 U64 bitKnightAttacks[64];
 U64 bitKingAttacks[64];
 
@@ -253,14 +250,13 @@ static U64 setOccupancies(const int index, const int bitInMask, U64 attackMask) 
 // *** INITIALIZING U64 ARRAYS *** //
 static void initLeaperPiecesAttacks() {
     for (int square=0; square < 64; square ++) {
-        pawnAttacks[White][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
-        pawnAttacks[Black][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
+        bitPawnAttacks[White][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
+        bitPawnAttacks[Black][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
 
         bitKnightAttacks[square] =  maskKnightMoves(square);
         bitKingAttacks[square] =  maskKingMoves(square);
     }
 }
-
 static void initSliderAttacks(const int bishop) {
 
     for (int square=0; square < 64; square++) {
@@ -291,6 +287,29 @@ static void initSliderAttacks(const int bishop) {
     }
 }
 
+
+static void initRandomKeys() {
+    //    std::random_device rd;
+    constexpr unsigned int seed = 12345;
+
+    std::mt19937 gen(seed);
+    std::uniform_int_distribution<U64> dis(0, UINT64_MAX);
+
+
+    for (int piece=0; piece < 12; piece++) {
+        for(int square=0; square < 64; square++) {
+            randomPieceKeys[piece][square] = dis(gen);
+        }
+    }
+
+    for(int square=0; square < 64; square++) { randomEnPassantKeys[square] = dis(gen); }
+    for(int bit=0; bit < 16; bit++) { randomCastlingKeys[bit] = dis(gen); }
+
+    sideKey = dis(gen);
+}
+
+
+
 void initAll() {
     initLeaperPiecesAttacks();
 
@@ -298,6 +317,8 @@ void initAll() {
     initSliderAttacks(0);
 
     initRandomKeys();
+
+    init_tables();
 
     clearTranspositionTable();
 } // this only takes 100 ms at startup in DEBUG mode

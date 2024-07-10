@@ -10,7 +10,6 @@
 #include "search.h"
 #include "board.h"
 #include "macros.h"
-#include "inline_functions.h"
 #include "misc.h"
 
 
