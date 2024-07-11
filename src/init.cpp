@@ -20,6 +20,18 @@ constexpr int bishopRelevantBits[64]{
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
+
+constexpr int getRankFromSquare[64]{
+    0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3,
+    4, 4, 4, 4, 4, 4, 4, 4,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 6, 6, 6, 6, 6, 6, 6,
+    7, 7, 7, 7, 7, 7, 7, 7
+};
+
 constexpr int rookRelevantBits[64] {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -89,8 +101,8 @@ U64 bitRookAttacksTable[64][4096];
 U64 fileMasks[64]{};
 U64 rankMasks[64]{};
 U64 isolatedPawnMasks[64]{};
-U64 white_pawnPawnMasks[64]{};
-U64 black_pawnPawnMasks[64]{};
+U64 white_passedPawnMasks[64]{};
+U64 black_passedPawnMasks[64]{};
 
 
 // *** NON-MAGIC PRE-COMPUTED TABLES *** //
@@ -315,15 +327,15 @@ static void initRandomKeys() {
 }
 
 
-U64 setFileAndRankMask(const int file, const int rank) {
+static U64 setFileAndRankMask(const int file, const int rank) {
     U64 mask{};
     for(int rankIndex=0; rankIndex < 8; rankIndex++) {
         for(int fileIndex=0; fileIndex < 8; fileIndex++) {
             const int square { rankIndex * 8 + fileIndex };
 
-            if (file != -1) {
+            if (file != -1 && file != 8) {
                 if (fileIndex == file) SET_BIT(mask, square);
-            } else if (rank != -1) {
+            } else if (rank != -1 && rank != 8) {
                 if (rankIndex == rank) SET_BIT(mask, square);
             }
         }
@@ -332,12 +344,34 @@ U64 setFileAndRankMask(const int file, const int rank) {
 }
 
 
-void initEvaluationMasks() {
+static void initEvaluationMasks() {
     for (int square=0; square < 64; square++) {
         const int file { square % 8 };
         const int rank { square / 8 };
         fileMasks[square] = setFileAndRankMask(file, -1);
         rankMasks[square] = setFileAndRankMask(-1, rank);
+    }
+
+    // now we do this for isolated masks
+    for (int square=0; square < 64; square++) {
+        const int file { square % 8 };
+        isolatedPawnMasks[square] = setFileAndRankMask(file - 1, -1) | setFileAndRankMask(file + 1, -1);
+    }
+
+    // now we do this for passed masks
+    // for white first
+    for (int square=0; square < 64; square++) {
+        const int file { square % 8 };
+        const int rank { square / 8 };
+        white_passedPawnMasks[square] = setFileAndRankMask(file - 1, -1) | setFileAndRankMask(file + 1, -1) | setFileAndRankMask(file, -1);
+        black_passedPawnMasks[square] = setFileAndRankMask(file - 1, -1) | setFileAndRankMask(file + 1, -1) | setFileAndRankMask(file, -1);
+
+        for (int i=0; i < rank; i++) {
+            white_passedPawnMasks[square] &= ~rankMasks[i * 8 + file];
+        }
+        for (int i=rank; i < 8; i++) {
+            black_passedPawnMasks[square] &= ~rankMasks[i * 8 + file];
+        }
     }
 }
 

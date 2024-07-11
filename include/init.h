@@ -31,8 +31,15 @@ extern U64 bitRookAttacksTable[64][4096];
 extern U64 fileMasks[64];
 extern U64 rankMasks[64];
 extern U64 isolatedPawnMasks[64];
-extern U64 white_pawnPawnMasks[64];
-extern U64 black_pawnPawnMasks[64];
+extern U64 white_passedPawnMasks[64];
+extern U64 black_passedPawnMasks[64];
+
+extern const int getRankFromSquare[64];
+
+// THESE SHOULD BE TUNED!!!!!!! //
+inline extern const int doublePawnPenalty = -10;
+inline extern const int isolatedPawnPenalty = -10;
+inline extern const int passedPawnBonus[8] {0, 5, 10, 20, 35, 60, 100, 200};
 
 void initAll();
 
