@@ -196,13 +196,16 @@ int evaluate() {
     int mg[2]{};
     int eg[2]{};
     int gamePhase = 0;
+    int penalties[2]{}; // 0 is white, 1 is black
 
     int square{};
+
     U64 bitboardCopy{}; // we need to ofc make a copy as we dont want to alter the bitboard
 
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
         bitboardCopy = bitboards[bbPiece];
 
+        // defo could improve the conditional branching in here
         while (bitboardCopy) {
             square = getLeastSigBitIndex(bitboardCopy);
 
@@ -213,8 +216,29 @@ int evaluate() {
             eg[(bbPiece < 6) ? 0 : 1] += eg_table[bbPiece][square];
             gamePhase += gamephaseInc[bbPiece];
 
+            // adding penalties to pawns
+            if (bbPiece % 6 == 0) { // For pawns
+
+                // adding penalties to double pawns
+                const int doubledPawns = countBits(bitboards[bbPiece] & fileMasks[square]);
+                if ( doubledPawns > 1) // you could try and avoid conditional branching here
+                    penalties[(bbPiece < 6) ? 0 : 1] += doublePawnPenalty * doubledPawns;
+
+                // adding penalties to isolated pawns
+                if ( (bitboards[bbPiece] & isolatedPawnMasks[square] ) == 0)
+                    penalties[(bbPiece < 6) ? 0 : 1] += isolatedPawnPenalty;
+
+                // adding bonuses to passed pawns
+                if (bbPiece == 0) { // white pawns
+                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[0] += passedPawnBonus[getRankFromSquare[square]];
+                } else { // black pawns
+                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[1] += passedPawnBonus[7 - getRankFromSquare[square]];
+                }
+            }
+
             SET_BIT_FALSE(bitboardCopy, square);
         }
+
     }
 
     // std::cout << "mgScore white: " << mg[side] << " mgScore black: " << mg[side^1] << '\n';
@@ -227,7 +251,8 @@ int evaluate() {
 
     const int egPhase = 24 - mgPhase;
 
-    return (mgScore * mgPhase + egScore * egPhase) / 24;
+    return penalties[side] - penalties[side^1];
+  //  return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties;
 }
 
 
