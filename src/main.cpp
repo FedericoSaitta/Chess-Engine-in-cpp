@@ -8,7 +8,7 @@
 
 //#define Perft_TESTS
 //#define Move_TESTS
-#define Puzzle_TESTS
+// #define Puzzle_TESTS
 //#define Init_TESTS
 
 #include <iostream>
@@ -24,9 +24,29 @@ int main() {
     logFile.open(logFilePath, std::ios::app);
 
     initAll(); // Done at compile time :)
-    clearTranspositionTable();
 
-    UCI();
+    printBitBoard(fileMasks[0]);
+    printBitBoard(fileMasks[1]);
+    printBitBoard(fileMasks[2]);
+    printBitBoard(fileMasks[3]);
+    printBitBoard(fileMasks[4]);
+    printBitBoard(fileMasks[5]);
+    printBitBoard(fileMasks[6]);
+    printBitBoard(fileMasks[7]);
+    printBitBoard(fileMasks[8]);
+
+    printBitBoard(rankMasks[0]);
+    printBitBoard(rankMasks[1]);
+    printBitBoard(rankMasks[2]);
+    printBitBoard(rankMasks[3]);
+    printBitBoard(rankMasks[4]);
+    printBitBoard(rankMasks[5]);
+    printBitBoard(rankMasks[6]);
+    printBitBoard(rankMasks[7]);
+    printBitBoard(rankMasks[8]);
+
+
+   // UCI();
 
     // need to press quit to properly save this file
     logFile.close();

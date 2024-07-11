@@ -28,6 +28,12 @@ extern U64 bitQueenAttacks[64];
 extern U64 bitBishopAttacksTable[64][512];
 extern U64 bitRookAttacksTable[64][4096];
 
+extern U64 fileMasks[64];
+extern U64 rankMasks[64];
+extern U64 isolatedPawnMasks[64];
+extern U64 white_pawnPawnMasks[64];
+extern U64 black_pawnPawnMasks[64];
+
 void initAll();
 
 

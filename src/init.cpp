@@ -86,6 +86,12 @@ U64 bitQueenAttacks[64];
 U64 bitBishopAttacksTable[64][512];
 U64 bitRookAttacksTable[64][4096];
 
+U64 fileMasks[64]{};
+U64 rankMasks[64]{};
+U64 isolatedPawnMasks[64]{};
+U64 white_pawnPawnMasks[64]{};
+U64 black_pawnPawnMasks[64]{};
+
 
 // *** NON-MAGIC PRE-COMPUTED TABLES *** //
 static U64 maskPawnAttacks(const int square, const int side) {
@@ -309,6 +315,32 @@ static void initRandomKeys() {
 }
 
 
+U64 setFileAndRankMask(const int file, const int rank) {
+    U64 mask{};
+    for(int rankIndex=0; rankIndex < 8; rankIndex++) {
+        for(int fileIndex=0; fileIndex < 8; fileIndex++) {
+            const int square { rankIndex * 8 + fileIndex };
+
+            if (file != -1) {
+                if (fileIndex == file) SET_BIT(mask, square);
+            } else if (rank != -1) {
+                if (rankIndex == rank) SET_BIT(mask, square);
+            }
+        }
+    }
+    return mask;
+}
+
+
+void initEvaluationMasks() {
+    for (int square=0; square < 64; square++) {
+        const int file { square % 8 };
+        const int rank { square / 8 };
+        fileMasks[square] = setFileAndRankMask(file, -1);
+        rankMasks[square] = setFileAndRankMask(-1, rank);
+    }
+}
+
 
 void initAll() {
     initLeaperPiecesAttacks();
@@ -319,6 +351,8 @@ void initAll() {
     initRandomKeys();
 
     init_tables();
+
+    initEvaluationMasks();
 
     clearTranspositionTable();
 } // this only takes 100 ms at startup in DEBUG mode

@@ -63,25 +63,29 @@ bestmove h4h3
 Mating Move: h4h3 Time taken: 71.1204ss
 
 #### Engine vs. Engine Match Results: 
+
+V1 vs. V2:
+--------------------------------------------------
 Results of ChessEngine_V1 vs ChessEngine (10+1, NULL, NULL, openings.epd):
 Elo: -260.49 +/- 43.07, nElo: -418.02 +/- 48.15
 LOS: 0.00 %, DrawRatio: 15.00 %, PairsRatio: 0.01
 Games: 200, Wins: 4, Losses: 131, Draws: 65, Points: 36.5 (18.25 %)
 Ptnml(0-2): [44, 40, 15, 1, 0]
+--------------------------------------------------
 
-44 pairs where both games were lost.
-40 pairs with one draw and one loss.
-15 pairs with both games drawn.
-1 pair with one win and one draw.
-0 pairs with both games won.
-
+V2.1 vs. V2: 
+--------------------------------------------------
+Results of ChessEngine vs ChessEngine_Bugless (10+1, NULL, NULL, scrapedOpenings.epd):
+Elo: 277.00 +/- 40.90, nElo: 345.17 +/- 34.05
+LOS: 100.00 %, DrawRatio: 17.00 %, PairsRatio: 22.71
+Games: 400, Wins: 307, Losses: 42, Draws: 51, Points: 332.5 (83.12 %)
+Ptnml(0-2): [4, 3, 34, 42, 117]
+--------------------------------------------------
 
 
 #### Future Improvements:
-- Pesto evaluation tables and tapered evaluation
+- Symmetry evaluation test suite
 - More complex time management for longer time controls
-- Aspiration windows
-- Transposition Table
 - Opening book
 - Evaluation of king safety and mobility
 - Evaluation of pawn structure and passed pawns
