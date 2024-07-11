@@ -15,8 +15,6 @@
 int mg_value[6] = { 82, 337, 365, 477, 1025,  0};
 int eg_value[6] = { 94, 281, 297, 512,  936,  0};
 
-const int openingScore { 6192 };
-const int endScore { 518 };
 
 /* piece/sq tables */
 /* values from Rofchade: http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19 */
@@ -176,6 +174,16 @@ int gamephaseInc[12] = {0, 1, 1, 2, 4, 0, 0, 1, 1, 2, 4, 0,};
 int mg_table[12][64];
 int eg_table[12][64];
 
+constexpr int doublePawnPenalty = -10;
+constexpr int isolatedPawnPenalty = -10;
+constexpr int passedPawnBonus[8] {0, 5, 10, 20, 35, 60, 100, 200};
+
+constexpr int semiOpenFileScore { 10 };
+constexpr int openFileScore { 15 };
+
+constexpr int kingShieldBonus { 5 };
+
+
 void init_tables()
 {
     // flip white because of little endian
@@ -189,17 +197,13 @@ void init_tables()
     }
 }
 
-static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
-                              "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
 
 int evaluate() {
     int mg[2]{};
     int eg[2]{};
-    int gamePhase = 0;
+    int gamePhase{};
     int penalties[2]{}; // 0 is white, 1 is black
-
     int square{};
-
     U64 bitboardCopy{}; // we need to ofc make a copy as we dont want to alter the bitboard
 
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
@@ -216,24 +220,78 @@ int evaluate() {
             eg[(bbPiece < 6) ? 0 : 1] += eg_table[bbPiece][square];
             gamePhase += gamephaseInc[bbPiece];
 
-            // adding penalties to pawns
-            if (bbPiece % 6 == 0) { // For pawns
 
-                // adding penalties to double pawns
-                const int doubledPawns = countBits(bitboards[bbPiece] & fileMasks[square]);
-                if ( doubledPawns > 1) // you could try and avoid conditional branching here
-                    penalties[(bbPiece < 6) ? 0 : 1] += doublePawnPenalty * doubledPawns;
+            // Note that some of these masks do not consider if the pawns are in front or behind the pieces
+            switch(bbPiece) {
+                case (Pawn):
+                    // you could try and avoid conditional branching here
+                    if ( countBits(bitboards[Pawn] & fileMasks[square]) > 1) penalties[White] += doublePawnPenalty * countBits(bitboards[Pawn] & fileMasks[square]);
 
-                // adding penalties to isolated pawns
-                if ( (bitboards[bbPiece] & isolatedPawnMasks[square] ) == 0)
-                    penalties[(bbPiece < 6) ? 0 : 1] += isolatedPawnPenalty;
+                    // adding penalties to isolated pawns
+                    if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
 
-                // adding bonuses to passed pawns
-                if (bbPiece == 0) { // white pawns
-                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[0] += passedPawnBonus[getRankFromSquare[square]];
-                } else { // black pawns
-                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[1] += passedPawnBonus[7 - getRankFromSquare[square]];
-                }
+                    // adding bonuses to passed pawns
+                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
+
+                    break;
+
+                case (Pawn + 6):
+                    // you could try and avoid conditional branching here
+                    if ( countBits(bitboards[Pawn + 6] & fileMasks[square]) > 1) penalties[Black] += doublePawnPenalty * countBits(bitboards[Pawn + 6] & fileMasks[square]);
+
+                    // adding penalties to isolated pawns
+                    if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
+
+                    // adding bonuses to passed pawns
+                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
+                    break;
+
+
+                case (Rook):
+                    if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] += semiOpenFileScore;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
+                    break;
+
+                case (Rook + 6):
+                    if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] += semiOpenFileScore;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
+                    break;
+
+                // if the kings are on semi-open or open files they will be given penalties
+                case (King):
+                    if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] -= semiOpenFileScore;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
+
+                    penalties[White] += kingShieldBonus * countBits(bitKingAttacks[square] & occupancies[White] );
+                    break;
+
+                case (King + 6):
+                    if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] -= semiOpenFileScore;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] -= openFileScore;
+
+                    penalties[Black] += kingShieldBonus * countBits(bitKingAttacks[square] & occupancies[Black] );
+                    break;
+
+                // mobility scores for sliding pieces except rooks, please test these and stop adding new features
+                // these are very basic implementations
+                case (Bishop):
+                    penalties[White] += countBits( getBishopAttacks(square, occupancies[2]) );
+                    break;
+
+                case (Bishop + 6):
+                    penalties[Black] += countBits( getBishopAttacks(square, occupancies[2]) );
+                    break;
+
+                case (Queen):
+                    penalties[White] += countBits( getQueenAttacks(square, occupancies[2]) );
+                    break;
+
+                case (Queen + 6):
+                    penalties[Black] += countBits( getQueenAttacks(square, occupancies[2]) );
+                    break;
+
+                default:
+                    break;
             }
 
             SET_BIT_FALSE(bitboardCopy, square);
@@ -251,8 +309,7 @@ int evaluate() {
 
     const int egPhase = 24 - mgPhase;
 
-    return penalties[side] - penalties[side^1];
-  //  return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties;
+    return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties[side] - penalties[side^1];;
 }
 
 
