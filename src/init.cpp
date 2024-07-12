@@ -376,7 +376,7 @@ static void initEvaluationMasks() {
 }
 
 
-void initAll() {
+void initAll(int ttSize) {
     initLeaperPiecesAttacks();
 
     initSliderAttacks(1);
@@ -388,5 +388,6 @@ void initAll() {
 
     initEvaluationMasks();
 
-    clearTranspositionTable();
+    initTranspositionTable(ttSize); // with 64 megabytes
+
 } // this only takes 100 ms at startup in DEBUG mode

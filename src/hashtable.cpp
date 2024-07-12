@@ -23,7 +23,8 @@ U64 sideKey{};
 
 U64 hashKey{};
 
-
+int transpotitionTableEntries{};
+tt* transpositionTable{ nullptr };
 
 U64 generateHashKey() { // to uniquely identify a position
     U64 key{};
@@ -47,8 +48,28 @@ U64 generateHashKey() { // to uniquely identify a position
     return key;
 }
 
+
+void initTranspositionTable(const int megaBytes) {
+    const int hashSize = 0x100000 * megaBytes;
+
+    transpotitionTableEntries = hashSize / sizeof(tt);
+
+    if (transpositionTable != nullptr)
+        clearTranspositionTable();
+
+    transpositionTable = static_cast<tt *>(malloc(transpotitionTableEntries * sizeof(tt)));
+
+    if (transpositionTable == nullptr) {
+        std::cerr << "ERR Allocation of memory has failed\n";
+        initTranspositionTable(megaBytes / 2);
+    } else {
+        // if the allocation has succeded
+        clearTranspositionTable();
+    }
+}
+
 void clearTranspositionTable() {
-    for (int index=0; index < HASH_SIZE; index++) {
+    for (int index=0; index < transpotitionTableEntries; index++) {
         transpositionTable[index].hashKey=0;
         transpositionTable[index].depth=0;
         transpositionTable[index].flag=0;
@@ -61,7 +82,7 @@ void clearTranspositionTable() {
 int probeHash(const int alpha, const int beta, int* best_move, const int depth)
 {
     // creates a pointer to the hash entry
-    const tt* hashEntry { &transpositionTable[hashKey % HASH_SIZE] };
+    const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
 
     // make sure we have the correct hashKey
     if (hashEntry->hashKey == hashKey) {
@@ -88,12 +109,9 @@ int probeHash(const int alpha, const int beta, int* best_move, const int depth)
     return NO_HASH_ENTRY;
 }
 
-
-tt transpositionTable[HASH_SIZE] {};
-
 void recordHash(int score, const int bestMove, const int flag, const int depth)
 {
-    tt* hashEntry = &transpositionTable[hashKey % HASH_SIZE];
+    tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
 
     // independent from distance of path taken from root node to current mating position
     if (score < -MATE_SCORE) score += ply;
@@ -105,13 +123,12 @@ void recordHash(int score, const int bestMove, const int flag, const int depth)
     hashEntry->depth = depth;
     hashEntry->bestMove = bestMove;
 }
-
 int checkHashOccupancy() {
-    float count{};
-    for (const tt position: transpositionTable) {
-        if ( position.hashKey != 0) {
+    float count {};
+    for (const tt* position = transpositionTable; position < transpositionTable + transpotitionTableEntries; ++position) {
+        if (position->hashKey != 0) {
             count++;
         }
     }
-    return static_cast<int>( 1'000 * ((count) / HASH_SIZE) );
+    return static_cast<int>( 1'000 * ((count) / transpotitionTableEntries) );
 }

@@ -22,9 +22,7 @@ int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
 
-    initAll(); // Done at compile time :)
-
-    Test::BenchMark::matingPuzzles();
+    initAll(256); // Done at compile time :)
 
     UCI();
 

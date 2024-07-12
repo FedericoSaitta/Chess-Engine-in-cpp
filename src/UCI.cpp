@@ -182,6 +182,7 @@ void UCI() {
         else if ( command == "quit") break;
         else if ( command == "ucinewgame") resetGameVariables();
 
+        else if ( command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
 }
 

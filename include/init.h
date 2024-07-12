@@ -36,5 +36,5 @@ extern U64 black_passedPawnMasks[64];
 extern const int getRankFromSquare[64];
 
 
-void initAll();
+void initAll(int ttSize=64);
 

@@ -12,7 +12,6 @@ extern U64 sideKey;
 
 extern U64 hashKey; // of the position
 
-#define HASH_SIZE 2'666'666 // 64 Mega Byte transposition table, statically allocated
 
 // https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
 #define    HASH_FLAG_EXACT   0 // evaluation from evaluation function
@@ -33,8 +32,11 @@ typedef struct tagHASHE {
 #define MATE_VALUE 49'000
 #define MATE_SCORE 48'000 // this is more like a boundary to the scores
 
-extern tt transpositionTable[HASH_SIZE];
+extern tt* transpositionTable;
+extern int transpotitionTableEntries;
 
+
+void initTranspositionTable(int megaBytes);
 void clearTranspositionTable();
 int probeHash(int alpha, int beta, int* best_move, int depth);
 void recordHash(int score, int best_move, int flag, int depth);
