@@ -65,23 +65,31 @@ Mating Move: h4h3 Time taken: 71.1204ss
 #### Engine vs. Engine Match Results: 
 
 V1 vs. V2:
---------------------------------------------------
+
 Results of ChessEngine_V1 vs ChessEngine (10+1, NULL, NULL, openings.epd):
 Elo: -260.49 +/- 43.07, nElo: -418.02 +/- 48.15
 LOS: 0.00 %, DrawRatio: 15.00 %, PairsRatio: 0.01
 Games: 200, Wins: 4, Losses: 131, Draws: 65, Points: 36.5 (18.25 %)
 Ptnml(0-2): [44, 40, 15, 1, 0]
---------------------------------------------------
+
 
 V2.1 vs. V2: 
---------------------------------------------------
+
 Results of ChessEngine vs ChessEngine_Bugless (10+1, NULL, NULL, scrapedOpenings.epd):
 Elo: 277.00 +/- 40.90, nElo: 345.17 +/- 34.05
 LOS: 100.00 %, DrawRatio: 17.00 %, PairsRatio: 22.71
 Games: 400, Wins: 307, Losses: 42, Draws: 51, Points: 332.5 (83.12 %)
 Ptnml(0-2): [4, 3, 34, 42, 117]
---------------------------------------------------
 
+V2.2 vs. V.1:
+
+Results of ChessEngine_V2-1 vs ChessEngine_V2-2 (30+0.1, NULL, NULL, scrapedOpenings.epd):
+Elo: -65.02 +/- 40.91, nElo: -78.73 +/- 48.15
+LOS: 0.07 %, DrawRatio: 31.00 %, PairsRatio: 0.47
+Games: 200, Wins: 51, Losses: 88, Draws: 61, Points: 81.5 (40.75 %)
+Ptnml(0-2): [19, 28, 31, 15, 7]
+
+V2.3 vs. V.2:
 
 #### Future Improvements:
 - Symmetry evaluation test suite

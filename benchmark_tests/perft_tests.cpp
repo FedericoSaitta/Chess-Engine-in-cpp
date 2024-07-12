@@ -25,7 +25,7 @@ static const std::string testFEN[] {
 static constexpr std::uint32_t testNodes[] {
     4'865'609, 193'690'690, 674'624, 15'833'292, 89'941'194, 164'075'551};
 
-namespace Test{
+namespace Test::BenchMark{
 
     static std::uint32_t nodes{};
 

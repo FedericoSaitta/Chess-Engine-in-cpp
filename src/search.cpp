@@ -96,7 +96,7 @@ static void resetStates() {
 
 
 // we will add different scorings for PV etc
-int scoreMove(const int move, const int ply) {
+inline int scoreMove(const int move, const int ply) {
 
 	if (scorePV) {
 		if (pvTable[0][ply] == move) {
@@ -134,7 +134,7 @@ int scoreMove(const int move, const int ply) {
 	return historyMoves[getMovePiece(move)][getMoveTargetSQ(move)];
 }
 
-void sortMoves(MoveList& moveList, const int ply, const int best_move) {
+inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
 	int *moveScores = static_cast<int*>(malloc(moveList.count * 4)); // as int has size of 4 bytes
 
 	// scoring the moves
@@ -218,16 +218,17 @@ static int canReduceMove(const int move) {
 
 
 static int quiescenceSearch(int alpha, const int beta) {
-	nodes++;
 	if ((nodes & 2047) == 0)
 		isTimeUp();
+
+	nodes++;
 
     if ( ply > (MAX_PLY - 1) ) return evaluate();
 
     const int staticEval{ evaluate() };
 
 	// delta pruning, to be implemented
-	if (staticEval < alpha - 975) return alpha;
+	//if (staticEval < alpha - 975) return alpha;
 
     if (staticEval > alpha) {
     	if (staticEval >= beta)
@@ -258,8 +259,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     	repetitionIndex--;
         RESTORE_BOARD()
 
-    	if (stopSearch)
-    		return 0;
+    	if (stopSearch) return 0;
 
         // found a better move
         if (score > alpha) { // Known as PV node (principal variatio)
@@ -278,26 +278,30 @@ static inline U64 nonPawnMat() {
 }
 
 
-static int negamax(int alpha, const int beta, int depth) {
+static inline int negamax(int alpha, const int beta, int depth) {
 
 	pvLength[ply] = ply;
-	int score{};
+	int score;
 	int bestMove {};
 	int hashFlag{ HASH_FLAG_ALPHA };
-
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a draw
 
 	// to figure ot if the current node is a principal variation node
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
-	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !(beta - alpha > 1)) return score;
+	int pvNode = beta - alpha > 1;
+	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
 
 	if ((nodes & 2047) == 0)
 		isTimeUp();
 
 
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
+
+	if (ply > MAX_PLY - 1)
+		// evaluate position
+		return evaluate();
 
 	nodes++;
 
@@ -307,10 +311,25 @@ static int negamax(int alpha, const int beta, int depth) {
 	// increase search depth if the king has been exposed into a check
 	if (inCheck) depth++;
 
+	const int static_eval { evaluate() };
+
+
+	// evaluation pruning / static null move pruning
+	if (depth < 3 && !pvNode && !inCheck &&  abs(beta - 1) > -MAX_VALUE + 100)
+	{
+		// define evaluation margin
+		const int evalMargin = 120 * depth;
+
+		// evaluation margin substracted from static evaluation score fails high
+		if (static_eval - evalMargin >= beta)
+			// evaluation margin substracted from static evaluation score
+				return static_eval - evalMargin;
+	}
+
+
 	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 	// position fen 8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1, in this position if we disable null move pruning it finds the correct sequence
-
 	if (depth >= 3 && !inCheck && ply && nonPawnMat()) { // we do not attempt null move pruning in case our side only has pawns on the board
 		COPY_BOARD()
 
@@ -341,6 +360,45 @@ static int negamax(int alpha, const int beta, int depth) {
 	// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
 
 
+	// razoring
+	if (!pvNode && !inCheck && depth <= 3)
+	{
+		// get static eval and add first bonus
+		score = static_eval + 125;
+
+		int newScore; // define new score
+
+		// static evaluation indicates a fail-low node
+		if (score < beta)
+		{
+			// on depth 1
+			if (depth == 1)
+			{
+				// get quiscence score
+				newScore = quiescenceSearch(alpha, beta);
+
+				// return quiescence score if it's greater then static evaluation score
+				return (newScore > score) ? newScore : score;
+			}
+
+			// add second bonus to static evaluation
+			score += 175;
+
+			// static evaluation indicates a fail-low node
+			if (score < beta && depth <= 2)
+			{
+				// get quiscence score
+				newScore = quiescenceSearch(alpha, beta);
+
+				// quiescence score indicates fail-low node
+				if (newScore < beta)
+					// return quiescence score if it's greater then static evaluation score
+						return (newScore > score) ? newScore : score;
+			}
+		}
+	}
+
+
     MoveList moveList;
     generateMoves(moveList);
 
@@ -351,8 +409,9 @@ static int negamax(int alpha, const int beta, int depth) {
     sortMoves(moveList, ply, bestMove);
 
 	int movesSearched{};
-	MoveList quietList;
-	int quietCount{};
+
+	//MoveList quietList;
+	//int quietCount{};
 
     for (int count=0; count < moveList.count; count++) {
 
@@ -371,13 +430,14 @@ static int negamax(int alpha, const int beta, int depth) {
         // increment legalMoves
         legalMoves++;
 
-    	const bool isQuiet = (!getMoveCapture(moveList.moves[count]) && !getMovePromPiece(moveList.moves[count]) && !getMoveEnPassant(moveList.moves[count]));
+    	// no need to check enPassant as we do count it as a capture
+    	const bool isQuiet = ( !getMoveCapture(moveList.moves[count]) && !getMovePromPiece(moveList.moves[count]) );
 
     	// needed for improvements to move ordereing etc.
-    	if (isQuiet){
-    		quietList.moves[quietCount] = moveList.moves[count];
-    		quietCount++;
-    	}
+    	//if (isQuiet){
+    	//	quietList.moves[quietCount] = moveList.moves[count];
+    	//	quietCount++;
+    	//}
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
@@ -430,14 +490,15 @@ static int negamax(int alpha, const int beta, int depth) {
         	// fail-hard beta cut off
         	if (score >= beta) {
         		// helps with better move ordering in branches at the same depth
-        		if (isQuiet) {
+        		if (!getMoveCapture(moveList.moves[count])) {
         			killerMoves[1][ply] = killerMoves[0][ply];
         			killerMoves[0][ply] = bestMove; // store killer moves
 
         			// can do more sophisticated code tho
+        			// check if this should go anywhere alpha increases or where we get a beta cut off
         			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
 
-
+					/*
         			for (int i = 0; i < quietCount; i++) {
         				const int quietMove = quietList.moves[i];
         				if (quietMove == bestMove) continue;
@@ -445,8 +506,7 @@ static int negamax(int alpha, const int beta, int depth) {
         				// penalize history of moves which didn't cause beta-cutoffs
         				historyMoves[getMovePiece(quietMove)][getMoveTargetSQ(quietMove)] -= depth * depth;
         			}
-
-
+        			*/
         		}
 
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);

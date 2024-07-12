@@ -24,9 +24,9 @@ int main() {
 
     initAll(); // Done at compile time :)
 
-    Test::BenchMark::branchingFactor();
+    Test::BenchMark::matingPuzzles();
 
-    //UCI();
+    UCI();
 
 
     // need to press quit to properly save this file
