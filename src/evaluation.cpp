@@ -213,64 +213,66 @@ int evaluate() {
         while (bitboardCopy) {
             square = getLeastSigBitIndex(bitboardCopy);
 
-            //std::cout << "Piece " << unicodePieces[bbPiece] << " square: " << chessBoard[square] << " middlegame value: " << mg_table[bbPiece][square] << '\n';
-            //std::cout << "Piece " << unicodePieces[bbPiece] << " square: " << chessBoard[square] << " engdame value: " << eg_table[bbPiece][square] << '\n';
+            // std::cout << "Piece "  << " square: " << chessBoard[square] << " middlegame value: " << mg_table[bbPiece][square] << '\n';
+            // std::cout << "Piece " << " square: " << chessBoard[square] << " engdame value: " << eg_table[bbPiece][square] << '\n';
 
             mg[(bbPiece < 6) ? 0 : 1] += mg_table[bbPiece][square];
             eg[(bbPiece < 6) ? 0 : 1] += eg_table[bbPiece][square];
             gamePhase += gamephaseInc[bbPiece];
 
 
+
             // Note that some of these masks do not consider if the pawns are in front or behind the pieces
             switch(bbPiece) {
                 case (Pawn):
                     // you could try and avoid conditional branching here
-                    if ( countBits(bitboards[Pawn] & fileMasks[square]) > 1) penalties[White] += doublePawnPenalty * countBits(bitboards[Pawn] & fileMasks[square]);
+                        if ( countBits(bitboards[Pawn] & fileMasks[square]) > 1) penalties[White] += doublePawnPenalty * countBits(bitboards[Pawn] & fileMasks[square]);
 
-                    // adding penalties to isolated pawns
-                    if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
+                // adding penalties to isolated pawns
+                if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
 
-                    // adding bonuses to passed pawns
-                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
-
-                    break;
+                // adding bonuses to passed pawns
+                if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
+                break;
 
                 case (Pawn + 6):
                     // you could try and avoid conditional branching here
-                    if ( countBits(bitboards[Pawn + 6] & fileMasks[square]) > 1) penalties[Black] += doublePawnPenalty * countBits(bitboards[Pawn + 6] & fileMasks[square]);
+                        if ( countBits(bitboards[Pawn + 6] & fileMasks[square]) > 1) penalties[Black] += doublePawnPenalty * countBits(bitboards[Pawn + 6] & fileMasks[square]);
 
-                    // adding penalties to isolated pawns
-                    if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
+                // adding penalties to isolated pawns
+                if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
 
-                    // adding bonuses to passed pawns
-                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
-                    break;
+                // adding bonuses to passed pawns
+                if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
+                break;
+
 
 
                 case (Rook):
                     if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] += semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
-                    break;
+                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
+                break;
 
                 case (Rook + 6):
                     if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] += semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
-                    break;
+                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
+                break;
 
                 // if the kings are on semi-open or open files they will be given penalties
                 case (King):
                     if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] -= semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
+                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
 
-                    penalties[White] += kingShieldBonus * countBits(bitKingAttacks[square] & occupancies[White] );
-                    break;
+                penalties[White] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[White] );
+                break;
 
                 case (King + 6):
                     if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] -= semiOpenFileScore;
                     if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] -= openFileScore;
 
-                    penalties[Black] += kingShieldBonus * countBits(bitKingAttacks[square] & occupancies[Black] );
-                    break;
+                penalties[Black] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[Black] );
+                break;
+
 
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
                 // these are very basic implementations
@@ -293,6 +295,7 @@ int evaluate() {
                 default:
                     break;
             }
+
 
             SET_BIT_FALSE(bitboardCopy, square);
         }

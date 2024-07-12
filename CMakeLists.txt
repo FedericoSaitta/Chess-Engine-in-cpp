@@ -43,4 +43,5 @@ add_executable(ChessEngine src/main.cpp
         include/update.h
         include/inline_functions.h
         src/evaluation.cpp
+        tests/evaluation_tests.cpp
 )

@@ -25,8 +25,8 @@ int main() {
 
     initAll(); // Done at compile time :)
 
-
-    UCI();
+    Test::mirrorEval();
+   // UCI();
 
 
     // need to press quit to properly save this file

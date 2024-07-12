@@ -366,7 +366,7 @@ static void initEvaluationMasks() {
         white_passedPawnMasks[square] = setFileAndRankMask(file - 1, -1) | setFileAndRankMask(file + 1, -1) | setFileAndRankMask(file, -1);
         black_passedPawnMasks[square] = setFileAndRankMask(file - 1, -1) | setFileAndRankMask(file + 1, -1) | setFileAndRankMask(file, -1);
 
-        for (int i=0; i < rank; i++) {
+        for (int i=0; i <= rank; i++) {
             white_passedPawnMasks[square] &= ~rankMasks[i * 8 + file];
         }
         for (int i=rank; i < 8; i++) {

@@ -36,6 +36,8 @@ namespace Test{
     };
     void matingPuzzles();
 
+    void mirrorEval();
+
 }
 
 
