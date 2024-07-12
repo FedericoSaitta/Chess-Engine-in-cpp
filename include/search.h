@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef SEARCH_H
-#define SEARCH_H
+#pragma once
 
 #include "movegen.h"
 #include "hashtable.h"
@@ -18,5 +17,3 @@ void sortMoves(MoveList& moveList, int ply, int bestMove);
 
 void iterativeDeepening(int depth, bool timeConstraint=false);
 
-
-#endif //SEARCH_H

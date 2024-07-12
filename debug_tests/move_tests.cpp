@@ -1,16 +1,16 @@
 //
 // Created by Federico Saitta on 03/07/2024.
 //
-#include "tests.h"
+#include "../benchmark_tests/benchmark_tests.h"
 
 #include <iostream>
 #include <random>
 #include <cmath>
 
-#include "search.h"
-#include "board.h"
-#include "macros.h"
-#include "misc.h"
+#include "../include/search.h"
+#include "../include/board.h"
+#include "../include/macros.h"
+#include "../include/misc.h"
 
 
 namespace Test{

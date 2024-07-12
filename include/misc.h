@@ -2,10 +2,10 @@
 // Created by Federico Saitta on 29/06/2024.
 //
 
-#ifndef MISC_H
-#define MISC_H
+#pragma once
 
 #include <iostream>
+#include <vector>
 
 #include "macros.h"
 #include "movegen.h"
@@ -22,5 +22,4 @@ extern const char promotedPieces[];
 
 std::string algebraicNotation(int move);
 
-
-#endif //MISC_H
+std::vector<std::string> split(const std::string& str);

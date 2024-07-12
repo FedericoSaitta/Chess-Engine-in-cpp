@@ -2,8 +2,8 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
+
 
 #include <iostream>
 
@@ -21,4 +21,4 @@ extern int castle; // 4-bit integer of the form qkQK, if bit is turned on then c
 
 
 
-#endif //BOARD_H
+

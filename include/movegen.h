@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef MOVEGEN_H
-#define MOVEGEN_H
+#pragma once
 #include "movegen.h"
 
 
@@ -19,4 +18,3 @@ inline void addMove(MoveList& moveList, const int move) {
 
 void generateMoves(MoveList& moveList);
 
-#endif //MOVEGEN_H

@@ -8,9 +8,11 @@
 #include "macros.h"
 #include "inline_functions.h"
 #include <iostream>
+#include <vector>
+#include <sstream>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
-// these could go under tests but I will put more rigorous testing functions there.
+// these could go under benchmark_tests but I will put more rigorous testing functions there.
 
 
 const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Knight] = 'n',
@@ -136,4 +138,14 @@ void printMovesList(const MoveList& moveList) {
         std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
         std::cout << '\n';
     }
+}
+
+std::vector<std::string> split(const std::string& str) {
+    std::vector<std::string> tokens;
+    std::istringstream iss(str);
+    std::string token;
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+    return tokens;
 }

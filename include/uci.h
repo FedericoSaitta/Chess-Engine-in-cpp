@@ -2,9 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef UCI_H
-#define UCI_H
-
+#pragma once
 #include <fstream>
 
 extern std::ofstream logFile;
@@ -16,7 +14,6 @@ extern int blackClockTime;
 extern int whiteIncrementTime;
 extern int blackIncrementTime;
 
+void resetGameVariables();
 void UCI();
 
-
-#endif //UCI_H

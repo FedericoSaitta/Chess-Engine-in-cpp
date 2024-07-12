@@ -4,12 +4,11 @@
 #include "uci.h"
 #include "init.h"
 #include "hashtable.h"
-#include "tests.h"
+#include "benchmark_tests.h"
+#include "debug_tests.h"
 
-//#define Perft_TESTS
-//#define Move_TESTS
-// #define Puzzle_TESTS
-//#define Init_TESTS
+//#define DEBUG
+//#define BENCHMARK
 
 #include <iostream>
 #include "evaluation.h"
@@ -25,8 +24,9 @@ int main() {
 
     initAll(); // Done at compile time :)
 
-    Test::mirrorEval();
-   // UCI();
+    Test::BenchMark::branchingFactor();
+
+    //UCI();
 
 
     // need to press quit to properly save this file
@@ -40,19 +40,13 @@ int main() {
     // good chess article:, really nice article for move generation
     // https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
 
-#ifdef Perft_TESTS
+
+#ifdef BENCHMARK
     Test::standardizedPerft();
-#endif
-
-#ifdef Move_TESTS
-    Test::moveSorting();
-#endif
-
-#ifdef Puzzle_TESTS
     Test::matingPuzzles();
 #endif
 
-#ifdef Init_TESTS
+#ifdef DEBUG
     Test::countPawnAttacks();
     Test::countKnightMoves();
     Test::countKingMoves();
@@ -61,6 +55,9 @@ int main() {
     Test::countRookMoves_noEdges();
 
     Test::moveEncodingAndDecoding();
+    Test::moveSorting();
+
+    Test::mirrorEval();
 #endif
 }
 

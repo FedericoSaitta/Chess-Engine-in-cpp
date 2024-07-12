@@ -228,69 +228,78 @@ int evaluate() {
                     // you could try and avoid conditional branching here
                         if ( countBits(bitboards[Pawn] & fileMasks[square]) > 1) penalties[White] += doublePawnPenalty * countBits(bitboards[Pawn] & fileMasks[square]);
 
-                // adding penalties to isolated pawns
-                if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
+                    // adding penalties to isolated pawns
+                    if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
 
-                // adding bonuses to passed pawns
-                if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
-                break;
+                    // adding bonuses to passed pawns
+                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
+                    break;
 
                 case (Pawn + 6):
                     // you could try and avoid conditional branching here
                         if ( countBits(bitboards[Pawn + 6] & fileMasks[square]) > 1) penalties[Black] += doublePawnPenalty * countBits(bitboards[Pawn + 6] & fileMasks[square]);
 
-                // adding penalties to isolated pawns
-                if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
+                    // adding penalties to isolated pawns
+                    if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
 
-                // adding bonuses to passed pawns
-                if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
-                break;
-
-
+                    // adding bonuses to passed pawns
+                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
+                    break;
 
                 case (Rook):
                     if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] += semiOpenFileScore;
-                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
-                break;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
+                    break;
 
                 case (Rook + 6):
                     if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] += semiOpenFileScore;
-                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
-                break;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
+                    break;
 
                 // if the kings are on semi-open or open files they will be given penalties
                 case (King):
                     if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] -= semiOpenFileScore;
-                if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
+                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
 
-                penalties[White] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[White] );
-                break;
+                    penalties[White] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[White] );
+                    break;
 
                 case (King + 6):
                     if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] -= semiOpenFileScore;
                     if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] -= openFileScore;
 
-                penalties[Black] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[Black] );
-                break;
+                    penalties[Black] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[Black] );
+                    break;
 
 
+                /*
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
-                // these are very basic implementations
+                // these are very basic implementations, like the ones in fruit
                 case (Bishop):
-                    penalties[White] += countBits( getBishopAttacks(square, occupancies[2]) );
+                    penalties[White] += (countBits( getBishopAttacks(square, occupancies[2]) ) - 6 ) * 5;
                     break;
 
                 case (Bishop + 6):
-                    penalties[Black] += countBits( getBishopAttacks(square, occupancies[2]) );
+                    penalties[Black] += (countBits( getBishopAttacks(square, occupancies[2]) ) - 6 ) * 5;
                     break;
 
+                case (Knight):
+                    penalties[White] += (countBits( bitKnightAttacks[square] & occupancies[2] ) - 4 ) * 4;
+                    break;
+
+                case (Knight + 6):
+                    penalties[Black] += (countBits( bitKnightAttacks[square] & occupancies[2] ) - 4 ) * 4;
+                    break;
+
+                // For now we dont assign any multipliers to quees
                 case (Queen):
-                    penalties[White] += countBits( getQueenAttacks(square, occupancies[2]) );
+                    penalties[White] += countBits( getQueenAttacks(square, occupancies[2]));
                     break;
 
                 case (Queen + 6):
                     penalties[Black] += countBits( getQueenAttacks(square, occupancies[2]) );
                     break;
+                    */
 
                 default:
                     break;

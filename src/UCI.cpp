@@ -14,7 +14,7 @@
 #include "board.h"
 #include "macros.h"
 #include "misc.h"
-#include "tests.h"
+#include "benchmark_tests.h"
 
 
 
@@ -27,15 +27,23 @@ int blackIncrementTime{};
 static bool isNewGame{true};
 
 // Helper function to split a string by space
-static std::vector<std::string> split(const std::string& str) {
-    std::vector<std::string> tokens;
-    std::istringstream iss(str);
-    std::string token;
-    while (iss >> token) {
-        tokens.push_back(token);
-    }
-    return tokens;
+
+void resetGameVariables() {
+    isNewGame = true;
+    // resetting all the time-controls just in case
+    gameLengthTime = 0;
+    whiteClockTime = 0;
+    blackClockTime = 0;
+    whiteIncrementTime = 0;
+    blackIncrementTime = 0;
+    // reset the hash Table
+    clearTranspositionTable();
+
+    repetitionIndex = 0;
+    repetitionTable[150] = 0;
 }
+
+
 static int parseMove(const std::string_view move) {
 
     const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
@@ -113,7 +121,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 static void handleGo(const std::vector<std::string>& tokens) {
 
     if (tokens[1] == "perft") {
-        Test::perft(std::stoi(tokens[2]));
+        Test::BenchMark::perft(std::stoi(tokens[2]));
         std::cout << '\n';
     }
     else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]), false);
@@ -172,20 +180,7 @@ void UCI() {
         else if ( command == "display" ) printBoardFancy();
 
         else if ( command == "quit") break;
-        else if ( command == "ucinewgame") {
-            isNewGame = true;
-            // resetting all the time-controls just in case
-            gameLengthTime = 0;
-            whiteClockTime = 0;
-            blackClockTime = 0;
-            whiteIncrementTime = 0;
-            blackIncrementTime = 0;
-            // reset the hash Table
-            clearTranspositionTable();
-
-            repetitionIndex = 0;
-            repetitionTable[150] = 0;
-        }
+        else if ( command == "ucinewgame") resetGameVariables();
 
     }
 }

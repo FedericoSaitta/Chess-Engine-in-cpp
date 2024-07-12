@@ -14,7 +14,8 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
 include_directories(include)
-include_directories(tests)
+include_directories(benchmark_tests)
+include_directories(debug_tests)
 
 add_executable(ChessEngine src/main.cpp
         src/main.cpp
@@ -25,15 +26,15 @@ add_executable(ChessEngine src/main.cpp
         src/init.cpp
         src/misc.cpp
         include/misc.h
-        tests/bitmask_tests.cpp
-        tests/tests.h
+        debug_tests/bitmask_tests.cpp
+        benchmark_tests/benchmark_tests.h
         src/search.cpp
         include/macros.h
-        tests/move_tests.cpp
-        tests/perft_tests.cpp
+        debug_tests/move_tests.cpp
+        benchmark_tests/perft_tests.cpp
         src/UCI.cpp
         include/evaluation.h
-        tests/puzzle_tests.cpp
+        benchmark_tests/puzzle_tests.cpp
         src/hashtable.cpp
         include/search.h
         include/uci.h
@@ -43,5 +44,7 @@ add_executable(ChessEngine src/main.cpp
         include/update.h
         include/inline_functions.h
         src/evaluation.cpp
-        tests/evaluation_tests.cpp
+        debug_tests/evaluation_tests.cpp
+        debug_tests/debug_tests.h
+        benchmark_tests/branching_factor.cpp
 )

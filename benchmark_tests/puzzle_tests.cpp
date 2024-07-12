@@ -1,7 +1,7 @@
 //
 // Created by Federico Saitta on 05/07/2024.
 //
-#include "tests.h"
+#include "benchmark_tests.h"
 
 #include <iostream>
 #include <random>
@@ -13,7 +13,7 @@
 #include "search.h"
 #include "macros.h"
 
-namespace Test {
+namespace Test::BenchMark {
     // this test can be very time consuming
     std::vector<Puzzle> matePuzzles {
     {"7k/5pp1/p3pN1p/1p1r1q2/2p4Q/2Pn2RP/PP3P1K/8 w - - 0 1", "h4h6", 2},

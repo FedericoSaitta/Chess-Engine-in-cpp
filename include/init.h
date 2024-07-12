@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef INIT_H
-#define INIT_H
+#pragma once
 
 #include "macros.h"
 extern const int bishopRelevantBits[64];
@@ -39,5 +38,3 @@ extern const int getRankFromSquare[64];
 
 void initAll();
 
-
-#endif //INIT_H

@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#pragma once
 
 #include "macros.h"
 extern U64 randomPieceKeys[12][64];
@@ -44,6 +43,3 @@ int checkHashOccupancy();
 
 U64 generateHashKey();
 
-
-
-#endif //HASHTABLE_H

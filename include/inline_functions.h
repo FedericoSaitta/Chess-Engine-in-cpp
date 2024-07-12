@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 10/07/2024.
 //
 
-#ifndef INLINE_FUNCTIONS_H
-#define INLINE_FUNCTIONS_H
+#pragma once
 
 #include "macros.h"
 #include "board.h"
@@ -80,5 +79,3 @@ inline int isSqAttacked(const int square, const int side) {
     return 0;
 }
 
-
-#endif //INLINE_FUNCTIONS_H

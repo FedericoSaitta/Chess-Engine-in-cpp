@@ -2,14 +2,14 @@
 // Tests are designed to be fully contained so that user only needs to call the test from the main
 // function without the need of any helper functions or previous input
 
-#include "tests.h"
+#include "../benchmark_tests/benchmark_tests.h"
 
 #include <bit>
 #include <iostream>
 
-#include "init.h"
-#include "misc.h"
-#include "macros.h"
+#include "../include/init.h"
+#include "../include/misc.h"
+#include "../include/macros.h"
 
 
 namespace Test{

@@ -1,7 +1,7 @@
 //
 // Created by Federico Saitta on 03/07/2024.
 //
-#include "tests.h"
+#include "benchmark_tests.h"
 
 #include <iostream>
 #include <random>
@@ -12,6 +12,7 @@
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
+#include "movegen.h"
 
 static const std::string testFEN[] {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -87,7 +88,7 @@ namespace Test{
         return nodes;
     }
 
-    // prints in red tests that have not passed
+    // prints in red benchmark_tests that have not passed
     void standardizedPerft() {
 
         const auto start = std::chrono::high_resolution_clock::now();

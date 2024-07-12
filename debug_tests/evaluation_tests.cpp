@@ -1,7 +1,7 @@
 //
 // Created by Federico Saitta on 12/07/2024.
 //
-#include "tests.h"
+#include "benchmark_tests.h"
 
 #include <iostream>
 #include <fstream>
@@ -11,19 +11,7 @@
 
 #include "evaluation.h"
 #include "board.h"
-
-
-static std::vector<std::string> split(const std::string &line, char delimiter = ' ') {
-    std::vector<std::string> result;
-    std::istringstream stream(line);
-    std::string token;
-
-    while (std::getline(stream, token, delimiter)) {
-        result.push_back(token);
-    }
-
-    return result;
-}
+#include "misc.h"
 
 U64 flipVertical(U64 x) {
     return  ( (x << 56)                           ) |
@@ -66,7 +54,7 @@ namespace Test {
     // (a) normal board (b) reflect by swapping ranks and changing the color of all pieces; (c)
     void mirrorEval() {
 
-        const std::string fileName = "/Users/federicosaitta/CLionProjects/ChessEngine/tests/resources/perft.epd";
+        const std::string fileName = "/Users/federicosaitta/CLionProjects/ChessEngine/tests/resources/random_positions.epd";
         std::ifstream file(fileName);
 
         if (!file.is_open()) { std::cerr << "Error opening file: " << fileName << std::endl; }
@@ -106,7 +94,7 @@ namespace Test {
             }
 
         }
-
+        std::cout << "mirrorEval test completed\n";
         file.close();
 
     }

@@ -226,10 +226,15 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     const int staticEval{ evaluate() };
 
-    if (staticEval >= beta) return beta; // known as node that fails high
+	// delta pruning, to be implemented
+	if (staticEval < alpha - 975) return alpha;
 
+    if (staticEval > alpha) {
+    	if (staticEval >= beta)
+    		return beta; // known as node that fails high
 
-    if (staticEval > alpha) alpha = staticEval; // Known as PV node (principal variation)
+	    alpha = staticEval; // Known as PV node (principal variation)
+    }
 
     MoveList moveList;
     generateMoves(moveList);
@@ -305,7 +310,8 @@ static int negamax(int alpha, const int beta, int depth) {
 	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 	// position fen 8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1, in this position if we disable null move pruning it finds the correct sequence
-	if (depth >= 3 && !inCheck && ply && nonPawnMat() ) { // we do not attempt null move pruning in case our side only has pawns on the board
+
+	if (depth >= 3 && !inCheck && ply && nonPawnMat()) { // we do not attempt null move pruning in case our side only has pawns on the board
 		COPY_BOARD()
 
 		hashKey ^= sideKey;
@@ -318,6 +324,9 @@ static int negamax(int alpha, const int beta, int depth) {
 		ply++;
 		repetitionIndex++;
 		repetitionTable[repetitionIndex] = hashKey;
+
+		// possible more aggressive reduction? int reduction{ 3 + depth / 6 };
+		// old reduction code: depth - 1 - nullMoveReduction
 		const int nullMoveScore = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
 		ply--;
 		repetitionIndex--;
@@ -342,6 +351,9 @@ static int negamax(int alpha, const int beta, int depth) {
     sortMoves(moveList, ply, bestMove);
 
 	int movesSearched{};
+	MoveList quietList;
+	int quietCount{};
+
     for (int count=0; count < moveList.count; count++) {
 
         COPY_BOARD()
@@ -359,15 +371,22 @@ static int negamax(int alpha, const int beta, int depth) {
         // increment legalMoves
         legalMoves++;
 
+    	const bool isQuiet = (!getMoveCapture(moveList.moves[count]) && !getMovePromPiece(moveList.moves[count]) && !getMoveEnPassant(moveList.moves[count]));
+
+    	// needed for improvements to move ordereing etc.
+    	if (isQuiet){
+    		quietList.moves[quietCount] = moveList.moves[count];
+    		quietCount++;
+    	}
+
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
     		// First move, use full-window search // this is the principal variation move
     		score = -negamax(-beta, -alpha, depth-1);
     	} else {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
-    			&& !getMoveCapture(moveList.moves[count]) // will not reduce captures
-    			&& !getMovePromPiece(moveList.moves[count]) // will not reduce promotions
-    			&& !inCheck            // will not reduce in case we are in check
+    			&& isQuiet			// will reduce quiet moves
+    			&& !inCheck         // will not reduce in case we are in check
     			&& canReduceMove(moveList.moves[count]))    // will not reduce in case we put opponent in check, is this worth the speed loss?
 
     				// some other heuristics can also be implemented though they are more complicated
@@ -394,10 +413,6 @@ static int negamax(int alpha, const int beta, int depth) {
 
         // found a better move
         if (score > alpha) { // Known as PV node (principal variation)
-            // store history moves
-            if (!getMoveCapture(moveList.moves[count])) {
-                historyMoves[getMovePiece(moveList.moves[count])][getMoveTargetSQ(moveList.moves[count])] += depth; // this can be dropped doesnt give much anyway
-            }
         	hashFlag = HASH_FLAG_EXACT;
             alpha = score;
 
@@ -415,9 +430,23 @@ static int negamax(int alpha, const int beta, int depth) {
         	// fail-hard beta cut off
         	if (score >= beta) {
         		// helps with better move ordering in branches at the same depth
-        		if (!getMoveCapture(moveList.moves[count])) {
+        		if (isQuiet) {
         			killerMoves[1][ply] = killerMoves[0][ply];
-        			killerMoves[0][ply] = moveList.moves[count]; // store killer moves
+        			killerMoves[0][ply] = bestMove; // store killer moves
+
+        			// can do more sophisticated code tho
+        			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+
+
+        			for (int i = 0; i < quietCount; i++) {
+        				const int quietMove = quietList.moves[i];
+        				if (quietMove == bestMove) continue;
+
+        				// penalize history of moves which didn't cause beta-cutoffs
+        				historyMoves[getMovePiece(quietMove)][getMoveTargetSQ(quietMove)] -= depth * depth;
+        			}
+
+
         		}
 
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
