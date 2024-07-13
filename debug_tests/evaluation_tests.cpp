@@ -49,12 +49,12 @@ static void swapColours() {
 
 
 
-namespace Test {
+namespace Test::Debug {
 
     // (a) normal board (b) reflect by swapping ranks and changing the color of all pieces; (c)
     void mirrorEval() {
 
-        const std::string fileName = "/Users/federicosaitta/CLionProjects/ChessEngine/tests/resources/random_positions.epd";
+        const std::string fileName = "/Users/federicosaitta/CLionProjects/ChessEngine/debug_tests/resources/random_positions.epd";
         std::ifstream file(fileName);
 
         if (!file.is_open()) { std::cerr << "Error opening file: " << fileName << std::endl; }

@@ -15,6 +15,15 @@
 int mg_value[6] = { 82, 337, 365, 477, 1025,  0};
 int eg_value[6] = { 94, 281, 297, 512,  936,  0};
 
+// From Fruit engine
+static constexpr int KnightMobOpening = 4;
+static constexpr int KnightMobEndgame = 4;
+static constexpr int BishopMobOpening = 5;
+static constexpr int BishopMobEndgame = 5;
+static constexpr int RookMobOpening = 2;
+static constexpr int RookMobEndgame = 4;
+static constexpr int QueenMobOpening = 1;
+static constexpr int QueenMobEndgame = 2;
 
 /* piece/sq tables */
 /* values from Rofchade: http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19 */
@@ -201,6 +210,10 @@ void init_tables()
 int evaluate() {
     int mg[2]{};
     int eg[2]{};
+
+    int mgMobility[2]{};
+    int egMobility[2]{};
+
     int gamePhase{};
     int penalties[2]{}; // 0 is white, 1 is black
     int square{};
@@ -249,11 +262,17 @@ int evaluate() {
                 case (Rook):
                     if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] += semiOpenFileScore;
                     if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
+
+                    mgMobility[White] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
+                    egMobility[White] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
                 case (Rook + 6):
                     if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] += semiOpenFileScore;
                     if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
+
+                    mgMobility[Black] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
+                    egMobility[Black] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
                 // if the kings are on semi-open or open files they will be given penalties
@@ -272,34 +291,39 @@ int evaluate() {
                     break;
 
 
-                /*
+
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
                 // these are very basic implementations, like the ones in fruit
                 case (Bishop):
-                    penalties[White] += (countBits( getBishopAttacks(square, occupancies[2]) ) - 6 ) * 5;
+                    mgMobility[White] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
+                    egMobility[White] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
                     break;
 
                 case (Bishop + 6):
-                    penalties[Black] += (countBits( getBishopAttacks(square, occupancies[2]) ) - 6 ) * 5;
+                    mgMobility[Black] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
+                    egMobility[Black] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
                     break;
 
                 case (Knight):
-                    penalties[White] += (countBits( bitKnightAttacks[square] & occupancies[2] ) - 4 ) * 4;
+                    mgMobility[White] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
+                    egMobility[White] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
                     break;
 
                 case (Knight + 6):
-                    penalties[Black] += (countBits( bitKnightAttacks[square] & occupancies[2] ) - 4 ) * 4;
+                    mgMobility[Black] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
+                    egMobility[Black] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
                     break;
 
                 // For now we dont assign any multipliers to quees
                 case (Queen):
-                    penalties[White] += countBits( getQueenAttacks(square, occupancies[2]));
+                    mgMobility[White] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
+                    egMobility[White] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
                     break;
 
                 case (Queen + 6):
-                    penalties[Black] += countBits( getQueenAttacks(square, occupancies[2]) );
+                    mgMobility[Black] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
+                    egMobility[Black] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
                     break;
-                    */
 
                 default:
                     break;
@@ -314,8 +338,8 @@ int evaluate() {
     // std::cout << "mgScore white: " << mg[side] << " mgScore black: " << mg[side^1] << '\n';
 
     /* tapered eval */
-    const int mgScore = mg[side] - mg[side^1];
-    const int egScore = eg[side] - eg[side^1];
+    const int mgScore = mg[side] + mgMobility[side] - mg[side^1] - mgMobility[side^1];
+    const int egScore = eg[side] + egMobility[side] - eg[side^1] - egMobility[side^1];
     int mgPhase = gamePhase;
     if (mgPhase > 24) mgPhase = 24; /* in case of early promotion */
 

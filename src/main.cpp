@@ -26,7 +26,6 @@ int main() {
 
     UCI();
 
-
     // need to press quit to properly save this file
     logFile.close();
 
