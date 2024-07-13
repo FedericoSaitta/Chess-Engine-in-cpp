@@ -243,8 +243,9 @@ static int quiescenceSearch(int alpha, const int beta) {
 	if (staticEval < alpha - 975) return alpha;
 
     if (staticEval > alpha) {
-    	if (staticEval >= beta)
+    	if (staticEval >= beta) {
     		return beta; // known as node that fails high
+    	}
 
 	    alpha = staticEval; // Known as PV node (principal variation)
     }
@@ -588,7 +589,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		}
-
 		currentDepth++; // we can proceed to the next iteration
 
     }

@@ -33,7 +33,7 @@ implemented. This is a simpler though slower approach due to the creation and de
 - simple time control that decides allowed thinking time based on how much of the total game time has been exhausted
 - search is only stopped once the current depth has been searched fully
 
-#### Performance BenchMarks:
+#### Performance BenchMarks of the latest version:
 - These test have been run on 1,6 GHz Dual-Core Intel Core i5 (Macbook Air 2017)
 
 ##### Perft Test:
@@ -64,41 +64,46 @@ Mating Move: h4h3 Time taken: 71.1204ss
 
 #### Engine vs. Engine Match Results: 
 
-V1 vs. V2:
+Here are the results of each version tested against the previous one. The tests were performed using fast-chess and 
+randomized positions from a small book 5 to 10 moves deep and less than 100 centipawn advantage for each side (thanks Stockfish).
+Please note that though the versions are improving over time, the gain is not linear, hence the estimate ELO values 
+are a rough measure of playing strength, and will only be confirmed or denied once the engine participates in larger 
+testing suites.
 
-Results of ChessEngine_V1 vs ChessEngine (10+1, NULL, NULL, openings.epd):
-Elo: -260.49 +/- 43.07, nElo: -418.02 +/- 48.15
-LOS: 0.00 %, DrawRatio: 15.00 %, PairsRatio: 0.01
-Games: 200, Wins: 4, Losses: 131, Draws: 65, Points: 36.5 (18.25 %)
-Ptnml(0-2): [44, 40, 15, 1, 0]
+| Version | ELO Gain     | Estimated ELO |
+|---------|--------------|---------------|
+| 1.2.5   | +46 +/- 20   | 2380          |
+| 1.2.4   | +69 +/- 20   | 2350          |
+| 1.2.3   | +35 +/- 20   | 2300          |
+| 1.2.2   | +65 +/- 20   | 2280          |
+| 1.2.1   | +223 +/- 41  | 2220          |
+| 1.2.0   | +200 +/- 43  | 2000          |
+| 1.1.0   | ------------ | 1800          |
 
 
-V2.1 vs. V2: 
+#### Patches:
+- v1.1.0: iterative deepening, negamax search with PVS and quiesce for captures and promotions, MVV-LVA, killer and history move ordering. Simple piece square table evaluation.
+- v1.2.0: Zobrist hashing for three-fold check and TT-table, null move pruning and basic LMR.
+- v1.2.1: Additions of Pesto Tables and tapered evaluation, aspiration windows.
+- v1.2.2: King-safety and pawn consideration (isolated, doubled, passed), piece mobility in middle and endgame.
+- v1.2.3: Razoring and static null move pruning
+- v1.2.4: Improvement to move sorting algorithm (from O(N^2) to O(NlogN)), added delta pruning
+- v1.2.5: More aggressive LMR (now reduces moves by dept/3 after the first six have been searched)
 
-Results of ChessEngine vs ChessEngine_Bugless (10+1, NULL, NULL, scrapedOpenings.epd):
-Elo: 277.00 +/- 40.90, nElo: 345.17 +/- 34.05
-LOS: 100.00 %, DrawRatio: 17.00 %, PairsRatio: 22.71
-Games: 400, Wins: 307, Losses: 42, Draws: 51, Points: 332.5 (83.12 %)
-Ptnml(0-2): [4, 3, 34, 42, 117]
-
-V2.2 vs. V.1:
-
-Results of ChessEngine_V2-1 vs ChessEngine_V2-2 (30+0.1, NULL, NULL, scrapedOpenings.epd):
-Elo: -65.02 +/- 40.91, nElo: -78.73 +/- 48.15
-LOS: 0.07 %, DrawRatio: 31.00 %, PairsRatio: 0.47
-Games: 200, Wins: 51, Losses: 88, Draws: 61, Points: 81.5 (40.75 %)
-Ptnml(0-2): [19, 28, 31, 15, 7]
-
-V2.3 vs. V.2:
+- Note that some minor details are not listed here, eg. v1.2.0 greatly improved time management over v1.1.0 which lead 
+to a few wins due to v1.1.0 flagging.
 
 #### Future Improvements:
-- Symmetry evaluation test suite
+- Futility pruning
+- LMR and LMP tables
+- Refactoring Eval function with S macro as used in other engines (eg. Weiss)
+- More accurate History move scoring
+- SEE and pruning captures based on it
+- Tuning of evaluation parameters
 - More complex time management for longer time controls
 - Opening book
-- Evaluation of king safety and mobility
-- Evaluation of pawn structure and passed pawns
 
 #### Credits: 
-This engine has been largely inspired by the work of many successful programmers such as Sebastian Lague, Code_Monkey_King and 
-Bluefever Software who all have amazing videos on chess engine programming on youtube. Lastly, this would not have been 
+This engine has been largely inspired by the work of many successful programmers such as Sebastian Lague, Maksim Korzh and 
+Bluefever Software who all have amazing videos on chess engine programming on YouTube. Lastly, this would not have been 
 possible without the resources provided by the Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 

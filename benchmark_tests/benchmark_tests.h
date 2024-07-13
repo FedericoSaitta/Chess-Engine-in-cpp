@@ -9,7 +9,6 @@
 
 namespace Test::BenchMark {
 
-
     void perftDriver(int depth);
     std::uint32_t perft(int depth);
     void standardizedPerft();

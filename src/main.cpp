@@ -16,7 +16,7 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-    // Test::BenchMark::branchingFactor();
+    Test::BenchMark::branchingFactor();
     UCI();
 
     // need to press quit to properly save this file

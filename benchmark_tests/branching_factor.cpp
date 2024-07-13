@@ -65,7 +65,7 @@ namespace Test::BenchMark {
                         const float branchingRatio { static_cast<float>(std::pow( std::stoi(tokens[7]), 1 / std::stod(tokens[5]) )) };
 
                         averageBranchingRatio += (branchingRatio / numEntries);
-                      //  std::cout << "At depth: " << tokens[5] << " Branching Ratio: " << branchingRatio << '\n';
+                        std::cout << "At depth: " << tokens[5] << " Branching Ratio: " << branchingRatio << '\n';
                     }
                 }
                 else break;
