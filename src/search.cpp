@@ -6,6 +6,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <algorithm>
 
 #include "macros.h"
 #include "inline_functions.h"
@@ -19,7 +20,6 @@
 #include "misc.h"
 
 #define MAX_PLY 64
-
 
 
 U64 repetitionTable[1'000]{};
@@ -49,11 +49,18 @@ static int timePerMove { 0 };
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
 
-///// MOVES ARE SORTED IN THIS ORDER ////
+/*  MOVE SORTING ORDER 
+    1. PV Move
+    2. Captures and Promotions
+    3. Killer 1
+    4. Killer 2
+    5. History 
+    6. Other moves
 
-/*
+    Thanks to Maksim Korzh for the implementation of 
+    MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
 
-	(Victims) Pawn Knight Bishop   Rook  Queen   King
+     (Victims) Pawn Knight Bishop   Rook  Queen   King
   (Attackers)
 		Pawn   105    205    305    405    505    605
 	  Knight   104    204    304    404    504    604
@@ -61,9 +68,12 @@ std::chrono::duration<float> searchDuration{ 0 };
 		Rook   102    202    302    402    502    602
 	   Queen   101    201    301    401    501    601
 		King   100    200    300    400    500    600
-
 */
 
+// To implement En-Passant captures neatly we duplicate the values
+// such that each side can capture their own pieces, this of course 
+// will not be allowed by the movegenerator
+// eg. mvv_lva[1][1]: means white pawn captures white pawn
 static int mvv_lva[12][12] = {
 	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
 	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
@@ -83,7 +93,7 @@ static int mvv_lva[12][12] = {
 static void resetStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
 	memset(historyMoves, 0, sizeof(historyMoves));
-	memset(pvLength, 0, sizeof(pvLength)); // though this is not 100% needed
+	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
 
 	nodes = 0;
@@ -139,10 +149,7 @@ if (scorePV && (pvTable[0][ply] == move)) {
 	return historyMoves[movePiece][targetSquare];
 }
 
-#include <vector>
-#include <algorithm>
-
-// Much faster sorting algorithm
+// 4x Faster than simple bubble sort
 static inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
 	// Pair moves with their scores
 	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
@@ -167,42 +174,7 @@ static inline void sortMoves(MoveList& moveList, const int ply, const int best_m
 		moveList.moves[i] = scoredMoves[i].second;
 	}
 }
-/*
-static inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
-	int *moveScores = static_cast<int*>(malloc(moveList.count * 4)); // as int has size of 4 bytes
 
-	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
-
-	// scoring the moves
-	for (int count=0; count < moveList.count; count++) {
-		// if we have a hash move available
-		if (best_move == moveList.moves[count])
-			// score move
-			moveScores[count] = 30000;
-
-		else
-		moveScores[count] = scoreMove(moveList.moves[count], ply);
-	}
-
-	// sorting the moves
-	for (int current=0; current < moveList.count; current++) {
-		for (int next=(current + 1); next < moveList.count; next++) {
-			// comparing current and next
-			if (moveScores[current] < moveScores[next]) {
-				const int tempScore{ moveScores[current] };
-				const int tempMove{ moveList.moves[current] };
-
-				moveScores[current] = moveScores[next];
-				moveList.moves[current] = moveList.moves[next];
-
-				moveScores[next] = tempScore;
-				moveList.moves[next] = tempMove;
-			}
-		}
-	}
-	free(moveScores); // remember to free the memory at the end
-}
-*/
 
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
@@ -211,7 +183,7 @@ static void enablePVscoring(const MoveList& moveList) {
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
 
-        	break; // I think this breaking condition is correct
+        	break; 
         }
     }
 }
@@ -232,8 +204,8 @@ static int getMoveTime(const bool timeConstraint) {
 
 static void isTimeUp() {
 	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
-	if ( (searchDuration.count() * 1'000) > timePerMove)
-		stopSearch = 1;
+
+	if ( (searchDuration.count() * 1'000) > timePerMove) stopSearch = 1;
 }
 
 static int isRepetition() {
@@ -241,9 +213,12 @@ static int isRepetition() {
 	return 0; // if no repetition found
 }
 
+static inline U64 nonPawnMaterial() {
+	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
+}
+
 static int canReduceMove(const int move) {
-	// This does cause some slow down clearly, but improves search stability
-	// should definetely be tested in many games
+	// This does cause some slow down clearly, but improves search stability should definetely be tested in many games
 	COPY_BOARD()
 	makeMove(move, 0);
 
@@ -255,8 +230,8 @@ static int canReduceMove(const int move) {
 
 
 static int quiescenceSearch(int alpha, const int beta) {
-	if ((nodes & 2047) == 0)
-		isTimeUp();
+
+	if ((nodes & 2047) == 0) isTimeUp();
 
 	nodes++;
 
@@ -264,7 +239,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     const int staticEval{ evaluate() };
 
-	// delta pruning, to be implemented
+	// delta pruning
 	if (staticEval < alpha - 975) return alpha;
 
     if (staticEval > alpha) {
@@ -280,6 +255,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
+
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
@@ -294,12 +270,13 @@ static int quiescenceSearch(int alpha, const int beta) {
         const int score = -quiescenceSearch(-beta, -alpha);
         ply--;
     	repetitionIndex--;
+
         RESTORE_BOARD()
 
-    	if (stopSearch) return 0;
+ 		if (stopSearch) return 0; // If the time is up, we return 0;
 
         // found a better move
-        if (score > alpha) { // Known as PV node (principal variatio)
+        if (score > alpha) { // Known as PV node (principal variation)
             alpha = score;
 
         	// fail-hard beta cut off
@@ -310,9 +287,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     return alpha; // node that fails low
 }
 
-static inline U64 nonPawnMat() {
-	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
-}
+
 
 
 static inline int negamax(int alpha, const int beta, int depth) {
@@ -322,52 +297,48 @@ static inline int negamax(int alpha, const int beta, int depth) {
 	int bestMove {};
 	int hashFlag{ HASH_FLAG_ALPHA };
 
-	if (ply && isRepetition()) return 0; // we return draw score if we detect a draw
+	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
 
-	// to figure ot if the current node is a principal variation node
-	// reading the TT table, if we the move has already been searched, we return its evaluation
+	
 	// ply && used to ensure we dont read from the transposition table at the root node
-	int pvNode = beta - alpha > 1;
+	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
+
+	// reading the TT table, if we the move has already been searched, we return its evaluation
 	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
 
-	if ((nodes & 2047) == 0)
-		isTimeUp();
-
+	if ((nodes & 2047) == 0) isTimeUp();
+	if (ply > MAX_PLY - 1) return evaluate();
 
 	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
-
-	if (ply > MAX_PLY - 1)
-		// evaluate position
-		return evaluate();
 
 	nodes++;
 
 	const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
+
 	int legalMoves{};
 
-	// increase search depth if the king has been exposed into a check
+	// Search extension if side is in check
 	if (inCheck) depth++;
 
 	const int static_eval { evaluate() };
 
 
-	// evaluation pruning / static null move pruning
+	// static null move pruning
 	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -MAX_VALUE + 100)
 	{
-		// define evaluation margin
-		const int evalMargin = 120 * depth;
+		const int evalMargin = 120 * depth; // the evaluation margin
 
 		// evaluation margin substracted from static evaluation score fails high
 		if (static_eval - evalMargin >= beta)
 			// evaluation margin substracted from static evaluation score
-				return static_eval - evalMargin;
+			return static_eval - evalMargin;
 	}
 
 
 	// maybe you can write TT entries here too???
 	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
-	// position fen 8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1, in this position if we disable null move pruning it finds the correct sequence
-	if (depth >= 3 && !inCheck && ply && nonPawnMat()) { // we do not attempt null move pruning in case our side only has pawns on the board
+	// Do not attempt null move pruning in case our side only has pawns on the board
+	if (depth >= 3 && !inCheck && ply && nonPawnMaterial()) {
 		COPY_BOARD()
 
 		hashKey ^= sideKey;
@@ -389,17 +360,13 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
 		RESTORE_BOARD() // un-making the null move
 
-		if (stopSearch)
-			return 0;
-
+		if (stopSearch) return 0;
 		if (nullMoveScore >= beta) return beta;
 	}
 	// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
 
-
 	// razoring
-	if (!pvNode && !inCheck && depth <= 3)
-	{
+	if (!pvNode && !inCheck && depth <= 3){
 		// get static eval and add first bonus
 		score = static_eval + 125;
 
@@ -435,22 +402,26 @@ static inline int negamax(int alpha, const int beta, int depth) {
 		}
 	}
 
-
     MoveList moveList;
     generateMoves(moveList);
 
-    if (followPV) { // if we are following PV line, we enable scoring
-        enablePVscoring(moveList);
-    }
+	// if we are following PV line, we enable scoring
+    if (followPV) enablePVscoring(moveList);
 
     sortMoves(moveList, ply, bestMove);
-
 	int movesSearched{};
 
-	//MoveList quietList;
-	//int quietCount{};
+	MoveList quietList;
+	int quietCount{};
+	// bool skipQuietMoves{ false };
 
     for (int count=0; count < moveList.count; count++) {
+    	const int move { moveList.moves[count] };
+    	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move) );
+
+
+    	//if (isQuiet && skipQuietMoves)
+    	//	continue;
 
         COPY_BOARD()
         ply++;
@@ -458,7 +429,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
     	repetitionTable[repetitionIndex] = hashKey;
 
         // makeMove returns 1 for legal moves
-        if( !makeMove(moveList.moves[count], 0) ) { // meaning its illegal
+        if( !makeMove(move, 0) ) { // meaning its illegal
             ply--;
         	repetitionIndex--;
             continue;
@@ -468,13 +439,11 @@ static inline int negamax(int alpha, const int beta, int depth) {
         legalMoves++;
 
     	// no need to check enPassant as we do count it as a capture
-    	const bool isQuiet = ( !getMoveCapture(moveList.moves[count]) && !getMovePromPiece(moveList.moves[count]) );
-
     	// needed for improvements to move ordereing etc.
-    	//if (isQuiet){
-    	//	quietList.moves[quietCount] = moveList.moves[count];
-    	//	quietCount++;
-    	//}
+    	if (isQuiet){
+    		quietList.moves[quietCount] = moveList.moves[count];
+    		quietCount++;
+    	}
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
@@ -484,7 +453,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			&& canReduceMove(moveList.moves[count]))    // will not reduce in case we put opponent in check, is this worth the speed loss?
+    			&& canReduceMove(move) )   // will not reduce in case we put opponent in check, is this worth the speed loss?
 
     				// some other heuristics can also be implemented though they are more complicated
     				score = -negamax(-alpha-1, -alpha, depth-2); // Search this move with reduced depth:
@@ -499,6 +468,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
     				score = -negamax(-beta, -alpha, depth-1);
     		}
     	}
+
         ply--;
     	repetitionIndex--;
         RESTORE_BOARD()
@@ -514,7 +484,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
             alpha = score;
 
         	// store best move (for TT)
-        	bestMove = moveList.moves[count];
+        	bestMove = move;
 
             pvTable[ply][ply] = moveList.moves[count];
             // copy move from deeper plies to curernt ply
@@ -527,7 +497,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         	// fail-hard beta cut off
         	if (score >= beta) {
         		// helps with better move ordering in branches at the same depth
-        		if (!getMoveCapture(moveList.moves[count])) {
+        		if (!getMoveCapture(move)) {
         			killerMoves[1][ply] = killerMoves[0][ply];
         			killerMoves[0][ply] = bestMove; // store killer moves
 
@@ -535,7 +505,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         			// check if this should go anywhere alpha increases or where we get a beta cut off
         			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
 
-					/*
+
         			for (int i = 0; i < quietCount; i++) {
         				const int quietMove = quietList.moves[i];
         				if (quietMove == bestMove) continue;
@@ -543,9 +513,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         				// penalize history of moves which didn't cause beta-cutoffs
         				historyMoves[getMovePiece(quietMove)][getMoveTargetSQ(quietMove)] -= depth * depth;
         			}
-        			*/
         		}
-
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         		return beta; // known as node that fails high
         	}
@@ -567,7 +535,6 @@ static inline int negamax(int alpha, const int beta, int depth) {
 }
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {
-
 	resetStates();
 
 	timePerMove = getMoveTime(timeConstraint);

@@ -4,7 +4,7 @@
 #include "init.h"
 
 //#define DEBUG
-//#define BENCHMARK
+// #define BENCHMARK
 
 #include <iostream>
 
@@ -14,11 +14,9 @@ int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
 
-    initAll(256); // Done at compile time :)
+    initAll(256); // Done at compile time :), using 256 MB size hash
 
-    Test::BenchMark::matingPuzzles();
-    Test::BenchMark::branchingFactor();
-   // UCI();
+    UCI();
 
     // need to press quit to properly save this file
     logFile.close();
@@ -33,8 +31,8 @@ int main() {
 
 
 #ifdef BENCHMARK
-    Test::standardizedPerft();
-    Test::matingPuzzles();
+    Test::BenchMark::branchingFactor();
+    Test::BenchMark::matingPuzzles();
 #endif
 
 #ifdef DEBUG
