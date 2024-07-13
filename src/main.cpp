@@ -18,7 +18,7 @@ int main() {
 
     Test::BenchMark::matingPuzzles();
     Test::BenchMark::branchingFactor();
-    UCI();
+   // UCI();
 
     // need to press quit to properly save this file
     logFile.close();

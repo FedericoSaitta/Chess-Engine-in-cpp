@@ -96,20 +96,20 @@ static void resetStates() {
 
 
 // we will add different scorings for PV etc
-inline int scoreMove(const int move, const int ply) {
+static inline int scoreMove(const int move, const int ply) {
 
-	if (scorePV) {
-		if (pvTable[0][ply] == move) {
-			scorePV = 0; // as there is only one principal move in a moveList
-			// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
-			// note that because of null move and late more pruning this will not print nicely because higher depths plies are
-			// not considered because of the early pruning, PV is still followed  though.
-			return 20'000;
-		}
+if (scorePV && (pvTable[0][ply] == move)) {
+		scorePV = 0; // as there is only one principal move in a moveList
+		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
+		// note that because of null move and late more pruning this will not print nicely because higher depths plies are
+		// not considered because of the early pruning, PV is still followed  though.
+		return 20'000;
 	}
 
-	if (getMoveCapture(move)) {
+	const int movePiece = getMovePiece(move);
+	const int targetSquare = getMoveTargetSQ(move);
 
+	if (getMoveCapture(move)) {
 		int targetPiece{ Pawn }; // in case we make an enPassant capture, which our loop would miss
 
 		// copied from makeMove function
@@ -118,29 +118,60 @@ inline int scoreMove(const int move, const int ply) {
 		else { startPiece = Pawn; endPiece = King; }
 
 		for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-			if ( GET_BIT(bitboards[bbPiece], getMoveTargetSQ(move)) ) {
+			if ( GET_BIT(bitboards[bbPiece], targetSquare) ) {
 				targetPiece = bbPiece;
 				break;
 			}
 		}
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
-		return mvv_lva[getMovePiece(move)][targetPiece] + 10'000; // important as we score MVV-LVA as better than killer
+		return mvv_lva[movePiece][targetPiece] + 10'000; // important as we score MVV-LVA as better than killer
 	}
 
 	// new addition
 	// we score promotions as MVV-LVA
-	if (getMovePromPiece(move) != 0) return mvv_lva[Pawn][getMovePromPiece(move)] + 10'000;
+	const int promPiece { getMovePromPiece(move) };
+	if (promPiece != 0) return mvv_lva[Pawn][promPiece] + 10'000;
 
 	if (killerMoves[0][ply] == move) return 9000;
-
 	if (killerMoves[1][ply] == move) return 8000;
 
-	return historyMoves[getMovePiece(move)][getMoveTargetSQ(move)];
+	return historyMoves[movePiece][targetSquare];
 }
 
-inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
+#include <vector>
+#include <algorithm>
+
+// Much faster sorting algorithm
+static inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
+	// Pair moves with their scores
+	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
+
+	for (int count = 0; count < moveList.count; ++count) {
+		int score;
+
+		if (best_move == moveList.moves[count]) score = 30000;
+
+		else score = scoreMove(moveList.moves[count], ply);
+
+		scoredMoves[count] = std::make_pair(score, moveList.moves[count]);
+	}
+
+	// Sort moves based on their scores in descending order
+	std::ranges::sort(scoredMoves, [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+		return a.first > b.first; // Descending order
+	});
+
+	// Update moveList with sorted moves
+	for (int i = 0; i < moveList.count; ++i) {
+		moveList.moves[i] = scoredMoves[i].second;
+	}
+}
+/*
+static inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
 	int *moveScores = static_cast<int*>(malloc(moveList.count * 4)); // as int has size of 4 bytes
+
+	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
 
 	// scoring the moves
 	for (int count=0; count < moveList.count; count++) {
@@ -171,6 +202,7 @@ inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
 	}
 	free(moveScores); // remember to free the memory at the end
 }
+*/
 
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
@@ -320,7 +352,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
 
 	// evaluation pruning / static null move pruning
-	if (depth < 3 && !pvNode && !inCheck &&  abs(beta - 1) > -MAX_VALUE + 100)
+	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -MAX_VALUE + 100)
 	{
 		// define evaluation margin
 		const int evalMargin = 120 * depth;
