@@ -1,8 +1,9 @@
 # Chess engine in c++
 
-[![lichess-rapid](https://lichess-shield.vercel.app/api?username=Aramis-Bot=bullet)](https://lichess.org/@/Aramis-Bot/perf/bullet)
-[![lichess-rapid](https://lichess-shield.vercel.app/api?username=Aramis-Bot=blitz)](https://lichess.org/@/Aramis-Bot/perf/blitz)
+[![lichess-bullet](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=bullet)](https://lichess.org/@/Aramis-Bot/perf/bullet)
+[![lichess-blitz](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=blitz)](https://lichess.org/@/Aramis-Bot/perf/blitz)
 [![lichess-rapid](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=rapid)](https://lichess.org/@/Aramis-Bot/perf/rapid)
+
 To play against this engine head to: https://lichess.org/@/Aramis-Bot.
 
 This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.

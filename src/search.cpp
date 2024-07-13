@@ -5,8 +5,6 @@
 #include <fstream>
 #include <string>
 #include <variant>
-#include <vector>
-#include <algorithm>
 
 #include "macros.h"
 #include "inline_functions.h"
@@ -18,9 +16,9 @@
 #include "board.h"
 #include "evaluation.h"
 #include "misc.h"
+#include "movesort.h"
 
 #define MAX_PLY 64
-
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
@@ -28,14 +26,14 @@ int repetitionIndex{};
 int ply{};
 static std::uint32_t nodes{};
 
-static int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-static int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
+int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
+int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
+int pvTable[64][64]{};
 static int pvLength[64]{};
-static int pvTable[64][64]{};
 
+int scorePV{};
 static int followPV{}; // if it is true then we follow the principal variation
-static int scorePV{};
 
 constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
 constexpr int reductionLimit { 3 };
@@ -49,46 +47,6 @@ static int timePerMove { 0 };
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
 
-/*  MOVE SORTING ORDER 
-    1. PV Move
-    2. Captures and Promotions
-    3. Killer 1
-    4. Killer 2
-    5. History 
-    6. Other moves
-
-    Thanks to Maksim Korzh for the implementation of 
-    MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
-
-     (Victims) Pawn Knight Bishop   Rook  Queen   King
-  (Attackers)
-		Pawn   105    205    305    405    505    605
-	  Knight   104    204    304    404    504    604
-	  Bishop   103    203    303    403    503    603
-		Rook   102    202    302    402    502    602
-	   Queen   101    201    301    401    501    601
-		King   100    200    300    400    500    600
-*/
-
-// To implement En-Passant captures neatly we duplicate the values
-// such that each side can capture their own pieces, this of course 
-// will not be allowed by the movegenerator
-// eg. mvv_lva[1][1]: means white pawn captures white pawn
-static int mvv_lva[12][12] = {
-	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
-
-	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
-};
 
 static void resetStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
@@ -103,79 +61,6 @@ static void resetStates() {
 
 	stopSearch = 0;
 }
-
-
-// we will add different scorings for PV etc
-static inline int scoreMove(const int move, const int ply) {
-
-if (scorePV && (pvTable[0][ply] == move)) {
-		scorePV = 0; // as there is only one principal move in a moveList
-		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
-		// note that because of null move and late more pruning this will not print nicely because higher depths plies are
-		// not considered because of the early pruning, PV is still followed  though.
-		return 20'000;
-	}
-
-	const int movePiece = getMovePiece(move);
-	const int targetSquare = getMoveTargetSQ(move);
-
-	if (getMoveCapture(move)) {
-		int targetPiece{ Pawn }; // in case we make an enPassant capture, which our loop would miss
-
-		// copied from makeMove function
-		int startPiece, endPiece;
-		if (side == White ) { startPiece = Pawn + 6; endPiece = King + 6; }
-		else { startPiece = Pawn; endPiece = King; }
-
-		for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-			if ( GET_BIT(bitboards[bbPiece], targetSquare) ) {
-				targetPiece = bbPiece;
-				break;
-			}
-		}
-
-		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
-		return mvv_lva[movePiece][targetPiece] + 10'000; // important as we score MVV-LVA as better than killer
-	}
-
-	// new addition
-	// we score promotions as MVV-LVA
-	const int promPiece { getMovePromPiece(move) };
-	if (promPiece != 0) return mvv_lva[Pawn][promPiece] + 10'000;
-
-	if (killerMoves[0][ply] == move) return 9000;
-	if (killerMoves[1][ply] == move) return 8000;
-
-	return historyMoves[movePiece][targetSquare];
-}
-
-// 4x Faster than simple bubble sort
-static inline void sortMoves(MoveList& moveList, const int ply, const int best_move) {
-	// Pair moves with their scores
-	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
-
-	for (int count = 0; count < moveList.count; ++count) {
-		int score;
-
-		if (best_move == moveList.moves[count]) score = 30000;
-
-		else score = scoreMove(moveList.moves[count], ply);
-
-		scoredMoves[count] = std::make_pair(score, moveList.moves[count]);
-	}
-
-	// Sort moves based on their scores in descending order
-	std::ranges::sort(scoredMoves, [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-		return a.first > b.first; // Descending order
-	});
-
-	// Update moveList with sorted moves
-	for (int i = 0; i < moveList.count; ++i) {
-		moveList.moves[i] = scoredMoves[i].second;
-	}
-}
-
-
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
@@ -213,7 +98,7 @@ static int isRepetition() {
 	return 0; // if no repetition found
 }
 
-static inline U64 nonPawnMaterial() {
+static U64 nonPawnMaterial() {
 	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
 }
 

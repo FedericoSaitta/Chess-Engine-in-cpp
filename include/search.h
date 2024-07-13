@@ -12,8 +12,11 @@ extern int ply;
 extern U64 repetitionTable[1'000];
 extern int repetitionIndex;
 
-static inline int scoreMove(int move, int ply);
-static inline void sortMoves(MoveList& moveList, int ply, int bestMove);
+extern int scorePV;
+extern int pvTable[64][64];
+
+extern int killerMoves[2][128];
+extern int historyMoves[12][64];
 
 void iterativeDeepening(int depth, bool timeConstraint=false);
 

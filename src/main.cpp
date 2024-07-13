@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 
 #include "uci.h"
 #include "init.h"
@@ -6,9 +7,9 @@
 //#define DEBUG
 // #define BENCHMARK
 
-#include <iostream>
 
 #include "benchmark_tests.h"
+#include "debug_tests.h"
 
 int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
@@ -16,7 +17,6 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-    Test::BenchMark::branchingFactor();
     UCI();
 
     // need to press quit to properly save this file

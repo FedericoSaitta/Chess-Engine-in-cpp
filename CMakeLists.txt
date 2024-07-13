@@ -47,4 +47,6 @@ add_executable(ChessEngine src/main.cpp
         debug_tests/evaluation_tests.cpp
         debug_tests/debug_tests.h
         benchmark_tests/branching_factor.cpp
+        src/movesort.cpp
+        include/movesort.h
 )
