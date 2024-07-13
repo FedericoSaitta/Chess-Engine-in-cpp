@@ -322,7 +322,6 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
 	const int static_eval { evaluate() };
 
-
 	// static null move pruning
 	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -MAX_VALUE + 100)
 	{
@@ -411,8 +410,8 @@ static inline int negamax(int alpha, const int beta, int depth) {
     sortMoves(moveList, ply, bestMove);
 	int movesSearched{};
 
-	MoveList quietList;
-	int quietCount{};
+	//MoveList quietList;
+	//int quietCount{};
 	// bool skipQuietMoves{ false };
 
     for (int count=0; count < moveList.count; count++) {
@@ -440,10 +439,10 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
     	// no need to check enPassant as we do count it as a capture
     	// needed for improvements to move ordereing etc.
-    	if (isQuiet){
-    		quietList.moves[quietCount] = moveList.moves[count];
-    		quietCount++;
-    	}
+    	//if (isQuiet){
+    	//	quietList.moves[quietCount] = moveList.moves[count];
+    	//	quietCount++;
+    	//}
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
@@ -453,11 +452,14 @@ static inline int negamax(int alpha, const int beta, int depth) {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			&& canReduceMove(move) )   // will not reduce in case we put opponent in check, is this worth the speed loss?
+    			&& canReduceMove(move) ) {
+    			// will not reduce in case we put opponent in check, is this worth the speed loss?
 
-    				// some other heuristics can also be implemented though they are more complicated
-    				score = -negamax(-alpha-1, -alpha, depth-2); // Search this move with reduced depth:
-
+    			// by one ply for the first 6 moves and by depth / 3 for remaining moves.
+    			const int reduction = (count < 7) ? 1 : depth / 3;
+    			// some other heuristics can also be implemented though they are more complicated
+    			score = -negamax(-alpha-1, -alpha, depth-1-reduction); // Search this move with reduced depth:
+    		}
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
 
     		// principal variation search (PVS)
@@ -505,7 +507,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         			// check if this should go anywhere alpha increases or where we get a beta cut off
         			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
 
-
+					/*
         			for (int i = 0; i < quietCount; i++) {
         				const int quietMove = quietList.moves[i];
         				if (quietMove == bestMove) continue;
@@ -513,6 +515,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         				// penalize history of moves which didn't cause beta-cutoffs
         				historyMoves[getMovePiece(quietMove)][getMoveTargetSQ(quietMove)] -= depth * depth;
         			}
+        			*/
         		}
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         		return beta; // known as node that fails high
