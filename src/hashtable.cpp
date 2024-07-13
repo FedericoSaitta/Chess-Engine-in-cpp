@@ -106,7 +106,7 @@ int probeHash(const int alpha, const int beta, int* best_move, const int depth)
         // store best move
         *best_move = hashEntry->bestMove;
     }
-    return NO_HASH_ENTRY;
+    return NO_HASH_ENTRY; // in case we dont get a tt hit
 }
 
 void recordHash(int score, const int bestMove, const int flag, const int depth)

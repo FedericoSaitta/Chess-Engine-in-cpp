@@ -179,7 +179,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 static inline int negamax(int alpha, const int beta, int depth) {
 
 	pvLength[ply] = ply;
-	int score;
+	int score{};
 	int bestMove {};
 	int hashFlag{ HASH_FLAG_ALPHA };
 
@@ -189,13 +189,14 @@ static inline int negamax(int alpha, const int beta, int depth) {
 	// ply && used to ensure we dont read from the transposition table at the root node
 	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
 
-	// reading the TT table, if we the move has already been searched, we return its evaluation
+	// reading the TT table, if we the move has already been searched, we return its evaluatio
 	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
+	bool ttHit = score != NO_HASH_ENTRY;
 
 	if ((nodes & 2047) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
 
-	if ( depth == 0 ) return quiescenceSearch(alpha, beta);
+	if ( depth <= 0 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
 
@@ -206,6 +207,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
 	// Search extension if side is in check
 	if (inCheck) depth++;
 
+	// if we have a static eval from tt we use that one, otherwise we have to evaluated
 	const int static_eval { evaluate() };
 
 	// static null move pruning
@@ -219,73 +221,81 @@ static inline int negamax(int alpha, const int beta, int depth) {
 			return static_eval - evalMargin;
 	}
 
+	if (!pvNode && !inCheck && ply) {
+		// reverse futility pruning
+		const int eval { ttHit ? score : static_eval };
+		if (depth < 9 && (eval - depth * 80) >= beta)
+			return eval; // return the evaluation, which could be the one from TT if we had a hit
+		// (it's  more accurate than the static one)
 
-	// maybe you can write TT entries here too???
-	// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
-	// Do not attempt null move pruning in case our side only has pawns on the board
-	if (depth >= 3 && !inCheck && ply && nonPawnMaterial()) {
-		COPY_BOARD()
+		// maybe you can write TT entries here too???
+		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
+		// Do not attempt null move pruning in case our side only has pawns on the board
+		if (depth >= 3 && nonPawnMaterial()) {
+			COPY_BOARD()
 
-		hashKey ^= sideKey;
-		if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
+			hashKey ^= sideKey;
+			if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
 
-		side ^= 1; // make null move
-		enPassantSQ = 64; // resetting en-passant to null-square
+			side ^= 1; // make null move
+			enPassantSQ = 64; // resetting en-passant to null-square
 
-		// we change plies so white and black killers remain in sync for negamax search
-		ply++;
-		repetitionIndex++;
-		repetitionTable[repetitionIndex] = hashKey;
+			// we change plies so white and black killers remain in sync for negamax search
+			ply++;
+			repetitionIndex++;
+			repetitionTable[repetitionIndex] = hashKey;
 
-		// possible more aggressive reduction? int reduction{ 3 + depth / 6 };
-		// old reduction code: depth - 1 - nullMoveReduction
-		const int nullMoveScore = -negamax(-beta, -beta + 1, depth - 1 - nullMoveReduction);
-		ply--;
-		repetitionIndex--;
+			// more aggressive reduction
+			const int R = 3 + depth / 3;
+			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R);
+			ply--;
+			repetitionIndex--;
 
-		RESTORE_BOARD() // un-making the null move
+			RESTORE_BOARD() // un-making the null move
 
-		if (stopSearch) return 0;
-		if (nullMoveScore >= beta) return beta;
-	}
-	// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
+			if (stopSearch) return 0;
+			if (nullMoveScore >= beta) return beta;
+		}
+		// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
 
-	// razoring
-	if (!pvNode && !inCheck && depth <= 3){
-		// get static eval and add first bonus
-		score = static_eval + 125;
+		// razoring
+		if (depth <= 3){
+			// get static eval and add first bonus
+			score = static_eval + 125;
 
-		int newScore; // define new score
-
-		// static evaluation indicates a fail-low node
-		if (score < beta)
-		{
-			// on depth 1
-			if (depth == 1)
-			{
-				// get quiscence score
-				newScore = quiescenceSearch(alpha, beta);
-
-				// return quiescence score if it's greater then static evaluation score
-				return (newScore > score) ? newScore : score;
-			}
-
-			// add second bonus to static evaluation
-			score += 175;
+			int newScore; // define new score
 
 			// static evaluation indicates a fail-low node
-			if (score < beta && depth <= 2)
+			if (score < beta)
 			{
-				// get quiscence score
-				newScore = quiescenceSearch(alpha, beta);
+				// on depth 1
+				if (depth == 1)
+				{
+					// get quiscence score
+					newScore = quiescenceSearch(alpha, beta);
 
-				// quiescence score indicates fail-low node
-				if (newScore < beta)
 					// return quiescence score if it's greater then static evaluation score
-						return (newScore > score) ? newScore : score;
+					return (newScore > score) ? newScore : score;
+				}
+
+				// add second bonus to static evaluation
+				score += 175;
+
+				// static evaluation indicates a fail-low node
+				if (score < beta && depth <= 2)
+				{
+					// get quiscence score
+					newScore = quiescenceSearch(alpha, beta);
+
+					// quiescence score indicates fail-low node
+					if (newScore < beta)
+						// return quiescence score if it's greater then static evaluation score
+							return (newScore > score) ? newScore : score;
+				}
 			}
 		}
 	}
+
 
     MoveList moveList;
     generateMoves(moveList);
