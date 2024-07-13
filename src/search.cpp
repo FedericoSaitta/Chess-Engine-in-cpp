@@ -127,6 +127,11 @@ inline int scoreMove(const int move, const int ply) {
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
 		return mvv_lva[getMovePiece(move)][targetPiece] + 10'000; // important as we score MVV-LVA as better than killer
 	}
+
+	// new addition
+	// we score promotions as MVV-LVA
+	if (getMovePromPiece(move) != 0) return mvv_lva[Pawn][getMovePromPiece(move)] + 10'000;
+
 	if (killerMoves[0][ply] == move) return 9000;
 
 	if (killerMoves[1][ply] == move) return 8000;
@@ -228,7 +233,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     const int staticEval{ evaluate() };
 
 	// delta pruning, to be implemented
-	//if (staticEval < alpha - 975) return alpha;
+	if (staticEval < alpha - 975) return alpha;
 
     if (staticEval > alpha) {
     	if (staticEval >= beta)
