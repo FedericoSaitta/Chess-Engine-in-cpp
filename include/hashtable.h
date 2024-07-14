@@ -28,9 +28,7 @@ typedef struct tagHASHE {
 }   tt;
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
-#define MAX_VALUE 50'000
-#define MATE_VALUE 49'000
-#define MATE_SCORE 48'000 // this is more like a boundary to the scores
+
 
 extern tt* transpositionTable;
 extern int transpotitionTableEntries;

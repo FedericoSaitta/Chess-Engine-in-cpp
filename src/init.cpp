@@ -6,6 +6,7 @@
 #include "inline_functions.h"
 #include "hashtable.h"
 #include "evaluation.h"
+#include "search.h"
 
 
 // ARRAYS NEEDED FOR MAGIC U64 APPROACH //
@@ -376,7 +377,7 @@ static void initEvaluationMasks() {
 }
 
 
-void initAll(int ttSize) {
+void initAll(const int ttSize) {
     initLeaperPiecesAttacks();
 
     initSliderAttacks(1);
@@ -390,4 +391,6 @@ void initAll(int ttSize) {
 
     initTranspositionTable(ttSize); // with 64 megabytes
 
-} // this only takes 100 ms at startup in DEBUG mode
+    // these are the search boards
+    initSearchTables();
+}

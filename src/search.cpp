@@ -10,6 +10,9 @@
 #include "inline_functions.h"
 
 #include "search.h"
+
+#include <assert.h>
+
 #include "update.h"
 #include "hashtable.h"
 #include "uci.h"
@@ -18,7 +21,8 @@
 #include "misc.h"
 #include "movesort.h"
 
-#define MAX_PLY 64
+#define DO_NULL 1
+#define NO_NULL 0
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
@@ -35,6 +39,8 @@ static int pvLength[64]{};
 int scorePV{};
 static int followPV{}; // if it is true then we follow the principal variation
 
+static int LMR_table[MAX_PLY][MAX_PLY];
+
 constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
 constexpr int reductionLimit { 3 };
 constexpr int nullMoveReduction { 2 };
@@ -47,6 +53,17 @@ static int timePerMove { 0 };
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
 
+
+void initSearchTables() {
+	constexpr float base = 75 / 100.0f;
+	constexpr float division = 300 / 100.0f;
+		for(int depth = 1; depth < MAX_PLY; depth++) {
+			for(int played = 1; played < 64; played++) {
+				LMR_table[depth][played] = base + log(depth) * log(played) / division; // formula from Berserk engine
+			}
+		}
+	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
+}
 
 static void resetStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
@@ -72,12 +89,11 @@ static void enablePVscoring(const MoveList& moveList) {
         }
     }
 }
-
 static int getMoveTime(const bool timeConstraint) {
 
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
-	// adding a delay of 50 milliseconds
+	// We give 100 millisecond lag compensation
 	const int timeAlloted = (side == White) ? whiteClockTime - 100 : blackClockTime - 100;
 	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
 
@@ -86,31 +102,32 @@ static int getMoveTime(const bool timeConstraint) {
 
 	return timePerMove;
 }
-
 static void isTimeUp() {
 	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
 
 	if ( (searchDuration.count() * 1'000) > timePerMove) stopSearch = 1;
 }
-
 static int isRepetition() {
-	for (int index=0; index < repetitionIndex; index++) { if (repetitionTable[index] == hashKey) return 1; } // repetition found
-	return 0; // if no repetition found
+	for (int index=0; index < repetitionIndex; index++) {
+		if (repetitionTable[index] == hashKey)
+			return 1; // repetition found
+	}
+	return 0; // no repetition
 }
 
 static U64 nonPawnMaterial() {
 	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
 }
 
-static int canReduceMove(const int move) {
-	// This does cause some slow down clearly, but improves search stability should definetely be tested in many games
+static int givesCheck(const int move) {
+	// Returns true if the current move puts the opponent in check
 	COPY_BOARD()
 	makeMove(move, 0);
 
-	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , !side) };
+	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , side^1 ) };
 
 	RESTORE_BOARD()
-	return !opponentInCheck;
+	return opponentInCheck;
 }
 
 
@@ -122,17 +139,17 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     if ( ply > (MAX_PLY - 1) ) return evaluate();
 
-    const int staticEval{ evaluate() };
+    const int standPat{ evaluate() };
 
 	// delta pruning
-	if (staticEval < alpha - 975) return alpha;
+	if (standPat < alpha - 975) return alpha;
 
-    if (staticEval > alpha) {
-    	if (staticEval >= beta) {
+    if (standPat > alpha) {
+    	if (standPat >= beta) {
     		return beta; // known as node that fails high
     	}
 
-	    alpha = staticEval; // Known as PV node (principal variation)
+	    alpha = standPat; // Known as PV node (principal variation)
     }
 
     MoveList moveList;
@@ -174,9 +191,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 
-
-
-static inline int negamax(int alpha, const int beta, int depth) {
+static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 	pvLength[ply] = ply;
 	int score{};
@@ -185,18 +200,18 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
 
-	
+
 	// ply && used to ensure we dont read from the transposition table at the root node
 	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
 
 	// reading the TT table, if we the move has already been searched, we return its evaluatio
 	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
-	bool ttHit = score != NO_HASH_ENTRY;
+	// bool ttHit = score != NO_HASH_ENTRY; dont need this for now
 
 	if ((nodes & 2047) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
 
-	if ( depth <= 0 ) return quiescenceSearch(alpha, beta);
+	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
 
@@ -207,31 +222,34 @@ static inline int negamax(int alpha, const int beta, int depth) {
 	// Search extension if side is in check
 	if (inCheck) depth++;
 
-	// if we have a static eval from tt we use that one, otherwise we have to evaluated
-	const int static_eval { evaluate() };
-
-	// static null move pruning
-	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -MAX_VALUE + 100)
+	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
+	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -INF + 100)
 	{
-		const int evalMargin = 120 * depth; // the evaluation margin
-
+		int staticEval{ evaluate() };
 		// evaluation margin substracted from static evaluation score fails high
-		if (static_eval - evalMargin >= beta)
+		if (staticEval - (120 * depth) >= beta)
 			// evaluation margin substracted from static evaluation score
-			return static_eval - evalMargin;
+			return staticEval - 120 * depth;
 	}
 
 	if (!pvNode && !inCheck && ply) {
+
+		/* WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
 		// reverse futility pruning
 		const int eval { ttHit ? score : static_eval };
 		if (depth < 9 && (eval - depth * 80) >= beta)
-			return eval; // return the evaluation, which could be the one from TT if we had a hit
+			return eval;
+		*/
+
+		// return the evaluation, which could be the one from TT if we had a hit
 		// (it's  more accurate than the static one)
 
 		// maybe you can write TT entries here too???
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our side only has pawns on the board
-		if (depth >= 3 && nonPawnMaterial()) {
+		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
+		// no NULL flag used to ensure we dont do two null moves in a row
+		if (depth >= 3 && nonPawnMaterial() && canNull) {
 			COPY_BOARD()
 
 			hashKey ^= sideKey;
@@ -247,7 +265,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
 			// more aggressive reduction
 			const int R = 3 + depth / 3;
-			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R);
+			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, NO_NULL);
 			ply--;
 			repetitionIndex--;
 
@@ -256,12 +274,11 @@ static inline int negamax(int alpha, const int beta, int depth) {
 			if (stopSearch) return 0;
 			if (nullMoveScore >= beta) return beta;
 		}
-		// NOTE THAT NULL MOVE PRUNING IS MAKING ONE OF THE MATES NOT TO BE FOUND
 
 		// razoring
-		if (depth <= 3){
+		if (depth <= 3 && canNull){
 			// get static eval and add first bonus
-			score = static_eval + 125;
+			score = evaluate() + 125;
 
 			int newScore; // define new score
 
@@ -296,7 +313,6 @@ static inline int negamax(int alpha, const int beta, int depth) {
 		}
 	}
 
-
     MoveList moveList;
     generateMoves(moveList);
 
@@ -312,7 +328,8 @@ static inline int negamax(int alpha, const int beta, int depth) {
 
     for (int count=0; count < moveList.count; count++) {
     	const int move { moveList.moves[count] };
-    	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move) );
+    	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
+    	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
 
 
     	//if (isQuiet && skipQuietMoves)
@@ -343,27 +360,26 @@ static inline int negamax(int alpha, const int beta, int depth) {
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
     		// First move, use full-window search // this is the principal variation move
-    		score = -negamax(-beta, -alpha, depth-1);
+    		score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     	} else {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			&& canReduceMove(move) ) {
-    			// will not reduce in case we put opponent in check, is this worth the speed loss?
+    		//	){
+    			&& !givesCheck(move)) { // maybe you should use this....
 
-    			// by one ply for the first 6 moves and by depth / 3 for remaining moves.
-    			const int reduction = (count < 7) ? 1 : depth / 3;
-    			// some other heuristics can also be implemented though they are more complicated
-    			score = -negamax(-alpha-1, -alpha, depth-1-reduction); // Search this move with reduced depth:
+    			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
+
+    			score = -negamax(-alpha-1, -alpha, depth-1-reduction, DO_NULL); // Search this move with reduced depth:
     		}
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
 
     		// principal variation search (PVS)
     		if(score > alpha) {
-    			score = -negamax(-alpha-1, -alpha, depth-1);
+    			score = -negamax(-alpha-1, -alpha, depth-1, DO_NULL);
 
     			if( (score > alpha) && (score < beta) )
-    				score = -negamax(-beta, -alpha, depth-1);
+    				score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     		}
     	}
 
@@ -424,7 +440,7 @@ static inline int negamax(int alpha, const int beta, int depth) {
         if (inCheck) {
         	// we need to adjust this before sending it to the transposition table to make it independent of the path
         	// from the root node to the mating node
-            return -MATE_VALUE+ ply; // we want to return the mating score, (slightly above negative MAX_VALUE, +ply scores faster mates as better moves)
+            return -MATE_VALUE+ ply; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
         }
         return 0; // we are in stalemate
     }
@@ -437,11 +453,10 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	resetStates();
 
 	timePerMove = getMoveTime(timeConstraint);
-	//logFile << "Time per move: " << timePerMove << '\n';
-	if (timePerMove < 0) logFile << "NEGATIVE TIME********\n";
+	assert( (timePerMove > 0) && "Negative Time Per Move");
 
-	int alpha { -MAX_VALUE };
-	int beta { MAX_VALUE };
+	int alpha { -INF };
+	int beta { INF };
 
 	startSearchTime = std::chrono::high_resolution_clock::now();
 
@@ -454,15 +469,15 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
-        const int score { negamax(alpha, beta, currentDepth) };
+        const int score { negamax(alpha, beta, currentDepth, DO_NULL) };
 
 		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
 
 		if ( (searchDuration.count() * 1'000) > timePerMove) break;
 
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
-	        alpha = -MAX_VALUE;
-        	beta = MAX_VALUE;
+	        alpha = -INF;
+        	beta = INF;
         	continue; // we redo the search at the same depth
         }
 		// otherwise we set up the window for the next iteration
@@ -492,4 +507,3 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
     // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
 }
-

@@ -66,6 +66,16 @@ bestmove h4h3
 
 Mating Move: h4h3 Time taken: 71.1204ss
 
+--------------------------------------------------
+Results of ChessEngine_V2-5 vs ChessEngine_V2-6 (30+1, NULL, NULL, scrapedOpenings.epd):
+Elo: -36.18 +/- 16.01, nElo: -54.83 +/- 24.08
+LOS: 0.00 %, DrawRatio: 39.25 %, PairsRatio: 0.56
+Games: 800, Wins: 149, Losses: 232, Draws: 419, Points: 358.5 (44.81 %)
+Ptnml(0-2): [27, 129, 157, 74, 13]
+-------------------------------------
+More aggressive null move, and added reverse futility pruning
+
+
 #### Engine vs. Engine Match Results: 
 
 Here are the results of each version tested against the previous one. The tests were performed using fast-chess and 
@@ -76,13 +86,14 @@ testing suites.
 
 | Version | ELO Gain     | Estimated ELO |
 |---------|--------------|---------------|
-| 1.2.5   | +46 +/- 20   | 2380          |
-| 1.2.4   | +69 +/- 20   | 2350          |
-| 1.2.3   | +35 +/- 20   | 2300          |
-| 1.2.2   | +65 +/- 20   | 2280          |
-| 1.2.1   | +223 +/- 41  | 2220          |
-| 1.2.0   | +200 +/- 43  | 2000          |
-| 1.1.0   | ------------ | 1800          |
+| 1.2.6   | +36 +/- 16   | 2300          |
+| 1.2.5   | +46 +/- 18   | 2280          |
+| 1.2.4   | +69 +/- 20   | 2250          |
+| 1.2.3   | +35 +/- 20   | 2200          |
+| 1.2.2   | +65 +/- 20   | 2180          |
+| 1.2.1   | +223 +/- 41  | 2120          |
+| 1.2.0   | +200 +/- 43  | 1900          |
+| 1.1.0   | ------------ | 1700          |
 
 
 #### Patches:

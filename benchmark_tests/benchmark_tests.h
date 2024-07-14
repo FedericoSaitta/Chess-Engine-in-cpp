@@ -23,7 +23,8 @@ namespace Test::BenchMark {
             : FEN(f), matingMove(m), depth(d) {}
     };
     void matingPuzzles();
-    void branchingFactor();
+
+    void staticSearch(int depth=10);
 }
 
 

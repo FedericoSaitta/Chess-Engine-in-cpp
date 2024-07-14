@@ -2,6 +2,7 @@
 
 #include "search.h"
 #include "board.h"
+#include "inline_functions.h"
 
 #include <vector>
 #include <algorithm>
@@ -56,6 +57,8 @@ constexpr int captureBonus{ 10'000 }; // so captures are always above killers
 constexpr int firstKiller{ 9'000 };
 constexpr int secondKiller{ 8'000 };
 
+
+
 int scoreMove(const int move, const int ply) {
 
 	if (scorePV && (pvTable[0][ply] == move)) {
@@ -73,16 +76,7 @@ int scoreMove(const int move, const int ply) {
 		int targetPiece{ Pawn }; // in case we make an enPassant capture, which our loop would miss
 
 		// copied from makeMove function
-		int startPiece, endPiece;
-		if (side == White ) { startPiece = Pawn + 6; endPiece = King + 6; }
-		else { startPiece = Pawn; endPiece = King; }
-
-		for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-			if ( GET_BIT(bitboards[bbPiece], targetSquare) ) {
-				targetPiece = bbPiece;
-				break;
-			}
-		}
+		targetPiece = getCapturedPiece(targetSquare);
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
 		return mvv_lva[movePiece][targetPiece] + captureBonus;

@@ -9,6 +9,9 @@
 #define MgScore(s) ((int16_t)((uint16_t)((unsigned)((s)))))
 #define EgScore(s) ((int16_t)((uint16_t)((unsigned)((s) + 0x8000) >> 16)))
 
+extern int mg_value[6];
+extern int eg_value[6];
+
 void init_tables();
 int evaluate();
 
