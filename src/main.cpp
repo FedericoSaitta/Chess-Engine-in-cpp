@@ -5,7 +5,7 @@
 #include "init.h"
 
 //#define DEBUG
-#define BENCHMARK
+// #define BENCHMARK
 
 
 #include "benchmark_tests.h"
@@ -17,7 +17,7 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-   // UCI();
+    UCI();
 
     // need to press quit to properly save this file
     logFile.close();
