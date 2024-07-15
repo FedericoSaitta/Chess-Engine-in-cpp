@@ -22,6 +22,6 @@ extern int killerMoves[2][128];
 extern int historyMoves[12][64];
 
 void initSearchTables();
-
+void clearHistoryTable();
 void iterativeDeepening(int depth, bool timeConstraint=false);
 

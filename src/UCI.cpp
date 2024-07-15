@@ -39,6 +39,7 @@ void resetGameVariables() {
 
     // reset the hash Table
     clearTranspositionTable();
+    memset(historyMoves, 0, sizeof(historyMoves));
 
     repetitionIndex = 0;
     repetitionTable[150] = 0;

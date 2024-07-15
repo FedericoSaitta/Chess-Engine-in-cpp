@@ -7,13 +7,15 @@
 #include <random>
 #include <cmath>
 
+#include "uci.h"
 #include "../include/movesort.h"
 #include "../include/board.h"
 #include "../include/macros.h"
 #include "../include/misc.h"
+#include "search.h"
 
 
-namespace Test{
+namespace Test::Debug{
 
     void moveEncodingAndDecoding() {
 
@@ -92,5 +94,43 @@ namespace Test{
         }
     }
 
+
+
+    static void printHistoryTable(const int piece) {
+        for (int square=0; square < 64; square++) {
+            std::cout << historyMoves[piece][square] << ' ';
+            if ( (square + 1) % 8 == 0) std::cout << '\n';
+        }
+    }
+
+    static void ageHistoryTable() {
+        for (int piece=0; piece < 12; piece++) {
+            for (int square=0; square<64; square++) {
+                // make sure we dont go over the limit
+                historyMoves[piece][square] = std::min(180, historyMoves[piece][square] / 8);
+            }
+        }
+    }
+
+    void historyScores() {
+        //resetGameVariables();
+        parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        MoveList moveList{};
+        generateMoves(moveList);
+
+        iterativeDeepening(10, false);
+
+        for (int piece=0; piece < 12; piece++) {
+            std::cout << "History Table: " << piece << '\n';
+            printHistoryTable(piece);
+        }
+
+        ageHistoryTable();
+
+        for (int piece=0; piece < 12; piece++) {
+            std::cout << "History Table: " << piece << '\n';
+            printHistoryTable(piece);
+        }
+    }
 }
 

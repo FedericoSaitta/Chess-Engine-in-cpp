@@ -12,6 +12,7 @@
 #include "search.h"
 
 #include <assert.h>
+#include <__algorithm/ranges_move.h>
 
 #include "update.h"
 #include "hashtable.h"
@@ -50,6 +51,8 @@ constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 static int stopSearch { 0 };
 static int timePerMove { 0 };
 
+constexpr int maxHistoryScore{ 180 };
+
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
 
@@ -65,9 +68,8 @@ void initSearchTables() {
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
 }
 
-static void resetStates() {
+static void resetSearchStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
-	memset(historyMoves, 0, sizeof(historyMoves));
 	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
 
@@ -78,6 +80,15 @@ static void resetStates() {
 
 	stopSearch = 0;
 }
+static void ageHistoryTable() {
+	for (int piece=0; piece < 12; piece++) {
+		for (int square=0; square<64; square++) {
+			// make sure we dont go over the limit
+			historyMoves[piece][square] = std::min(maxHistoryScore, historyMoves[piece][square] / 8);
+		}
+	}
+}
+
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
@@ -189,7 +200,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     return alpha; // node that fails low
 }
-
 
 static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
@@ -321,6 +331,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     if (followPV) enablePVscoring(moveList);
 
     sortMoves(moveList, ply, bestMove);
+
 	int movesSearched{};
 
 	//MoveList quietList;
@@ -451,7 +462,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 }
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {
-	resetStates();
+	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint);
 	assert( (timePerMove > 0) && "Negative Time Per Move");
@@ -461,7 +472,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	startSearchTime = std::chrono::high_resolution_clock::now();
 
-	//logFile << "Starting Iterative deepening\n";
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
 
@@ -503,8 +513,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		currentDepth++; // we can proceed to the next iteration
 
     }
+	ageHistoryTable();
 
-//	logFile << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
-    // search time is up so we return the bestMove
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
 }
