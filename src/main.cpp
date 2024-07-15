@@ -17,8 +17,7 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-    //Test::Debug::historyScores();
-
+    //Test::BenchMark::staticSearch();
     UCI();
 
     // need to press quit to properly save this file
@@ -34,7 +33,7 @@ int main() {
 
 
 #ifdef BENCHMARK
-    Test::BenchMark::branchingFactor();
+    Test::BenchMark::staticSearch();
     Test::BenchMark::matingPuzzles();
 #endif
 
@@ -50,6 +49,7 @@ int main() {
     Test::moveSorting();
 
     Test::mirrorEval();
+    Test::Debug::historyScores();
 #endif
 }
 

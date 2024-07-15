@@ -41,6 +41,7 @@ int scorePV{};
 static int followPV{}; // if it is true then we follow the principal variation
 
 static int LMR_table[MAX_PLY][MAX_PLY];
+static int LMP_table[2][MAX_PLY];
 
 constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
 constexpr int reductionLimit { 3 };
@@ -66,6 +67,13 @@ void initSearchTables() {
 			}
 		}
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
+
+	// Implement this once you have got improving heuristic done
+	// from Berserk chess engine
+	for(int depth = 1; depth < 64; depth++) {
+		LMP_table[0][depth] = 1.3050 + 0.3503 * depth * depth;
+		LMP_table[1][depth] = 2.1885 + 0.9911 * depth * depth;
+	}
 }
 
 static void resetSearchStates() {
@@ -335,17 +343,29 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	int movesSearched{};
 
 	//MoveList quietList;
-	//int quietCount{};
-	// bool skipQuietMoves{ false };
+	int quietMoveCount{};
+	bool skipQuietMoves{ false };
 
     for (int count=0; count < moveList.count; count++) {
     	const int move { moveList.moves[count] };
     	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
     	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
+    	if (isQuiet && skipQuietMoves) continue;
 
+    	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
 
-    	//if (isQuiet && skipQuietMoves)
-    	//	continue;
+			//Late move pruning (LMP)
+
+			//if the move is quiet and we have already searched
+			//enough moves before, we can skip it.
+
+    		// quiet moves played within this node
+    		if (!pvNode && depth <= 7 && quietMoveCount >= 0.45 * (depth * depth)) {
+    			skipQuietMoves= true;
+    			continue;
+    		}
+    	}
+
 
         COPY_BOARD()
         ply++;
@@ -364,10 +384,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
     	// no need to check enPassant as we do count it as a capture
     	// needed for improvements to move ordereing etc.
-    	//if (isQuiet){
-    	//	quietList.moves[quietCount] = moveList.moves[count];
-    	//	quietCount++;
-    	//}
+    	if (isQuiet) quietMoveCount++; // we only add to counter if the quiet move is actually legal
+
 
     	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     	if(movesSearched == 0) {
@@ -428,7 +446,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         			killerMoves[0][ply] = bestMove; // store killer moves
 
         			// can do more sophisticated code tho
-        			// check if this should go anywhere alpha increases or where we get a beta cut off
         			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
 
 					/*
