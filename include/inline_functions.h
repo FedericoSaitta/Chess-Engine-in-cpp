@@ -31,6 +31,12 @@ inline U64 getBishopAttacks(const int square, U64 occupancy) {
 
     return bitBishopAttacksTable[square][occupancy];
 }
+inline U64 getBishopXrayAttacks(const int square, const U64 occupancy, U64 blockers) {
+    const U64 attacks { getBishopAttacks(square, occupancy) };
+    blockers &= attacks;
+    return attacks ^ getBishopAttacks(square, occupancy ^ blockers);
+}
+
 inline U64 getRookAttacks(const int square, U64 occupancy) {
     // get bishop attacks assuming current board occupancy
     occupancy &= bitRookAttacks[square];
@@ -39,6 +45,12 @@ inline U64 getRookAttacks(const int square, U64 occupancy) {
 
     return bitRookAttacksTable[square][occupancy];
 }
+inline U64 getRookXrayAttacks(const int square, const U64 occupancy, U64 blockers) {
+    const U64 attacks { getRookAttacks(square, occupancy) };
+    blockers &= attacks;
+    return attacks ^ getRookAttacks(square, occupancy ^ blockers);
+}
+
 inline U64 getQueenAttacks(const int square, U64 occupancy) {
 
     U64 bishopOccupancy{ occupancy };

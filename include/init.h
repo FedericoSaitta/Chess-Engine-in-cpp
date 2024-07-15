@@ -16,6 +16,10 @@ extern U64 notABFile;
 extern U64 notHFile;
 extern U64 notHGFile;
 
+
+extern U64 squaresBetween[64][64];
+extern U64 squaresLine[64][64];
+
 extern U64 bitPawnAttacks[2][64];
 extern U64 bitKnightAttacks[64];
 extern U64 bitKingAttacks[64];

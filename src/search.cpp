@@ -45,14 +45,13 @@ static int LMP_table[2][MAX_PLY];
 
 constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
 constexpr int reductionLimit { 3 };
-constexpr int nullMoveReduction { 2 };
 
 constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 
 static int stopSearch { 0 };
 static int timePerMove { 0 };
 
-constexpr int maxHistoryScore{ 180 };
+constexpr int maxHistoryScore{ 1'000 };
 
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
@@ -71,8 +70,8 @@ void initSearchTables() {
 	// Implement this once you have got improving heuristic done
 	// from Berserk chess engine
 	for(int depth = 1; depth < 64; depth++) {
-		LMP_table[0][depth] = 1.3050 + 0.3503 * depth * depth;
-		LMP_table[1][depth] = 2.1885 + 0.9911 * depth * depth;
+		LMP_table[0][depth] = 2.5 +  2.5 * depth * depth / 4.5;
+		LMP_table[1][depth] = 6.0 +  4.0 * depth * depth / 4.5;
 	}
 }
 
@@ -350,27 +349,26 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     	const int move { moveList.moves[count] };
     	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
     	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
+
     	if (isQuiet && skipQuietMoves) continue;
 
     	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
 
-			//Late move pruning (LMP)
+    		//Late move pruning (LMP)
 
-			//if the move is quiet and we have already searched
-			//enough moves before, we can skip it.
-
-    		// quiet moves played within this node
-    		if (!pvNode && depth <= 7 && quietMoveCount >= 0.45 * (depth * depth)) {
+    		// parameters obtained from CARP
+    		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
     			skipQuietMoves= true;
     			continue;
     		}
     	}
 
-
         COPY_BOARD()
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
+
+
 
         // makeMove returns 1 for legal moves
         if( !makeMove(move, 0) ) { // meaning its illegal

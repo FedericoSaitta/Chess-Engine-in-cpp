@@ -7,6 +7,7 @@
 #include "init.h"
 #include "board.h"
 #include "inline_functions.h"
+#include "misc.h"
 
 
 
@@ -341,5 +342,121 @@ void generateMoves(MoveList& moveList) {
 // 0010 0000 0000 0000 0000 0000 double push flag       0x200000
 // 0100 0000 0000 0000 0000 0000 en passant flag        0x400000
 // 1000 0000 0000 0000 0000 0000 castling flag          0x800000
+
+UndoInfo history[256]{};
+U64 checkers{};
+U64 pinned{};
+
+// you need some global variables which should be put in a Position Class
+void generateLegalMoves(MoveList& moveList) {
+    moveList.count = 0; // this is needed
+
+    // make copies of bitboards because as we loop through them we remove the leftmost bits.
+    U64 bitboard{};
+    U64 attacks{};
+    U64 masks{};
+
+    int ourKing, theirKing;
+    int startPiece, endPiece;
+
+    if (side == White) {
+        startPiece = Pawn + 6;
+        endPiece = King + 6;
+        ourKing = getLeastSigBitIndex(bitboards[King]);
+        theirKing = getLeastSigBitIndex(bitboards[King + 6]);
+    } else {
+        startPiece = Pawn;
+        endPiece = King;
+        ourKing = getLeastSigBitIndex(bitboards[King + 6]);
+        theirKing = getLeastSigBitIndex(bitboards[King]);
+    }
+
+    // to be efficient, we already know their king location
+    U64 danger{ bitKingAttacks[theirKing] }; // squares that our king cannot move to
+
+    // adding all the enemy attacks to danger bitboardd
+    for (int bbPiece=startPiece; bbPiece < endPiece; bbPiece++) {
+        U64 bbCopy { bitboards[bbPiece] };
+
+        while (bbCopy) {
+            const int square { getLeastSigBitIndex(bbCopy) };
+
+            switch(bbPiece % 6) {
+                case(Pawn): // look at the opposite side's pawns
+                    danger |= bitPawnAttacks[side^1][square];
+                    break;
+
+                case(Knight):
+                    danger |= bitKnightAttacks[square];
+                    break;
+
+                // For sliders we need to consider attacks which are not visible because our king
+                // is currently blocking them, so we remove the king from the occupancies bitboard
+                case(Bishop):
+                    danger |= getBishopAttacks(square, occupancies[2] ^ (1ULL << ourKing) ) ;
+                    break;
+
+                case(Rook):
+                    danger |= getRookAttacks(square, occupancies[2] ^ (1ULL << ourKing) );
+                    break;
+
+                case(Queen):
+                    danger |= getQueenAttacks(square, occupancies[2] ^ (1ULL << ourKing) ) ;
+                    break;
+
+                default:
+                    break;
+
+            }
+            SET_BIT_FALSE(bbCopy, square);
+        }
+    } // seems good!!!
+    printBitBoard(danger);
+
+    //The king can move to all of its surrounding squares, except ones that are attacked, and
+    //ones that have our own pieces on them
+    bitboard = bitKingAttacks[ourKing] & ~(occupancies[side] | danger);
+
+    // lets add these king movesmoves to the list:
+    while(bitboard) {
+        const int targetSquare {getLeastSigBitIndex(bitboard) };
+
+        if ( !GET_BIT( occupancies[side^1], targetSquare ) ){
+            addMove(moveList, ENCODE_MOVE(ourKing, targetSquare, King + 6*side , 0, 0, 0, 0, 0) );
+        } else {  // capture moves
+            addMove(moveList, ENCODE_MOVE(ourKing, targetSquare, King + 6*side , 0, 1, 0, 0, 0) );
+        }
+        SET_BIT_FALSE(bitboard, targetSquare);
+    }
+
+
+    //The capture mask filters destination squares to those that contain an enemy piece that is checking the
+    //king and must be captured
+    U64 captureMask;
+
+    //The quiet mask filter destination squares to those where pieces must be moved to block an incoming attack to the king
+    U64 quietMask;
+
+    int square; //A general purpose square for storing destinations, etc.
+
+    //Checkers of each piece type are identified by:
+    //1. Projecting attacks FROM the king square
+    //2. Intersecting this bitboard with the enemy bitboard of that piece type
+
+
+    // this is done quite easily with the functions used in isSqAttacked
+    /*
+    checkers = attacks<KNIGHT>(our_king, all) & bitboard_of(Them, KNIGHT)
+        | pawn_attacks<Us>(our_king) & bitboard_of(Them, PAWN);
+
+    //Here, we identify slider checkers and pinners simultaneously, and candidates for such pinners
+    //and checkers are represented by the bitboard <candidates>
+    Bitboard candidates = attacks<ROOK>(our_king, them_bb) & their_orth_sliders
+        | attacks<BISHOP>(our_king, them_bb) & their_diag_sliders;
+    */
+
+
+}
+
 
 

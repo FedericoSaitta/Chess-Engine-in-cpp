@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include "movegen.h"
 #include <iostream>
 #include <vector>
-
 #include "macros.h"
-#include "movegen.h"
+
 
 
 void printBitBoard(U64 bb, bool mirrored=false);

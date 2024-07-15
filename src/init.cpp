@@ -3,6 +3,8 @@
 //
 #include "macros.h"
 #include <random>
+#include <type_traits>
+
 #include "inline_functions.h"
 #include "hashtable.h"
 #include "evaluation.h"
@@ -377,17 +379,58 @@ static void initEvaluationMasks() {
 }
 
 
+U64 squaresBetween[64][64]{};
+U64 squaresLine[64][64]{};
+
+// these functions now work :)
+static int diagonal_of(const int s){
+    return 7 + (s / 8) - (s % 8);
+}
+static int anti_diagonal_of(const int s) {
+    return (s / 8) + (s % 8);
+}
+static void initialiseSquaresBetween() {
+
+    // we do 1ULL << sq1 to get the board with a bit set on sq1 position
+    for (int sq1 = 0; sq1 <= 63; ++sq1)
+        for (int sq2 = 0; sq2 <= 63; ++sq2) {
+            const U64 sqs = (1ULL << sq1) | (1ULL << sq2);
+
+            if ( (fileMasks[sq1] == fileMasks[sq2]) || (rankMasks[sq1] == rankMasks[sq2]) ) {
+                squaresBetween[sq1][sq2] = ( getRookAttacks(sq1, sqs) & getRookAttacks(sq2, sqs) );
+            }
+
+            else if ( (diagonal_of(sq1) == diagonal_of(sq2)) || (anti_diagonal_of(sq1) == anti_diagonal_of(sq2)) ) {
+                squaresBetween[sq1][sq2] = getBishopAttacks(sq1, sqs) & getBishopAttacks(sq2, sqs);
+            }
+        }
+}
+static void initialiseLine() {
+    for (int sq1 = 0; sq1 <= 63; ++sq1)
+        for (int sq2 = 0; sq2 <= 63; ++sq2) {
+            if (fileMasks[sq1] == fileMasks[sq2] || rankMasks[sq1] == rankMasks[sq2])
+                squaresLine[sq1][sq2] = ( getRookAttacks(sq1, 0) & getRookAttacks(sq2, 0) ) | 1ULL << sq1 | 1ULL << sq2;
+
+            else if (diagonal_of(sq1) == diagonal_of(sq2) || anti_diagonal_of(sq1) == anti_diagonal_of(sq2))
+                squaresLine[sq1][sq2] = (getBishopAttacks(sq1, 0) & getBishopAttacks(sq2, 0) ) | 1ULL << sq1 | 1ULL << sq2;
+        }
+}
+
 void initAll(const int ttSize) {
     initLeaperPiecesAttacks();
 
     initSliderAttacks(1);
     initSliderAttacks(0);
 
+    initEvaluationMasks();
+
+    initialiseSquaresBetween();
+    initialiseLine();
+
     initRandomKeys();
 
     init_tables();
 
-    initEvaluationMasks();
 
     initTranspositionTable(ttSize); // with 64 megabytes
 

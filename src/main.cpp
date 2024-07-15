@@ -10,6 +10,7 @@
 
 #include "benchmark_tests.h"
 #include "debug_tests.h"
+#include "movegen.h"
 
 int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
@@ -17,8 +18,16 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-    //Test::BenchMark::staticSearch();
-    UCI();
+   // Test::BenchMark::staticSearch();
+
+    parseFEN("rnb1kbnr/pppppppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+    printBoardFancy();
+    MoveList a{};
+    generateLegalMoves(a);
+
+    printMovesList(a);
+
+    //UCI();
 
     // need to press quit to properly save this file
     logFile.close();
@@ -37,6 +46,7 @@ int main() {
     Test::BenchMark::matingPuzzles();
 #endif
 
+    /*
 #ifdef DEBUG
     Test::countPawnAttacks();
     Test::countKnightMoves();
@@ -51,5 +61,6 @@ int main() {
     Test::mirrorEval();
     Test::Debug::historyScores();
 #endif
+*/
 }
 
