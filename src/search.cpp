@@ -206,7 +206,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 	// reading the TT table, if we the move has already been searched, we return its evaluatio
 	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
-	// bool ttHit = score != NO_HASH_ENTRY; dont need this for now
+	bool ttHit = score != NO_HASH_ENTRY;
 
 	if ((nodes & 2047) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
@@ -234,12 +234,13 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 	if (!pvNode && !inCheck && ply) {
 
-		/* WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
+		/* WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7*/
 		// reverse futility pruning
-		const int eval { ttHit ? score : static_eval };
+		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
+		const int eval { ttHit ? score : evaluate() };
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
-		*/
+
 
 		// return the evaluation, which could be the one from TT if we had a hit
 		// (it's  more accurate than the static one)
