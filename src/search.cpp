@@ -352,16 +352,20 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
     	if (isQuiet && skipQuietMoves) continue;
 
+    	/*
     	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
 
     		//Late move pruning (LMP)
 
     		// parameters obtained from CARP
+
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
     			skipQuietMoves= true;
     			continue;
     		}
+
     	}
+    	*/
 
         COPY_BOARD()
         ply++;

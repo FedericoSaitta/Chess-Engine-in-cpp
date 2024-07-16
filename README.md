@@ -86,6 +86,7 @@ testing suites.
 
 | Version | ELO Gain     | Estimated ELO |
 |---------|--------------|---------------|
+| 1.2.7   | +15 +/- 10   | 2310          |
 | 1.2.6   | +36 +/- 16   | 2300          |
 | 1.2.5   | +46 +/- 18   | 2280          |
 | 1.2.4   | +69 +/- 20   | 2250          |
@@ -104,13 +105,14 @@ testing suites.
 - v1.2.3: Razoring and static null move pruning
 - v1.2.4: Improvement to move sorting algorithm (from O(N^2) to O(NlogN)), added delta pruning
 - v1.2.5: More aggressive LMR (now reduces moves by dept/3 after the first six have been searched)
+- v1.2.6: Improved LMR formula based on Berserk engine (log * log)
+- v1.2.7: Added basic LMP (** I believe current implementation is faulty)
 
 - Note that some minor details are not listed here, eg. v1.2.0 greatly improved time management over v1.1.0 which lead 
 to a few wins due to v1.1.0 flagging.
 
 #### Future Improvements:
 - Futility pruning
-- LMR and LMP tables
 - Refactoring Eval function with S macro as used in other engines (eg. Weiss)
 - More accurate History move scoring
 - SEE and pruning captures based on it
