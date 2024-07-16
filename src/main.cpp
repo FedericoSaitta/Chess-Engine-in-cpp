@@ -18,14 +18,8 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-   // Test::BenchMark::staticSearch();
+    Test::BenchMark::staticSearch();
 
-    parseFEN("rnb1kbnr/pppppppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
-    printBoardFancy();
-    MoveList a{};
-    generateLegalMoves(a);
-
-    printMovesList(a);
 
     //UCI();
 

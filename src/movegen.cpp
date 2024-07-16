@@ -22,20 +22,20 @@ void generateMoves(MoveList& moveList) {
     int targetSquare{};
 
     // make copies of bitboards because as we loop through them we remove the leftmost bits.
-    U64 bitboard{};
+    U64 b1{};
     U64 attacks{};
 
     for (int piece=0; piece < 12; piece++) {
 
-        bitboard = bitboards[piece];
+        b1 = bitboards[piece];
 
         // these are the special cases that dont have
         // generate white pawn moves and white king castling moves
         if (side == White) {
-            if (piece == Pawn) { // loop over white pawn bitboard
+            if (piece == Pawn) { // loop over white pawn b1
 
-                while(bitboard) {
-                    startSquare = getLeastSigBitIndex(bitboard);
+                while(b1) {
+                    startSquare = getLeastSigBitIndex(b1);
 
                     targetSquare = startSquare + 8;
 
@@ -60,7 +60,7 @@ void generateMoves(MoveList& moveList) {
                         }
                     }
 
-                    // need to initialize the attack bitboard, can only capture black piececs
+                    // need to initialize the attack b1, can only capture black piececs
                     attacks = bitPawnAttacks[White][startSquare] & occupancies[Black];
 
                     while (attacks) {
@@ -89,7 +89,7 @@ void generateMoves(MoveList& moveList) {
                             addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
-                    SET_BIT_FALSE(bitboard, startSquare);
+                    SET_BIT_FALSE(b1, startSquare);
                 }
             } // this works
 
@@ -117,10 +117,10 @@ void generateMoves(MoveList& moveList) {
             }
         } else {
             // generate black pawn moves and black king castling moves
-            if (piece == (Pawn + 6) ) { // loop over white pawn bitboard
+            if (piece == (Pawn + 6) ) { // loop over white pawn b1
 
-                while(bitboard) {
-                    startSquare = getLeastSigBitIndex(bitboard);
+                while(b1) {
+                    startSquare = getLeastSigBitIndex(b1);
 
                     targetSquare = startSquare - 8;
 
@@ -144,7 +144,7 @@ void generateMoves(MoveList& moveList) {
                             }
                         }
                     }
-                    // need to initialize the attack bitboard, can only capture white piececs
+                    // need to initialize the attack b1, can only capture white piececs
                     attacks = bitPawnAttacks[Black][startSquare] & occupancies[White];
 
                     while (attacks) {
@@ -172,7 +172,7 @@ void generateMoves(MoveList& moveList) {
                         }
                     }
 
-                    SET_BIT_FALSE(bitboard, startSquare);
+                    SET_BIT_FALSE(b1, startSquare);
                 }
             } // this works
 
@@ -202,8 +202,8 @@ void generateMoves(MoveList& moveList) {
 
         // generate knight moves
         if ( (side == White)? piece == Knight : piece == (Knight + 6) ) {
-            while (bitboard) {
-                startSquare = getLeastSigBitIndex(bitboard);
+            while (b1) {
+                startSquare = getLeastSigBitIndex(b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = bitKnightAttacks[startSquare] & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
@@ -222,14 +222,14 @@ void generateMoves(MoveList& moveList) {
 
                     SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(bitboard, startSquare);
+                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
         // generate bishop moves
         if ( (side == White)? piece == Bishop : piece == (Bishop + 6) ) {
-            while (bitboard) {
-                startSquare = getLeastSigBitIndex(bitboard);
+            while (b1) {
+                startSquare = getLeastSigBitIndex(b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getBishopAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
@@ -248,14 +248,14 @@ void generateMoves(MoveList& moveList) {
 
                     SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(bitboard, startSquare);
+                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
         // generate rook moves
         if ( (side == White)? piece == Rook : piece == (Rook + 6) ) {
-            while (bitboard) {
-                startSquare = getLeastSigBitIndex(bitboard);
+            while (b1) {
+                startSquare = getLeastSigBitIndex(b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getRookAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
@@ -274,14 +274,14 @@ void generateMoves(MoveList& moveList) {
 
                     SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(bitboard, startSquare);
+                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
         // generate queen moves
         if ( (side == White)? piece == Queen : piece == (Queen + 6) ) {
-            while (bitboard) {
-                startSquare = getLeastSigBitIndex(bitboard);
+            while (b1) {
+                startSquare = getLeastSigBitIndex(b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getQueenAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
@@ -299,14 +299,14 @@ void generateMoves(MoveList& moveList) {
 
                     SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(bitboard, startSquare);
+                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
         // generate king moves
         if ( (side == White)? piece == King : piece == (King + 6) ) {
-            while (bitboard) {
-                startSquare = getLeastSigBitIndex(bitboard);
+            while (b1) {
+                startSquare = getLeastSigBitIndex(b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = bitKingAttacks[startSquare] & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
@@ -324,7 +324,7 @@ void generateMoves(MoveList& moveList) {
 
                     SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(bitboard, startSquare);
+                SET_BIT_FALSE(b1, startSquare);
             }
         }
     }
@@ -343,120 +343,89 @@ void generateMoves(MoveList& moveList) {
 // 0100 0000 0000 0000 0000 0000 en passant flag        0x400000
 // 1000 0000 0000 0000 0000 0000 castling flag          0x800000
 
-UndoInfo history[256]{};
-U64 checkers{};
-U64 pinned{};
+const int DEBRUIJN64[64] = {
+    0, 47,  1, 56, 48, 27,  2, 60,
+   57, 49, 41, 37, 28, 16,  3, 61,
+   54, 58, 35, 52, 50, 42, 21, 44,
+   38, 32, 29, 23, 17, 11,  4, 62,
+   46, 55, 26, 59, 40, 36, 15, 53,
+   34, 51, 20, 43, 31, 22, 10, 45,
+   25, 39, 14, 33, 19, 30,  9, 24,
+   13, 18,  8, 12,  7,  6,  5, 63
+};
+constexpr U64 MAGIC = 0x03f79d71b4cb0a89;
 
-// you need some global variables which should be put in a Position Class
-void generateLegalMoves(MoveList& moveList) {
-    moveList.count = 0; // this is needed
+//Returns the index of the least significant bit in the b1
+constexpr int bsf(U64 b) {
+    return int(DEBRUIJN64[MAGIC * (b ^ (b - 1)) >> 58]);
+}
 
-    // make copies of bitboards because as we loop through them we remove the leftmost bits.
-    U64 bitboard{};
-    U64 attacks{};
-    U64 masks{};
-
-    int ourKing, theirKing;
-    int startPiece, endPiece;
-
-    if (side == White) {
-        startPiece = Pawn + 6;
-        endPiece = King + 6;
-        ourKing = getLeastSigBitIndex(bitboards[King]);
-        theirKing = getLeastSigBitIndex(bitboards[King + 6]);
-    } else {
-        startPiece = Pawn;
-        endPiece = King;
-        ourKing = getLeastSigBitIndex(bitboards[King + 6]);
-        theirKing = getLeastSigBitIndex(bitboards[King]);
-    }
-
-    // to be efficient, we already know their king location
-    U64 danger{ bitKingAttacks[theirKing] }; // squares that our king cannot move to
-
-    // adding all the enemy attacks to danger bitboardd
-    for (int bbPiece=startPiece; bbPiece < endPiece; bbPiece++) {
-        U64 bbCopy { bitboards[bbPiece] };
-
-        while (bbCopy) {
-            const int square { getLeastSigBitIndex(bbCopy) };
-
-            switch(bbPiece % 6) {
-                case(Pawn): // look at the opposite side's pawns
-                    danger |= bitPawnAttacks[side^1][square];
-                    break;
-
-                case(Knight):
-                    danger |= bitKnightAttacks[square];
-                    break;
-
-                // For sliders we need to consider attacks which are not visible because our king
-                // is currently blocking them, so we remove the king from the occupancies bitboard
-                case(Bishop):
-                    danger |= getBishopAttacks(square, occupancies[2] ^ (1ULL << ourKing) ) ;
-                    break;
-
-                case(Rook):
-                    danger |= getRookAttacks(square, occupancies[2] ^ (1ULL << ourKing) );
-                    break;
-
-                case(Queen):
-                    danger |= getQueenAttacks(square, occupancies[2] ^ (1ULL << ourKing) ) ;
-                    break;
-
-                default:
-                    break;
-
-            }
-            SET_BIT_FALSE(bbCopy, square);
-        }
-    } // seems good!!!
-    printBitBoard(danger);
-
-    //The king can move to all of its surrounding squares, except ones that are attacked, and
-    //ones that have our own pieces on them
-    bitboard = bitKingAttacks[ourKing] & ~(occupancies[side] | danger);
-
-    // lets add these king movesmoves to the list:
-    while(bitboard) {
-        const int targetSquare {getLeastSigBitIndex(bitboard) };
-
-        if ( !GET_BIT( occupancies[side^1], targetSquare ) ){
-            addMove(moveList, ENCODE_MOVE(ourKing, targetSquare, King + 6*side , 0, 0, 0, 0, 0) );
-        } else {  // capture moves
-            addMove(moveList, ENCODE_MOVE(ourKing, targetSquare, King + 6*side , 0, 1, 0, 0, 0) );
-        }
-        SET_BIT_FALSE(bitboard, targetSquare);
-    }
-
-
-    //The capture mask filters destination squares to those that contain an enemy piece that is checking the
-    //king and must be captured
-    U64 captureMask;
-
-    //The quiet mask filter destination squares to those where pieces must be moved to block an incoming attack to the king
-    U64 quietMask;
-
-    int square; //A general purpose square for storing destinations, etc.
-
-    //Checkers of each piece type are identified by:
-    //1. Projecting attacks FROM the king square
-    //2. Intersecting this bitboard with the enemy bitboard of that piece type
-
-
-    // this is done quite easily with the functions used in isSqAttacked
-    /*
-    checkers = attacks<KNIGHT>(our_king, all) & bitboard_of(Them, KNIGHT)
-        | pawn_attacks<Us>(our_king) & bitboard_of(Them, PAWN);
-
-    //Here, we identify slider checkers and pinners simultaneously, and candidates for such pinners
-    //and checkers are represented by the bitboard <candidates>
-    Bitboard candidates = attacks<ROOK>(our_king, them_bb) & their_orth_sliders
-        | attacks<BISHOP>(our_king, them_bb) & their_diag_sliders;
-    */
-
-
+inline int pop_lsb(U64* b) {
+    const int lsb = bsf(*b);
+    *b &= *b - 1;
+    return lsb;
 }
 
 
+/// NEW MOVE APPROACH:
+///
+/// A move needs 16 bits to be stored
+///
+/// bit  0- 5: destination square (from 0 to 63)
+/// bit  6-11: origin square (from 0 to 63)
+/// bit 12-13: promotion piece type - 2 (from KNIGHT-2 to QUEEN-2)
+/// bit 14-15: special move flag: promotion (1), en passant (2), castling (3)
+/// NOTE: EN-PASSANT bit is set only when a pawn can be captured
+///
+///
 
+enum MoveFlags : int {
+	QUIET = 0b0000, DOUBLE_PUSH = 0b0001,
+	OO = 0b0010, OOO = 0b0011,
+	CAPTURE = 0b1000,
+	CAPTURES = 0b1111,
+	EN_PASSANT = 0b1010,
+	PROMOTIONS = 0b0111,
+	PROMOTION_CAPTURES = 0b1100,
+	PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
+	PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
+};
+
+class Move {
+private:
+    //The internal representation of the move
+    uint16_t move;
+public:
+    //Defaults to a null move (a1a1)
+    inline Move() : move(0) {}
+
+    inline Move(uint16_t m) { move = m; }
+
+    inline Move(int from, int to) : move(0) {
+        move = (from << 6) | to;
+    }
+
+    inline Move(int from, int to, MoveFlags flags) : move(0) {
+        move = (flags << 12) | (from << 6) | to;
+    }
+
+    inline int to() const { return int(move & 0x3f); }
+    inline int from() const { return int((move >> 6) & 0x3f); }
+    inline int to_from() const { return move & 0xffff; }
+    inline MoveFlags flags() const { return MoveFlags((move >> 12) & 0xf); }
+
+    inline bool is_capture() const {
+        return (move >> 12) & CAPTURES;
+    }
+};
+
+
+struct new_MoveList {
+    Move moves[218];
+    int count;
+};
+// should also change the type of moveList
+void new_addMove(new_MoveList& moveList, const Move move) {
+    moveList.moves[moveList.count] = move;
+    moveList.count++;
+}
