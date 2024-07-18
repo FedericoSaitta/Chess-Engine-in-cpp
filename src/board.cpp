@@ -65,7 +65,7 @@ void parseFEN(const std::string& fenString) {
         }
     }
 
-    side = (parts[1][0] == 'w') ? White : Black;
+    side = (parts[1][0] == 'w') ? WHITE : BLACK;
 
     for (const char c : parts[2]) {
         switch (c) {

@@ -11,7 +11,7 @@
 
 
 
-///*** little subtlelty, we are not checking the landing square of the castling eg g1 for white with isSQAttacked
+///*** little subtlelty, we are not checking the landing square of the castling eg g1 for WHITE with isSQAttacked
 //// as this is a pseudo legal generator, in the make move function we will check that the king is not in check
 /// and will hence eliminate those moves
 
@@ -30,12 +30,12 @@ void generateMoves(MoveList& moveList) {
         b1 = bitboards[piece];
 
         // these are the special cases that dont have
-        // generate white pawn moves and white king castling moves
-        if (side == White) {
-            if (piece == Pawn) { // loop over white pawn b1
+        // generate WHITE pawn moves and WHITE king castling moves
+        if (side == WHITE) {
+            if (piece == PAWN) { // loop over WHITE pawn b1
 
                 while(b1) {
-                    startSquare = getLeastSigBitIndex(b1);
+                    startSquare = pop_lsb(&b1);
 
                     targetSquare = startSquare + 8;
 
@@ -44,10 +44,10 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT, 0, 0, 0, 0) );
 
 
                         } else {
@@ -60,55 +60,52 @@ void generateMoves(MoveList& moveList) {
                         }
                     }
 
-                    // need to initialize the attack b1, can only capture black piececs
-                    attacks = bitPawnAttacks[White][startSquare] & occupancies[Black];
+                    // need to initialize the attack b1, can only capture BLACK piececs
+                    attacks = bitPawnAttacks[WHITE][startSquare] & occupancies[BLACK];
 
                     while (attacks) {
-                        targetSquare = getLeastSigBitIndex(attacks);
+                        targetSquare = pop_lsb(&attacks);
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT, 1, 0, 0, 0) );
 
                         } else {
                             addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
-
-                        SET_BIT_FALSE(attacks, targetSquare);
                     }
 
                     // generate enPassantCaptures
                     if (enPassantSQ != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[White][startSquare] & (1ULL << enPassantSQ);
+                        U64 enPassantAttacks = bitPawnAttacks[WHITE][startSquare] & (1ULL << enPassantSQ);
 
                         if (enPassantAttacks) {
-                            targetSquare = getLeastSigBitIndex(enPassantAttacks);
+                            targetSquare = bsf(enPassantAttacks);
                             addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
-                    SET_BIT_FALSE(b1, startSquare);
                 }
             } // this works
 
-            if (piece == King) {
+            if (piece == KING) {
                 // king side castling
                 if (castle & WK) {
                     // checking that the space is empty
                     if( !GET_BIT(occupancies[2], F1) && !GET_BIT(occupancies[2], G1)) {
-                        if ( !isSqAttacked(E1, Black) && !isSqAttacked(F1, Black) ) {
+                        if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(F1, BLACK) ) {
                             addMove(moveList, ENCODE_MOVE(E1, G1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
 
-                //queen side castling
+                //QUEEN side castling
                 if (castle & WQ) {
                     // checking that the space is empty
                     if( !GET_BIT(occupancies[2], B1) && !GET_BIT(occupancies[2], C1) && !GET_BIT(occupancies[2], D1)) {
-                        if ( !isSqAttacked(E1, Black) && !isSqAttacked(D1, Black) ) {
+                        if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(D1, BLACK) ) {
                             addMove(moveList, ENCODE_MOVE(E1, C1, piece, 0, 0, 0, 0, 1) );
                         }
                     }
@@ -116,11 +113,11 @@ void generateMoves(MoveList& moveList) {
 
             }
         } else {
-            // generate black pawn moves and black king castling moves
-            if (piece == (Pawn + 6) ) { // loop over white pawn b1
+            // generate BLACK pawn moves and BLACK king castling moves
+            if (piece == (PAWN + 6) ) { // loop over WHITE pawn b1
 
                 while(b1) {
-                    startSquare = getLeastSigBitIndex(b1);
+                    startSquare = pop_lsb(&b1);
 
                     targetSquare = startSquare - 8;
 
@@ -129,10 +126,10 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP + 6, 0, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT + 6, 0, 0, 0, 0) );
 
                         } else {
                             // one square ahead
@@ -144,54 +141,50 @@ void generateMoves(MoveList& moveList) {
                             }
                         }
                     }
-                    // need to initialize the attack b1, can only capture white piececs
-                    attacks = bitPawnAttacks[Black][startSquare] & occupancies[White];
+                    // need to initialize the attack b1, can only capture WHITE piececs
+                    attacks = bitPawnAttacks[BLACK][startSquare] & occupancies[WHITE];
 
                     while (attacks) {
-                        targetSquare = getLeastSigBitIndex(attacks);
+                        targetSquare = pop_lsb(&attacks);
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Queen + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Rook + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Bishop + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, Knight + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP + 6, 1, 0, 0, 0) );
+                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT + 6, 1, 0, 0, 0) );
                         } else {
                             addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                         }
-
-                        SET_BIT_FALSE(attacks, targetSquare);
                     }
                     // generate enPassantCaptures
                     if (enPassantSQ != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[Black][startSquare] & (1ULL << enPassantSQ);
+                        U64 enPassantAttacks = bitPawnAttacks[BLACK][startSquare] & (1ULL << enPassantSQ);
 
                         if (enPassantAttacks) {
-                            targetSquare = getLeastSigBitIndex(enPassantAttacks);
+                            targetSquare = bsf(enPassantAttacks);
                             addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
                         }
                     }
-
-                    SET_BIT_FALSE(b1, startSquare);
                 }
             } // this works
 
-            if (piece == (King + 6)) {
+            if (piece == (KING + 6)) {
                 // king side castling
                 if (castle & BK) {
                     // checking that the space is empty
                     if( !GET_BIT(occupancies[2], F8) && !GET_BIT(occupancies[2], G8)) {
-                        if ( !isSqAttacked(E8, White) && !isSqAttacked(F8, White) ) {
+                        if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(F8, WHITE) ) {
                             addMove(moveList, ENCODE_MOVE(E8, G8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
                 }
 
-                //queen side castling
+                //QUEEN side castling
                 if (castle & BQ) {
                     // checking that the space is empty
                     if( !GET_BIT(occupancies[2], B8) && !GET_BIT(occupancies[2], C8) && !GET_BIT(occupancies[2], D8)) {
-                        if ( !isSqAttacked(E8, White) && !isSqAttacked(D8, White) ) {
+                        if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(D8, WHITE) ) {
                             addMove(moveList, ENCODE_MOVE(E8, C8, piece, 0, 0, 0, 0, 1) );
                         }
                     }
@@ -200,131 +193,116 @@ void generateMoves(MoveList& moveList) {
             }
         }
 
-        // generate knight moves
-        if ( (side == White)? piece == Knight : piece == (Knight + 6) ) {
+        // generate KNIGHT moves
+        if ( (side == WHITE)? piece == KNIGHT : piece == (KNIGHT + 6) ) {
             while (b1) {
-                startSquare = getLeastSigBitIndex(b1);
+                startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = bitKnightAttacks[startSquare] & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
+                attacks = bitKnightAttacks[startSquare] & ((side == WHITE) ? ~occupancies[WHITE] : ~occupancies[BLACK]);
 
 
                 while (attacks) {
-                    targetSquare = getLeastSigBitIndex(attacks);
+                    targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                    if ( !GET_BIT( ((side == WHITE) ? occupancies[BLACK] : occupancies[WHITE]), targetSquare ) ){
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
-
-                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
-        // generate bishop moves
-        if ( (side == White)? piece == Bishop : piece == (Bishop + 6) ) {
+        // generate BISHOP moves
+        if ( (side == WHITE)? piece == BISHOP : piece == (BISHOP + 6) ) {
             while (b1) {
-                startSquare = getLeastSigBitIndex(b1);
+                startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getBishopAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
+                attacks = getBishopAttacks(startSquare, occupancies[2]) & ((side == WHITE) ? ~occupancies[WHITE] : ~occupancies[BLACK]);
 
 
                 while (attacks) {
-                    targetSquare = getLeastSigBitIndex(attacks);
+                    targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                    if ( !GET_BIT( ((side == WHITE) ? occupancies[BLACK] : occupancies[WHITE]), targetSquare ) ){
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
-
-                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
-        // generate rook moves
-        if ( (side == White)? piece == Rook : piece == (Rook + 6) ) {
+        // generate ROOK moves
+        if ( (side == WHITE)? piece == ROOK : piece == (ROOK + 6) ) {
             while (b1) {
-                startSquare = getLeastSigBitIndex(b1);
+                startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getRookAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
+                attacks = getRookAttacks(startSquare, occupancies[2]) & ((side == WHITE) ? ~occupancies[WHITE] : ~occupancies[BLACK]);
 
 
                 while (attacks) {
-                    targetSquare = getLeastSigBitIndex(attacks);
+                    targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                    if ( !GET_BIT( ((side == WHITE) ? occupancies[BLACK] : occupancies[WHITE]), targetSquare ) ){
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
-
-                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
-        // generate queen moves
-        if ( (side == White)? piece == Queen : piece == (Queen + 6) ) {
+        // generate QUEEN moves
+        if ( (side == WHITE)? piece == QUEEN : piece == (QUEEN + 6) ) {
             while (b1) {
-                startSquare = getLeastSigBitIndex(b1);
+                startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getQueenAttacks(startSquare, occupancies[2]) & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
+                attacks = getQueenAttacks(startSquare, occupancies[2]) & ((side == WHITE) ? ~occupancies[WHITE] : ~occupancies[BLACK]);
 
                 while (attacks) {
-                    targetSquare = getLeastSigBitIndex(attacks);
+                    targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                    if ( !GET_BIT( ((side == WHITE) ? occupancies[BLACK] : occupancies[WHITE]), targetSquare ) ){
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
-
-                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(b1, startSquare);
             }
         }
 
         // generate king moves
-        if ( (side == White)? piece == King : piece == (King + 6) ) {
+        if ( (side == WHITE)? piece == KING : piece == (KING + 6) ) {
             while (b1) {
-                startSquare = getLeastSigBitIndex(b1);
+                startSquare =pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = bitKingAttacks[startSquare] & ((side == White) ? ~occupancies[White] : ~occupancies[Black]);
+                attacks = bitKingAttacks[startSquare] & ((side == WHITE) ? ~occupancies[WHITE] : ~occupancies[BLACK]);
 
                 while (attacks) {
-                    targetSquare = getLeastSigBitIndex(attacks);
+                    targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((side == White) ? occupancies[Black] : occupancies[White]), targetSquare ) ){
+                    if ( !GET_BIT( ((side == WHITE) ? occupancies[BLACK] : occupancies[WHITE]), targetSquare ) ){
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
 
                     } else {  // capture moves
                         addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
                     }
-
-                    SET_BIT_FALSE(attacks, targetSquare);
                 }
-                SET_BIT_FALSE(b1, startSquare);
             }
         }
     }
@@ -342,30 +320,6 @@ void generateMoves(MoveList& moveList) {
 // 0010 0000 0000 0000 0000 0000 double push flag       0x200000
 // 0100 0000 0000 0000 0000 0000 en passant flag        0x400000
 // 1000 0000 0000 0000 0000 0000 castling flag          0x800000
-
-const int DEBRUIJN64[64] = {
-    0, 47,  1, 56, 48, 27,  2, 60,
-   57, 49, 41, 37, 28, 16,  3, 61,
-   54, 58, 35, 52, 50, 42, 21, 44,
-   38, 32, 29, 23, 17, 11,  4, 62,
-   46, 55, 26, 59, 40, 36, 15, 53,
-   34, 51, 20, 43, 31, 22, 10, 45,
-   25, 39, 14, 33, 19, 30,  9, 24,
-   13, 18,  8, 12,  7,  6,  5, 63
-};
-constexpr U64 MAGIC = 0x03f79d71b4cb0a89;
-
-//Returns the index of the least significant bit in the b1
-constexpr int bsf(U64 b) {
-    return int(DEBRUIJN64[MAGIC * (b ^ (b - 1)) >> 58]);
-}
-
-inline int pop_lsb(U64* b) {
-    const int lsb = bsf(*b);
-    *b &= *b - 1;
-    return lsb;
-}
-
 
 /// NEW MOVE APPROACH:
 ///

@@ -15,8 +15,8 @@
 // these could go under benchmark_tests but I will put more rigorous testing functions there.
 
 
-const char promotedPieces[] = { [Queen] = 'q', [Rook] = 'r', [Bishop] = 'b', [Knight] = 'n',
-                            [Queen + 6] = 'q', [Rook + 6] = 'r', [Bishop + 6] = 'b', [Knight + 6] = 'n',
+const char promotedPieces[] = { [WHITE_QUEEN] = 'q', [WHITE_ROOK] = 'r', [WHITE_BISHOP] = 'b', [WHITE_KNIGHT] = 'n',
+                            [BLACK_QUEEN] = 'q', [BLACK_ROOK] = 'r', [BLACK_BISHOP] = 'b', [BLACK_KNIGHT] = 'n',
                             [0] =  ' ' }; // these are always lowercase for both colors
 
 static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White

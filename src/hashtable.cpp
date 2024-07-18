@@ -35,15 +35,14 @@ U64 generateHashKey() { // to uniquely identify a position
         tempPieceBitboard = bitboards[piece];
 
         while (tempPieceBitboard) {
-            const int square = getLeastSigBitIndex(tempPieceBitboard);
+            const int square = pop_lsb(&tempPieceBitboard);
             key ^= randomPieceKeys[piece][square];
-            SET_BIT_FALSE(tempPieceBitboard, square);
         }
     }
 
     if (enPassantSQ != 64) key ^= randomEnPassantKeys[enPassantSQ];
     key ^= randomCastlingKeys[castle];
-    if (side == Black) key ^= sideKey; // only done if side to move is black
+    if (side == BLACK) key ^= sideKey; // only done if side to move is black
 
     return key;
 }

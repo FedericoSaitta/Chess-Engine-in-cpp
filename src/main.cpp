@@ -5,7 +5,7 @@
 #include "init.h"
 
 //#define DEBUG
-// #define BENCHMARK
+ //#define BENCHMARK
 
 
 #include "benchmark_tests.h"
@@ -37,7 +37,7 @@ int main() {
     Test::BenchMark::matingPuzzles();
 #endif
 
-    /*
+/*
 #ifdef DEBUG
     Test::countPawnAttacks();
     Test::countKnightMoves();
@@ -53,5 +53,6 @@ int main() {
     Test::Debug::historyScores();
 #endif
 */
+
 }
 

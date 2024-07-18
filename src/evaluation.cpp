@@ -6,6 +6,8 @@
 #include "inline_functions.h"
 #include "board.h"
 
+#include <immintrin.h>
+#include <algorithm>
 #include "misc.h"
 #define FLIP(sq) ((sq)^56)
 
@@ -224,128 +226,123 @@ int evaluate() {
 
         // defo could improve the conditional branching in here
         while (bitboardCopy) {
-            square = getLeastSigBitIndex(bitboardCopy);
+            square = pop_lsb(&bitboardCopy);
 
             // std::cout << "Piece "  << " square: " << chessBoard[square] << " middlegame value: " << mg_table[bbPiece][square] << '\n';
             // std::cout << "Piece " << " square: " << chessBoard[square] << " engdame value: " << eg_table[bbPiece][square] << '\n';
 
-            mg[(bbPiece < 6) ? 0 : 1] += mg_table[bbPiece][square];
-            eg[(bbPiece < 6) ? 0 : 1] += eg_table[bbPiece][square];
+            mg[bbPiece / 6] += mg_table[bbPiece][square];
+            eg[bbPiece / 6] += eg_table[bbPiece][square];
             gamePhase += gamephaseInc[bbPiece];
-
 
 
             // Note that some of these masks do not consider if the pawns are in front or behind the pieces
             switch(bbPiece) {
-                case (Pawn):
+                case (PAWN):
                     // you could try and avoid conditional branching here
-                        if ( countBits(bitboards[Pawn] & fileMasks[square]) > 1) penalties[White] += doublePawnPenalty * countBits(bitboards[Pawn] & fileMasks[square]);
+                    if ( countBits(bitboards[PAWN] & fileMasks[square]) > 1) penalties[WHITE] += doublePawnPenalty * countBits(bitboards[PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (bitboards[Pawn] & isolatedPawnMasks[square] ) == 0) penalties[White] += isolatedPawnPenalty;
+                    if ( (bitboards[PAWN] & isolatedPawnMasks[square] ) == 0) penalties[WHITE] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (bitboards[Pawn + 6] & white_passedPawnMasks[square] ) == 0) penalties[White] += passedPawnBonus[getRankFromSquare[square]];
+                    if ( (bitboards[BLACK_PAWN] & white_passedPawnMasks[square] ) == 0) penalties[WHITE] += passedPawnBonus[getRankFromSquare[square]];
                     break;
 
-                case (Pawn + 6):
+                case (BLACK_PAWN):
                     // you could try and avoid conditional branching here
-                        if ( countBits(bitboards[Pawn + 6] & fileMasks[square]) > 1) penalties[Black] += doublePawnPenalty * countBits(bitboards[Pawn + 6] & fileMasks[square]);
+                        if ( countBits(bitboards[BLACK_PAWN] & fileMasks[square]) > 1) penalties[BLACK] += doublePawnPenalty * countBits(bitboards[BLACK_PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (bitboards[Pawn + 6] & isolatedPawnMasks[square] ) == 0) penalties[Black] += isolatedPawnPenalty;
+                    if ( (bitboards[BLACK_PAWN] & isolatedPawnMasks[square] ) == 0) penalties[BLACK] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (bitboards[Pawn] & black_passedPawnMasks[square] ) == 0) penalties[Black] += passedPawnBonus[7 - getRankFromSquare[square]];
+                    if ( (bitboards[PAWN] & black_passedPawnMasks[square] ) == 0) penalties[BLACK] += passedPawnBonus[7 - getRankFromSquare[square]];
                     break;
 
-                case (Rook):
-                    if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] += semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] += openFileScore;
+                case (ROOK):
+                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) penalties[WHITE] += semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[WHITE] += openFileScore;
 
-                    mgMobility[White] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
-                    egMobility[White] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
+                    mgMobility[WHITE] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
+                    egMobility[WHITE] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
-                case (Rook + 6):
-                    if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] += semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] += openFileScore;
+                case (BLACK_ROOK):
+                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) penalties[BLACK] += semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[BLACK] += openFileScore;
 
-                    mgMobility[Black] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
-                    egMobility[Black] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
+                    mgMobility[BLACK] += RookMobOpening * countBits( getRookAttacks(square, occupancies[2]) );
+                    egMobility[BLACK] += RookMobEndgame * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
                 // if the kings are on semi-open or open files they will be given penalties
-                case (King):
-                    if ( (bitboards[Pawn] & fileMasks[square]) == 0) penalties[White] -= semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[White] -= openFileScore;
+                case (KING):
+                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) penalties[WHITE] -= semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[WHITE] -= openFileScore;
 
-                    penalties[White] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[White] );
+                    penalties[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[WHITE] );
                     break;
 
-                case (King + 6):
-                    if ( (bitboards[Pawn + 6] & fileMasks[square]) == 0) penalties[Black] -= semiOpenFileScore;
-                    if ( ( (bitboards[Pawn] | bitboards[Pawn + 6]) & fileMasks[square]) == 0) penalties[Black] -= openFileScore;
+                case (BLACK_KING):
+                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) penalties[BLACK] -= semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[BLACK] -= openFileScore;
 
-                    penalties[Black] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[Black] );
+                    penalties[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[BLACK] );
                     break;
 
 
 
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
                 // these are very basic implementations, like the ones in fruit
-                case (Bishop):
-                    mgMobility[White] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
-                    egMobility[White] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
+                case (BISHOP):
+                    mgMobility[WHITE] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
+                    egMobility[WHITE] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
                     break;
 
-                case (Bishop + 6):
-                    mgMobility[Black] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
-                    egMobility[Black] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
+                case (BLACK_BISHOP):
+                    mgMobility[BLACK] += BishopMobOpening * countBits( getBishopAttacks(square, occupancies[2]) );
+                    egMobility[BLACK] += BishopMobEndgame * countBits( getBishopAttacks(square, occupancies[2]) );
                     break;
 
-                case (Knight):
-                    mgMobility[White] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
-                    egMobility[White] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
+                case (KNIGHT):
+                    mgMobility[WHITE] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
+                    egMobility[WHITE] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
                     break;
 
-                case (Knight + 6):
-                    mgMobility[Black] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
-                    egMobility[Black] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
+                case (BLACK_KNIGHT):
+                    mgMobility[BLACK] += KnightMobOpening * countBits( bitKnightAttacks[square] & occupancies[2] );
+                    egMobility[BLACK] += KnightMobEndgame * countBits( bitKnightAttacks[square] & occupancies[2] );
                     break;
 
                 // For now we dont assign any multipliers to quees
-                case (Queen):
-                    mgMobility[White] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
-                    egMobility[White] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
+                case (QUEEN):
+                    mgMobility[WHITE] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
+                    egMobility[WHITE] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
                     break;
 
-                case (Queen + 6):
-                    mgMobility[Black] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
-                    egMobility[Black] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
+                case (BLACK_QUEEN):
+                    mgMobility[BLACK] += QueenMobOpening * countBits( getQueenAttacks(square, occupancies[2]) );
+                    egMobility[BLACK] += QueenMobEndgame * countBits( getQueenAttacks(square, occupancies[2]) );
                     break;
 
                 default:
                     break;
             }
-
-
-            SET_BIT_FALSE(bitboardCopy, square);
         }
 
     }
 
     // std::cout << "mgScore white: " << mg[side] << " mgScore black: " << mg[side^1] << '\n';
 
-    /* tapered eval */
     const int mgScore = mg[side] + mgMobility[side] - mg[side^1] - mgMobility[side^1];
     const int egScore = eg[side] + egMobility[side] - eg[side^1] - egMobility[side^1];
     int mgPhase = gamePhase;
-    if (mgPhase > 24) mgPhase = 24; /* in case of early promotion */
+    if (mgPhase > 24) mgPhase = 24;  // in case of early promotion
 
     const int egPhase = 24 - mgPhase;
 
-    return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties[side] - penalties[side^1];;
+    return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties[side] - penalties[side^1];
 }
 
 

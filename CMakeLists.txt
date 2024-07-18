@@ -4,14 +4,14 @@ project(ChessEngine)
 set(CMAKE_CXX_STANDARD 23)
 
 ## Debug builds
-set(CMAKE_BUILD_TYPE Debug)
-add_compile_definitions(DEBUG)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedantic")
+#set(CMAKE_BUILD_TYPE Debug)
+#add_compile_definitions(DEBUG)
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedantic")
 
 
 ## Release builds
-#set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
 include_directories(include)
 include_directories(benchmark_tests)
@@ -49,4 +49,5 @@ add_executable(ChessEngine src/main.cpp
         benchmark_tests/branching_factor.cpp
         src/movesort.cpp
         include/movesort.h
+        include/types.h
 )

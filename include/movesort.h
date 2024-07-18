@@ -6,5 +6,5 @@
 
 #include "movegen.h"
 
-int scoreMove(int move, int ply);
-void sortMoves(MoveList& moveList, int ply, int bestMove);
+int scoreMove(int move);
+void sortMoves(MoveList& moveList, int bestMove);

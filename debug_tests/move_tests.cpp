@@ -83,14 +83,14 @@ namespace Test::Debug{
 
         for (int count=0; count < moveList.count; count++) {
             printMove(moveList.moves[count]);
-            std::cout << " score: " << scoreMove(moveList.moves[count], 0) << '\n';
+            std::cout << " score: " << scoreMove(moveList.moves[count]) << '\n';
         }
 
-        sortMoves(moveList, 0, 0);
+        sortMoves(moveList, 0);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
             printMove(moveList.moves[count]);
-            std::cout << " score: " << scoreMove(moveList.moves[count], 0) << '\n';
+            std::cout << " score: " << scoreMove(moveList.moves[count])<< '\n';
         }
     }
 

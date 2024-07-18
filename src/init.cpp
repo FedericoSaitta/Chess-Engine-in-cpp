@@ -260,8 +260,7 @@ static U64 setOccupancies(const int index, const int bitInMask, U64 attackMask) 
 
     for (int i=0; i < bitInMask; i++) {
 
-        const int square {getLeastSigBitIndex(attackMask)};
-        SET_BIT_FALSE(attackMask, square);
+        const int square {pop_lsb(&attackMask)};
 
         if (index & (1ULL << i)) { SET_BIT(occupancy, square); }
     }
@@ -271,8 +270,8 @@ static U64 setOccupancies(const int index, const int bitInMask, U64 attackMask) 
 // *** INITIALIZING U64 ARRAYS *** //
 static void initLeaperPiecesAttacks() {
     for (int square=0; square < 64; square ++) {
-        bitPawnAttacks[White][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
-        bitPawnAttacks[Black][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
+        bitPawnAttacks[WHITE][square] =  maskPawnAttacks(square, 0); // white pawn captures (no en-passant)
+        bitPawnAttacks[BLACK][square] =  maskPawnAttacks(square, 1); // black pawn captures (no en-passant)
 
         bitKnightAttacks[square] =  maskKnightMoves(square);
         bitKingAttacks[square] =  maskKingMoves(square);

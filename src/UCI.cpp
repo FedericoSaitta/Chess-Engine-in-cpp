@@ -62,10 +62,10 @@ static int parseMove(const std::string_view move) {
 
             if (promotedPiece) {
 
-                if ( ((promotedPiece % 6) == Queen) && (move[4] == 'q') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == Rook) && (move[4] == 'r') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == Bishop) && (move[4] == 'b') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == Knight) && (move[4] == 'n') ) return moveList.moves[count];
+                if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count];
+                if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count];
+                if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count];
+                if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count];
 
             } else { return moveList.moves[count]; }
         }
@@ -148,11 +148,11 @@ static void handleGo(const std::vector<std::string>& tokens) {
     else if (tokens[1] == "movetime") {
         // need to fix this
 
-        if (side == White) whiteClockTime = std::stoi(tokens[2]);
+        if (side == WHITE) whiteClockTime = std::stoi(tokens[2]);
         else blackClockTime = std::stoi(tokens[2]);
 
         if (isNewGame) {
-            gameLengthTime = (side == White) ? whiteClockTime : blackClockTime;
+            gameLengthTime = (side == WHITE) ? whiteClockTime : blackClockTime;
             isNewGame = false;
         }
 

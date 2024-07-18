@@ -59,7 +59,7 @@ constexpr int secondKiller{ 8'000 };
 
 
 
-int scoreMove(const int move, const int ply) {
+int scoreMove(const int move) {
 
 	if (scorePV && (pvTable[0][ply] == move)) {
 		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
@@ -73,7 +73,7 @@ int scoreMove(const int move, const int ply) {
 	const int targetSquare = getMoveTargetSQ(move);
 
 	if (getMoveCapture(move)) {
-		int targetPiece{ Pawn }; // in case we make an enPassant capture, which our loop would miss
+		int targetPiece{ PAWN }; // in case we make an enPassant capture, which our loop would miss
 
 		// copied from makeMove function
 		targetPiece = getCapturedPiece(targetSquare);
@@ -84,7 +84,7 @@ int scoreMove(const int move, const int ply) {
 
 	// scoring promotions, should check this....
 	const int promPiece { getMovePromPiece(move) };
-	if (promPiece != 0) return mvv_lva[Pawn][promPiece] + captureBonus;
+	if (promPiece != 0) return mvv_lva[PAWN][promPiece] + captureBonus;
 
 	if (killerMoves[0][ply] == move) return firstKiller;
 	if (killerMoves[1][ply] == move) return secondKiller;
@@ -92,7 +92,7 @@ int scoreMove(const int move, const int ply) {
 	return historyMoves[movePiece][targetSquare];
 }
 
-void sortMoves(MoveList& moveList, const int ply, const int bestMove) {
+void sortMoves(MoveList& moveList, const int bestMove) {
 	// Pair moves with their scores
 	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
 
@@ -101,7 +101,7 @@ void sortMoves(MoveList& moveList, const int ply, const int bestMove) {
 
 		if (bestMove == moveList.moves[count]) score = hashTableBonus;
 
-		else score = scoreMove(moveList.moves[count], ply);
+		else score = scoreMove(moveList.moves[count]);
 
 		scoredMoves[count] = std::make_pair(score, moveList.moves[count]);
 	}

@@ -26,7 +26,7 @@
 #pragma once
 
 #include <cstdint>
-
+#include "types.h"
 
 #define U64 std::uint64_t
 
@@ -102,23 +102,11 @@
 #define G8  62
 #define H8  63
 
-// Piece values, 6 is added to form black pieces
-#define Pawn 0
-#define Knight 1
-#define Bishop 2
-#define Rook 3
-#define Queen 4
-#define King 5
-
 // Castling rights relevant bits
 #define WK 1
 #define WQ 2
 #define BK 4
 #define BQ 8
-
-// side to move
-#define White 0
-#define Black 1
 
 
 #define SET_BIT(board, square) ((board) |= (1ULL << (square)))

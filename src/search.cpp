@@ -112,8 +112,8 @@ static int getMoveTime(const bool timeConstraint) {
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// We give 100 millisecond lag compensation
-	const int timeAlloted = (side == White) ? whiteClockTime - 100 : blackClockTime - 100;
-	const int increment = (side == White) ? whiteIncrementTime : blackIncrementTime;
+	const int timeAlloted = (side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
+	const int increment = (side == WHITE) ? whiteIncrementTime : blackIncrementTime;
 
 	int timePerMove{ timeAlloted / 30 + increment };
 	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
@@ -134,7 +134,7 @@ static int isRepetition() {
 }
 
 static U64 nonPawnMaterial() {
-	return ( bitboards[Queen + 6 * side] | bitboards[Rook + 6 * side] | bitboards[Bishop + 6 * side] | bitboards[Knight + 6 * side]);
+	return ( bitboards[QUEEN + 6 * side] | bitboards[ROOK + 6 * side] | bitboards[BISHOP + 6 * side] | bitboards[KNIGHT + 6 * side]);
 }
 
 static int givesCheck(const int move) {
@@ -142,7 +142,7 @@ static int givesCheck(const int move) {
 	COPY_BOARD()
 	makeMove(move, 0);
 
-	const int opponentInCheck { isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]) , side^1 ) };
+	const int opponentInCheck { isSqAttacked( bsf(bitboards[KING + 6 * side]) , side^1 ) };
 
 	RESTORE_BOARD()
 	return opponentInCheck;
@@ -172,7 +172,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     MoveList moveList;
     generateMoves(moveList);
-    sortMoves(moveList, ply, 0);
+    sortMoves(moveList, 0);
 
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
@@ -201,11 +201,31 @@ static int quiescenceSearch(int alpha, const int beta) {
             alpha = score;
 
         	// fail-hard beta cut off
-        	if (score >= beta) return beta; // known as node that fails high
+        	if (score >= beta) {
+        		return beta; // known as nodethat fails high
+        	}
         }
     }
 
     return alpha; // node that fails low
+}
+
+
+static void makeNullMove() {
+	hashKey ^= sideKey;
+	if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
+
+	side ^= 1; // make null move
+	enPassantSQ = 64; // resetting en-passant to null-square
+
+	// we change plies so white and black killers remain in sync for negamax search
+	ply++;
+	repetitionIndex++;
+	repetitionTable[repetitionIndex] = hashKey;
+}
+static void undoNullMove() {
+	ply--;
+	repetitionIndex--;
 }
 
 static int negamax(int alpha, const int beta, int depth, const int canNull) {
@@ -221,9 +241,11 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	// ply && used to ensure we dont read from the transposition table at the root node
 	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
 
-	// reading the TT table, if we the move has already been searched, we return its evaluatio
-	if (ply && (score = probeHash(alpha, beta, &bestMove, depth)) != NO_HASH_ENTRY && !pvNode) return score;
-	bool ttHit = score != NO_HASH_ENTRY;
+	// reading the TT table, if we the move has already been searched, we return its evaluation
+	score = probeHash(alpha, beta, &bestMove, depth);
+	const bool ttHit = score != NO_HASH_ENTRY;
+	if (ply && ttHit && !pvNode) return score;
+
 
 	if ((nodes & 2047) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
@@ -232,7 +254,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 	nodes++;
 
-	const int inCheck{ isSqAttacked( (side == White) ? getLeastSigBitIndex(bitboards[King]) : getLeastSigBitIndex(bitboards[King + 6]), side^1) };
+	const int inCheck{ isSqAttacked( bsf(bitboards[KING + 6 * side]), side^1) };
 
 	int legalMoves{};
 
@@ -242,7 +264,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
 	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -INF + 100)
 	{
-		int staticEval{ evaluate() };
+		// new addition avoid having to re-evaluate if we already have a tt eval
+		const int staticEval{ (ttHit) ? score : evaluate() };
 		// evaluation margin substracted from static evaluation score fails high
 		if (staticEval - (120 * depth) >= beta)
 			// evaluation margin substracted from static evaluation score
@@ -270,22 +293,12 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 		if (depth >= 3 && nonPawnMaterial() && canNull) {
 			COPY_BOARD()
 
-			hashKey ^= sideKey;
-			if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
-
-			side ^= 1; // make null move
-			enPassantSQ = 64; // resetting en-passant to null-square
-
-			// we change plies so white and black killers remain in sync for negamax search
-			ply++;
-			repetitionIndex++;
-			repetitionTable[repetitionIndex] = hashKey;
+			makeNullMove();
 
 			// more aggressive reduction
 			const int R = 3 + depth / 3;
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, NO_NULL);
-			ply--;
-			repetitionIndex--;
+			undoNullMove();
 
 			RESTORE_BOARD() // un-making the null move
 
@@ -337,7 +350,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	// if we are following PV line, we enable scoring
     if (followPV) enablePVscoring(moveList);
 
-    sortMoves(moveList, ply, bestMove);
+    sortMoves(moveList, bestMove);
 
 	int movesSearched{};
 
@@ -352,7 +365,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
     	if (isQuiet && skipQuietMoves) continue;
 
-    	/*
+
     	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
 
     		//Late move pruning (LMP)
@@ -365,7 +378,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     		}
 
     	}
-    	*/
+
 
         COPY_BOARD()
         ply++;
@@ -480,10 +493,14 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     return alpha; // known as fail-low node
 }
 
+
+
 void iterativeDeepening(const int depth, const bool timeConstraint) {
 	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint);
+
+	const int softTimeLimit = timePerMove / 4.0f;
 	assert( (timePerMove > 0) && "Negative Time Per Move");
 
 	int alpha { -INF };
@@ -494,16 +511,14 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
 
-		if (stopSearch)
-			break;
-
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
         const int score { negamax(alpha, beta, currentDepth, DO_NULL) };
 
 		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
 
-		if ( (searchDuration.count() * 1'000) > timePerMove) break;
+		// If the previous search exceeds the hard or soft time limit, we stop searching
+		if ( (stopSearch) || (searchDuration.count() * 1'000) > softTimeLimit) break;
 
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
 	        alpha = -INF;
@@ -532,7 +547,8 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		currentDepth++; // we can proceed to the next iteration
 
     }
-	ageHistoryTable();
-
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
+
+	// Post searching cleanups that can be done during the opponent's turn
+	ageHistoryTable();
 }

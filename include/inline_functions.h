@@ -8,6 +8,9 @@
 #include "board.h"
 #include "init.h"
 
+
+// there are more complicated bit counting techniques but this actually all gets
+// optimized by the compiler
 inline int countBits(U64 board) {
     // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
     int count{};
@@ -15,13 +18,33 @@ inline int countBits(U64 board) {
     return count;
 }
 
-inline int getLeastSigBitIndex(const U64 board) {
-    // this returned the index of the right most bit in a Bitboard
-    if (board) {
-        return countBits((board & -board) - 1);
-    }
-    return -1; // in case the bitboard is initially empty
+
+const int DEBRUIJN64[64] = {
+    0, 47,  1, 56, 48, 27,  2, 60,
+   57, 49, 41, 37, 28, 16,  3, 61,
+   54, 58, 35, 52, 50, 42, 21, 44,
+   38, 32, 29, 23, 17, 11,  4, 62,
+   46, 55, 26, 59, 40, 36, 15, 53,
+   34, 51, 20, 43, 31, 22, 10, 45,
+   25, 39, 14, 33, 19, 30,  9, 24,
+   13, 18,  8, 12,  7,  6,  5, 63
+};
+
+constexpr U64 MAGIC = 0x03f79d71b4cb0a89;
+
+//Returns the index of the least significant bit in the bitboard
+constexpr int bsf(const U64 b) {
+    return DEBRUIJN64[MAGIC * (b ^ (b - 1)) >> 58];
 }
+
+//Returns the index of the least significant bit in the bitboard, and removes the bit from the bitboard
+inline int pop_lsb(U64* b) {
+    const int lsb = bsf(*b);
+    *b &= *b - 1;
+    return lsb;
+}
+
+
 
 inline U64 getBishopAttacks(const int square, U64 occupancy) {
     // get bishop attacks assuming current board occupancy
@@ -69,34 +92,32 @@ inline U64 getQueenAttacks(const int square, U64 occupancy) {
 
 inline int isSqAttacked(const int square, const int side) {
 
+    // we use side^1 to look at the opponent's attacks and + 6 * side to look at our own pieces, side = 1 for black
     // attacked by pawns
-    if ( (side == White) && (bitPawnAttacks[Black][square] & bitboards[Pawn]) ) return 1;
-    if ( (side == Black) && (bitPawnAttacks[White][square] & bitboards[Pawn + 6]) ) return 1;
+    if ( (bitPawnAttacks[side^1][square] & bitboards[PAWN + 6 * side]) ) return 1;
 
     // attacked by knight
-    if ( bitKnightAttacks[square] & ((side == White) ? bitboards[Knight] : bitboards[Knight + 6] ) ) return 1;
+    if ( bitKnightAttacks[square] & bitboards[KNIGHT + 6 * side] ) return 1;
 
     // attacked by bishop
-    if ( (getBishopAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Bishop] : bitboards[Bishop+6])) ) return 1;
+    if ( (getBishopAttacks(square, occupancies[2]) & bitboards[BISHOP + 6 * side] ) ) return 1;
 
     // attacked by rook
-    if ( (getRookAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Rook] : bitboards[Rook+6])) ) return 1;
+    if ( (getRookAttacks(square, occupancies[2]) & bitboards[ROOK + 6 * side] ) ) return 1;
 
     // attacked by queen
-    if ( (getQueenAttacks(square, occupancies[2]) & ((side == White) ? bitboards[Queen] : bitboards[Queen+6])) ) return 1;
+    if ( (getQueenAttacks(square, occupancies[2]) & bitboards[QUEEN + 6 * side] ) ) return 1;
 
     // attacked by king
-    if ( bitKingAttacks[square] & ((side == White) ? bitboards[King] : bitboards[King + 6] ) ) return 1;
+    if ( bitKingAttacks[square] & bitboards[KING + 6 * side] ) return 1;
 
     return 0;
 }
 
 inline int getCapturedPiece(const int targetSquare) {
-    int startPiece, endPiece;
+    const int startPiece { PAWN + 6 * (side^1) };
+    const int endPiece { KING + 6 * (side^1) };
     int targetPiece{};
-
-    if (side == White ) { startPiece = Pawn + 6; endPiece = King + 6; }
-    else { startPiece = Pawn; endPiece = King; }
 
     for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
         if ( GET_BIT(bitboards[bbPiece], targetSquare) ) {
@@ -104,5 +125,6 @@ inline int getCapturedPiece(const int targetSquare) {
             break;
         }
     }
+
     return targetPiece;
 }

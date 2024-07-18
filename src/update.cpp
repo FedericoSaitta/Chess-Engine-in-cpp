@@ -49,10 +49,9 @@ int makeMove(const int move, const int onlyCaptures){
         hashKey ^= randomPieceKeys[piece][targetSQ];
 
         if ( capture ) {
-            int startPiece, endPiece;
 
-            if (side == White ) { startPiece = Pawn + 6; endPiece = King + 6; }
-            else { startPiece = Pawn; endPiece = King; }
+            const int startPiece { PAWN + 6 * (side^1) };
+            const int endPiece { KING + 6 * (side^1) };;
 
             for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
                 if ( GET_BIT(bitboards[bbPiece], targetSQ) ) {
@@ -71,21 +70,21 @@ int makeMove(const int move, const int onlyCaptures){
             SET_BIT_FALSE( bitboards[piece], targetSQ);
             SET_BIT( bitboards[promPiece], targetSQ);
 
-            // hash the removal of the pawn and add the new piece
-            hashKey ^= randomPieceKeys[piece][targetSQ]; // removal of the pawn
+            // hash the removal of the PAWN and add the new piece
+            hashKey ^= randomPieceKeys[piece][targetSQ]; // removal of the PAWN
             hashKey ^= randomPieceKeys[promPiece][targetSQ]; // addition of promoted piece
         }
 
         if ( enPassant ) {
-            if (side == White) {
-                SET_BIT_FALSE( bitboards[Pawn + 6], targetSQ - 8 );
+            if (side == WHITE) {
+                SET_BIT_FALSE( bitboards[PAWN + 6], targetSQ - 8 );
 
-                // hash the removal of the opponent's pawn
-                hashKey ^= randomPieceKeys[Pawn + 6][targetSQ - 8];
+                // hash the removal of the opponent's PAWN
+                hashKey ^= randomPieceKeys[PAWN + 6][targetSQ - 8];
 
             } else {
-                SET_BIT_FALSE( bitboards[Pawn], targetSQ + 8 );
-                hashKey ^= randomPieceKeys[Pawn][targetSQ + 8];
+                SET_BIT_FALSE( bitboards[PAWN], targetSQ + 8 );
+                hashKey ^= randomPieceKeys[PAWN][targetSQ + 8];
             }
         }
 
@@ -96,7 +95,7 @@ int makeMove(const int move, const int onlyCaptures){
         enPassantSQ = 64;
 
         if ( doublePush ) {
-            if (side == White) {
+            if (side == WHITE) {
                 enPassantSQ = targetSQ - 8;
                 // update hashKey
                 hashKey ^= randomEnPassantKeys[targetSQ - 8];
@@ -110,35 +109,35 @@ int makeMove(const int move, const int onlyCaptures){
         if ( castling ) {
             switch(targetSQ) {
                 case (G1):
-                    SET_BIT_FALSE(bitboards[Rook], H1);
-                    SET_BIT(bitboards[Rook], F1);
+                    SET_BIT_FALSE(bitboards[ROOK], H1);
+                    SET_BIT(bitboards[ROOK], F1);
 
-                    // hash rook:
-                    hashKey ^= randomPieceKeys[Rook][H1];
-                    hashKey ^= randomPieceKeys[Rook][F1];
+                    // hash ROOK:
+                    hashKey ^= randomPieceKeys[ROOK][H1];
+                    hashKey ^= randomPieceKeys[ROOK][F1];
                     break;
 
                 case (C1):
-                    SET_BIT_FALSE(bitboards[Rook], A1);
-                    SET_BIT(bitboards[Rook], D1);
-                    // hash rook:
-                    hashKey ^= randomPieceKeys[Rook][A1];
-                    hashKey ^= randomPieceKeys[Rook][D1];
+                    SET_BIT_FALSE(bitboards[ROOK], A1);
+                    SET_BIT(bitboards[ROOK], D1);
+                    // hash ROOK:
+                    hashKey ^= randomPieceKeys[ROOK][A1];
+                    hashKey ^= randomPieceKeys[ROOK][D1];
                     break;
 
                 case (G8):
-                    SET_BIT_FALSE(bitboards[Rook + 6], H8);
-                    SET_BIT(bitboards[Rook + 6], F8);
-                    // hash rook:
-                    hashKey ^= randomPieceKeys[Rook + 6][H8];
-                    hashKey ^= randomPieceKeys[Rook + 6][F8];
+                    SET_BIT_FALSE(bitboards[BLACK_ROOK], H8);
+                    SET_BIT(bitboards[BLACK_ROOK], F8);
+                    // hash ROOK:
+                    hashKey ^= randomPieceKeys[BLACK_ROOK][H8];
+                    hashKey ^= randomPieceKeys[BLACK_ROOK][F8];
                     break;
                 case (C8):
-                    SET_BIT_FALSE(bitboards[Rook + 6], A8);
-                    SET_BIT(bitboards[Rook + 6], D8);
-                    // hash rook:
-                    hashKey ^= randomPieceKeys[Rook + 6][A8];
-                    hashKey ^= randomPieceKeys[Rook + 6][D8];
+                    SET_BIT_FALSE(bitboards[BLACK_ROOK], A8);
+                    SET_BIT(bitboards[BLACK_ROOK], D8);
+                    // hash ROOK:
+                    hashKey ^= randomPieceKeys[BLACK_ROOK][A8];
+                    hashKey ^= randomPieceKeys[BLACK_ROOK][D8];
                     break;
 
                 default: break;
@@ -178,7 +177,7 @@ int makeMove(const int move, const int onlyCaptures){
 
 
         // make sure that the king has not been exposed into check
-        if (const U64 kingBitboard{ (side == White) ? bitboards[King + 6] : bitboards[King] }; isSqAttacked(getLeastSigBitIndex(kingBitboard), side)) {
+        if ( isSqAttacked(bsf( bitboards[KING + 6 * (side^1)] ), side)) {
             // square is illegal so we take it back
             RESTORE_BOARD();
             return 0;
