@@ -171,19 +171,20 @@ void UCI() {
     while (std::getline(std::cin, line)) {
         std::vector<std::string> tokens = split(line);
         if (tokens.empty()) { continue; }
-
         const std::string command = tokens[0];
 
-        logFile << line << '\n';
+        // UCI COMMANDS
         if ( command == "uci") handleUci();
         else if ( command == "isready") handleIsReady();
         else if ( command == "position") handlePosition(tokens); // though this seems expensive because of al lthe checks, 80 move game in 235 microsec
         else if ( command == "go") handleGo(tokens);
-        else if ( command == "display" ) printBoardFancy();
 
         else if ( command == "quit") break;
         else if ( command == "ucinewgame") resetGameVariables();
 
+        // NON-UCI COMMANDS
+        else if (command == "bench")  Test::BenchMark::staticSearch();
+        else if ( command == "display" ) printBoardFancy();
         else if ( command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
 }

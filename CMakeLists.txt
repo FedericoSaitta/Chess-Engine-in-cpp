@@ -33,7 +33,7 @@ add_executable(ChessEngine src/main.cpp
         debug_tests/move_tests.cpp
         benchmark_tests/perft_tests.cpp
         src/UCI.cpp
-        include/evaluation.h
+        src/eval/evaluation.h
         benchmark_tests/puzzle_tests.cpp
         src/hashtable.cpp
         include/search.h
@@ -43,11 +43,12 @@ add_executable(ChessEngine src/main.cpp
         include/board.h
         include/update.h
         include/inline_functions.h
-        src/evaluation.cpp
+        src/eval/evaluation.cpp
         debug_tests/evaluation_tests.cpp
         debug_tests/debug_tests.h
         benchmark_tests/branching_factor.cpp
         src/movesort.cpp
         include/movesort.h
         include/types.h
+        src/eval/evalparams.h
 )

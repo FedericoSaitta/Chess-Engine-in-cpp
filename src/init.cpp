@@ -7,7 +7,7 @@
 
 #include "inline_functions.h"
 #include "hashtable.h"
-#include "evaluation.h"
+#include "eval/evaluation.h"
 #include "search.h"
 
 

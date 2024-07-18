@@ -6,21 +6,21 @@
 #include <string>
 #include <variant>
 
-#include "macros.h"
-#include "inline_functions.h"
+#include "../include/macros.h"
+#include "../include/inline_functions.h"
 
-#include "search.h"
+#include "../include/search.h"
 
 #include <assert.h>
 #include <__algorithm/ranges_move.h>
 
-#include "update.h"
-#include "hashtable.h"
-#include "uci.h"
-#include "board.h"
-#include "evaluation.h"
-#include "misc.h"
-#include "movesort.h"
+#include "../include/update.h"
+#include "../include/hashtable.h"
+#include "../include/uci.h"
+#include "../include/board.h"
+#include "eval/evaluation.h"
+#include "../include/misc.h"
+#include "../include/movesort.h"
 
 #define DO_NULL 1
 #define NO_NULL 0
@@ -32,7 +32,7 @@ int ply{};
 static std::uint32_t nodes{};
 
 int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
+int historyMoves[64][64]{}; // zero initialization to ensure no random bonuses to moves
 
 int pvTable[64][64]{};
 static int pvLength[64]{};
@@ -51,7 +51,7 @@ constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 static int stopSearch { 0 };
 static int timePerMove { 0 };
 
-constexpr int maxHistoryScore{ 1'000 };
+constexpr int maxHistoryScore{ 1'600 };
 
 auto startSearchTime = std::chrono::high_resolution_clock::now();
 std::chrono::duration<float> searchDuration{ 0 };
@@ -88,10 +88,10 @@ static void resetSearchStates() {
 	stopSearch = 0;
 }
 static void ageHistoryTable() {
-	for (int piece=0; piece < 12; piece++) {
-		for (int square=0; square<64; square++) {
+	for (int a=0; a < 64; a++) {
+		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
-			historyMoves[piece][square] = std::min(maxHistoryScore, historyMoves[piece][square] / 8);
+			historyMoves[a][b] = std::min(maxHistoryScore, historyMoves[a][b] / 8);
 		}
 	}
 }
@@ -386,7 +386,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     	repetitionTable[repetitionIndex] = hashKey;
 
 
-
         // makeMove returns 1 for legal moves
         if( !makeMove(move, 0) ) { // meaning its illegal
             ply--;
@@ -460,18 +459,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         			killerMoves[1][ply] = killerMoves[0][ply];
         			killerMoves[0][ply] = bestMove; // store killer moves
 
-        			// can do more sophisticated code tho
-        			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
-
-					/*
-        			for (int i = 0; i < quietCount; i++) {
-        				const int quietMove = quietList.moves[i];
-        				if (quietMove == bestMove) continue;
-
-        				// penalize history of moves which didn't cause beta-cutoffs
-        				historyMoves[getMovePiece(quietMove)][getMoveTargetSQ(quietMove)] -= depth * depth;
-        			}
-        			*/
+        			// can do more sophisticated code tho, not giving maluses for now
+        			historyMoves[getMoveStartSQ(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
         		}
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         		return beta; // known as node that fails high

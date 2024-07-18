@@ -19,7 +19,7 @@ extern int scorePV;
 extern int pvTable[64][64];
 
 extern int killerMoves[2][128];
-extern int historyMoves[12][64];
+extern int historyMoves[64][64];
 
 void initSearchTables();
 void clearHistoryTable();

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-#include "evaluation.h"
+#include "../src/eval/evaluation.h"
 #include "board.h"
 #include "misc.h"
 

@@ -96,18 +96,18 @@ namespace Test::Debug{
 
 
 
-    static void printHistoryTable(const int piece) {
+    static void printHistoryTable(const int a) {
         for (int square=0; square < 64; square++) {
-            std::cout << historyMoves[piece][square] << ' ';
+            std::cout << historyMoves[a][square] << ' ';
             if ( (square + 1) % 8 == 0) std::cout << '\n';
         }
     }
 
     static void ageHistoryTable() {
-        for (int piece=0; piece < 12; piece++) {
-            for (int square=0; square<64; square++) {
+        for (int a=0; a < 64; a++) {
+            for (int b=0; b<64; b++) {
                 // make sure we dont go over the limit
-                historyMoves[piece][square] = std::min(180, historyMoves[piece][square] / 8);
+                historyMoves[a][b] = std::min(180, historyMoves[a][b] / 8);
             }
         }
     }
@@ -120,9 +120,9 @@ namespace Test::Debug{
 
         iterativeDeepening(10, false);
 
-        for (int piece=0; piece < 12; piece++) {
-            std::cout << "History Table: " << piece << '\n';
-            printHistoryTable(piece);
+        for (int a=0; a < 64; a++) {
+            std::cout << "History Table Square: " << chessBoard[a] << '\n';
+            printHistoryTable(a);
         }
 
         ageHistoryTable();

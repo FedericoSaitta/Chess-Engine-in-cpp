@@ -89,7 +89,7 @@ int scoreMove(const int move) {
 	if (killerMoves[0][ply] == move) return firstKiller;
 	if (killerMoves[1][ply] == move) return secondKiller;
 
-	return historyMoves[movePiece][targetSquare];
+	return historyMoves[getMoveStartSQ(move)][targetSquare];
 }
 
 void sortMoves(MoveList& moveList, const int bestMove) {

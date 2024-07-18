@@ -5,7 +5,7 @@
 #include "init.h"
 
 //#define DEBUG
- //#define BENCHMARK
+// #define BENCHMARK
 
 
 #include "benchmark_tests.h"
@@ -20,6 +20,7 @@ int main() {
 
     UCI();
 
+    // packed eval: https://minuskelvin.net/chesswiki/content/packed-eval.html
     // need to press quit to properly save this file
     logFile.close();
 
