@@ -3,23 +3,24 @@ project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
 
-## Debug builds
+# Debug builds (if needed)
 #set(CMAKE_BUILD_TYPE Debug)
 #add_compile_definitions(DEBUG)
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedantic")
 
-
-## Release builds
+# Release builds
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
+# Include directories
 include_directories(include)
 include_directories(benchmark_tests)
 include_directories(debug_tests)
 include_directories(eval)
 include_directories(search)
 
-add_executable(ChessEngine src/main.cpp
+# Add the executable
+add_executable(ChessEngine
         src/main.cpp
         include/movegen.h
         src/movegen.cpp

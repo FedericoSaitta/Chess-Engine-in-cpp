@@ -151,7 +151,7 @@ static int givesCheck(const int move) {
 
 static int quiescenceSearch(int alpha, const int beta) {
 
-	if ((nodes & 2047) == 0) isTimeUp();
+	if ((nodes & 4095) == 0) isTimeUp();
 
 	nodes++;
 
@@ -162,17 +162,18 @@ static int quiescenceSearch(int alpha, const int beta) {
 	// delta pruning
 	if (standPat < alpha - 975) return alpha;
 
-    if (standPat > alpha) {
-    	if (standPat >= beta) {
-    		return beta; // known as node that fails high
-    	}
+	if (standPat >= beta) return standPat; // fail soft
 
+    if (standPat > alpha) {
 	    alpha = standPat; // Known as PV node (principal variation)
     }
 
     MoveList moveList;
     generateMoves(moveList);
     sortMoves(moveList, 0);
+
+	const int originalAlpha { alpha };
+	int bestEval { standPat };
 
     for (int count=0; count < moveList.count; count++) {
         COPY_BOARD()
@@ -197,17 +198,20 @@ static int quiescenceSearch(int alpha, const int beta) {
  		if (stopSearch) return 0; // If the time is up, we return 0;
 
         // found a better move
-        if (score > alpha) { // Known as PV node (principal variation)
-            alpha = score;
+        if (score > bestEval) { // Known as PV node (principal variation)
+            bestEval = score;
 
-        	// fail-hard beta cut off
-        	if (score >= beta) {
-        		return beta; // known as nodethat fails high
+        	if (score > alpha) {
+        		alpha = score;
+
+        		if (score >= beta) {
+        			break; // fail soft
+        		}
         	}
         }
     }
 
-    return alpha; // node that fails low
+    return bestEval; // node that fails low
 }
 
 
@@ -233,6 +237,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	pvLength[ply] = ply;
 	int score{};
 	int bestMove {};
+	int bestEval {-INF - 1};
 	int hashFlag{ HASH_FLAG_ALPHA };
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
@@ -247,7 +252,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	if (ply && ttHit && !pvNode) return score;
 
 
-	if ((nodes & 2047) == 0) isTimeUp();
+	if ((nodes & 4095) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
 
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
@@ -358,6 +363,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	int quietMoveCount{};
 	bool skipQuietMoves{ false };
 
+	const int originalAlpha {alpha};
+
     for (int count=0; count < moveList.count; count++) {
     	const int move { moveList.moves[count] };
     	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
@@ -365,9 +372,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
     	if (isQuiet && skipQuietMoves) continue;
 
-
     	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
-
     		//Late move pruning (LMP)
 
     		// parameters obtained from CARP
@@ -431,42 +436,44 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     	repetitionIndex--;
         RESTORE_BOARD()
 
-    	if (stopSearch)
-    		return 0;
+    	if (stopSearch) return 0;
 
     	movesSearched++;
 
-        // found a better move
-        if (score > alpha) { // Known as PV node (principal variation)
-        	hashFlag = HASH_FLAG_EXACT;
-            alpha = score;
+        // fail soft framework
+        if (score > bestEval) {
+	        // Known as PV node (principal variation)
+        	bestEval = score;
 
-        	// store best move (for TT)
-        	bestMove = move;
+        	if (score > alpha){
+        		hashFlag = HASH_FLAG_EXACT;
 
-            pvTable[ply][ply] = moveList.moves[count];
-            // copy move from deeper plies to curernt ply
-            for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
-                pvTable[ply][nextPly] = pvTable[ply + 1][nextPly];
-            }
+        		alpha = score;
+        		bestMove = move; // store best move (for TT)
 
-            pvLength[ply] = pvLength[ply + 1];
-
-        	// fail-hard beta cut off
-        	if (score >= beta) {
-        		// helps with better move ordering in branches at the same depth
-        		if (!getMoveCapture(move)) {
-        			killerMoves[1][ply] = killerMoves[0][ply];
-        			killerMoves[0][ply] = bestMove; // store killer moves
-
-        			// can do more sophisticated code tho, not giving maluses for now
-        			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+        		pvTable[ply][ply] = moveList.moves[count];
+        		// copy move from deeper plies to curernt ply
+        		for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
+        			pvTable[ply][nextPly] = pvTable[ply + 1][nextPly];
         		}
-        		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
-        		return beta; // known as node that fails high
+
+        		pvLength[ply] = pvLength[ply + 1];
+
+        		// fail-hard beta cut off
+        		if (alpha >= beta) {
+        			// helps with better move ordering in branches at the same depth
+        			if (isQuiet) {
+        				killerMoves[1][ply] = killerMoves[0][ply];
+        				killerMoves[0][ply] = bestMove; // store killer moves
+
+        				// can do more sophisticated code tho, not giving maluses for now
+        				historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+        			}
+        			recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
+        			break;
+        		}
         	}
         }
-
     }
 
     if (!legalMoves) { // we dont have any legal moves to make in this position
@@ -478,8 +485,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         return 0; // we are in stalemate
     }
 
-	recordHash(alpha, bestMove, hashFlag, depth);
-    return alpha; // known as fail-low node
+	recordHash(bestEval, bestMove, hashFlag, depth);
+    return bestEval; // known as fail-low node
 }
 
 
