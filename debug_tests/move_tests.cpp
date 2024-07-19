@@ -8,11 +8,11 @@
 #include <cmath>
 
 #include "uci.h"
-#include "../include/movesort.h"
+#include "../src/search/movesort.h"
 #include "../include/board.h"
 #include "../include/macros.h"
 #include "../include/misc.h"
-#include "search.h"
+#include "../src/search/search.h"
 
 
 namespace Test::Debug{

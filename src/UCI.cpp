@@ -10,7 +10,7 @@
 
 #include "update.h"
 #include "hashtable.h"
-#include "search.h"
+#include "search/search.h"
 #include "board.h"
 #include "macros.h"
 #include "misc.h"

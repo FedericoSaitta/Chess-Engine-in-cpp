@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "hashtable.h"
-#include "search.h"
+#include "search/search.h"
 
 const char* chessBoard[65] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",

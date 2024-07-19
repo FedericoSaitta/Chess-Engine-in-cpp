@@ -12,7 +12,7 @@
 #include "../include/macros.h"
 
 
-namespace Test{
+namespace Test::Debug{
 
     void countPawnAttacks() {
 

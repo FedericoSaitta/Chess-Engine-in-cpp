@@ -9,7 +9,7 @@
 #include "../include/macros.h"
 #include "../include/inline_functions.h"
 
-#include "../include/search.h"
+#include "search.h"
 
 #include <assert.h>
 #include <__algorithm/ranges_move.h>
@@ -18,9 +18,9 @@
 #include "../include/hashtable.h"
 #include "../include/uci.h"
 #include "../include/board.h"
-#include "eval/evaluation.h"
+#include "../eval/evaluation.h"
 #include "../include/misc.h"
-#include "../include/movesort.h"
+#include "movesort.h"
 
 #define DO_NULL 1
 #define NO_NULL 0
@@ -32,7 +32,7 @@ int ply{};
 static std::uint32_t nodes{};
 
 int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-int historyMoves[64][64]{}; // zero initialization to ensure no random bonuses to moves
+int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
 int pvTable[64][64]{};
 static int pvLength[64]{};
@@ -88,7 +88,7 @@ static void resetSearchStates() {
 	stopSearch = 0;
 }
 static void ageHistoryTable() {
-	for (int a=0; a < 64; a++) {
+	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
 			historyMoves[a][b] = std::min(maxHistoryScore, historyMoves[a][b] / 8);
@@ -460,7 +460,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         			killerMoves[0][ply] = bestMove; // store killer moves
 
         			// can do more sophisticated code tho, not giving maluses for now
-        			historyMoves[getMoveStartSQ(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+        			historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
         		}
         		recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         		return beta; // known as node that fails high
@@ -489,16 +489,26 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	timePerMove = getMoveTime(timeConstraint);
 
-	const int softTimeLimit = timePerMove / 4.0f;
+	const int softTimeLimit = timePerMove / 3.0f;
 	assert( (timePerMove > 0) && "Negative Time Per Move");
 
 	int alpha { -INF };
 	int beta { INF };
 
+
 	startSearchTime = std::chrono::high_resolution_clock::now();
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
+
+		if (stopSearch) break;
+		searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
+		if ( (searchDuration.count() * 1'000) > softTimeLimit) {
+		//	std::cout << "stopped by soft limit" << '\n';
+		//	std::cout << softTimeLimit << '\n';
+		//	std::cout << "time per move: " << timePerMove << '\n';
+			break;
+		}
 
         const auto startDepthTime = std::chrono::high_resolution_clock::now();
 
@@ -507,8 +517,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
 
 		// If the previous search exceeds the hard or soft time limit, we stop searching
-		if ( (stopSearch) || (searchDuration.count() * 1'000) > softTimeLimit) break;
-
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
 	        alpha = -INF;
         	beta = INF;

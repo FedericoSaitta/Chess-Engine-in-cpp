@@ -10,7 +10,7 @@
 
 #include "hashtable.h"
 #include "board.h"
-#include "search.h"
+#include "../src/search/search.h"
 #include "macros.h"
 
 namespace Test::BenchMark {

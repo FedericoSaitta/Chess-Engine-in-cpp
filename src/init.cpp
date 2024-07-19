@@ -8,7 +8,7 @@
 #include "inline_functions.h"
 #include "hashtable.h"
 #include "eval/evaluation.h"
-#include "search.h"
+#include "search/search.h"
 
 
 // ARRAYS NEEDED FOR MAGIC U64 APPROACH //

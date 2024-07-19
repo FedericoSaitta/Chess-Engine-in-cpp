@@ -16,6 +16,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune
 include_directories(include)
 include_directories(benchmark_tests)
 include_directories(debug_tests)
+include_directories(eval)
+include_directories(search)
 
 add_executable(ChessEngine src/main.cpp
         src/main.cpp
@@ -28,7 +30,7 @@ add_executable(ChessEngine src/main.cpp
         include/misc.h
         debug_tests/bitmask_tests.cpp
         benchmark_tests/benchmark_tests.h
-        src/search.cpp
+        src/search/search.cpp
         include/macros.h
         debug_tests/move_tests.cpp
         benchmark_tests/perft_tests.cpp
@@ -36,7 +38,7 @@ add_executable(ChessEngine src/main.cpp
         src/eval/evaluation.h
         benchmark_tests/puzzle_tests.cpp
         src/hashtable.cpp
-        include/search.h
+        src/search/search.h
         include/uci.h
         include/hashtable.h
         include/init.h
@@ -47,8 +49,8 @@ add_executable(ChessEngine src/main.cpp
         debug_tests/evaluation_tests.cpp
         debug_tests/debug_tests.h
         benchmark_tests/branching_factor.cpp
-        src/movesort.cpp
-        include/movesort.h
+        src/search/movesort.cpp
+        src/search/movesort.h
         include/types.h
         src/eval/evalparams.h
 )

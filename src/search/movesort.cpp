@@ -1,8 +1,8 @@
 #include "movesort.h"
 
 #include "search.h"
-#include "board.h"
-#include "inline_functions.h"
+#include "../include/board.h"
+#include "../include/inline_functions.h"
 
 #include <vector>
 #include <algorithm>
@@ -89,7 +89,7 @@ int scoreMove(const int move) {
 	if (killerMoves[0][ply] == move) return firstKiller;
 	if (killerMoves[1][ply] == move) return secondKiller;
 
-	return historyMoves[getMoveStartSQ(move)][targetSquare];
+	return historyMoves[movePiece][targetSquare];
 }
 
 void sortMoves(MoveList& moveList, const int bestMove) {

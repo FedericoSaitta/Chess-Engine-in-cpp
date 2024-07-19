@@ -13,7 +13,7 @@
 #include "inline_functions.h"
 
 #include "hashtable.h"
-#include "search.h"
+#include "search/search.h"
 
 // here we put the Zobrist hashing and Trasposition tables
 U64 randomPieceKeys[12][64]{};

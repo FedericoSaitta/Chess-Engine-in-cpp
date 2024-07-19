@@ -15,7 +15,7 @@
 #include "hashtable.h"
 #include "board.h"
 #include "movegen.h"
-#include "search.h"
+#include "../src/search/search.h"
 #include "misc.h"
 #include "uci.h"
 

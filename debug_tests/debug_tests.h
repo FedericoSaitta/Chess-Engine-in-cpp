@@ -5,13 +5,6 @@
 #ifndef DEBUG_TESTS_H
 #define DEBUG_TESTS_H
 
-
-#include <bit>
-#include <iostream>
-
-#include "misc.h"
-#include "macros.h"
-
 namespace Test::Debug {
     void countPawnAttacks();
     void countKnightMoves();

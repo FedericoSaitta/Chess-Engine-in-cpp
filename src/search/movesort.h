@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "movegen.h"
+#include "../../include/movegen.h"
 
 int scoreMove(int move);
 void sortMoves(MoveList& moveList, int bestMove);
