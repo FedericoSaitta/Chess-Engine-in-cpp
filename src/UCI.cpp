@@ -74,7 +74,7 @@ static int parseMove(const std::string_view move) {
 }
 
 static void handleUci() {
-    std::cout << "id name MyChessEngine\n";
+    std::cout << "id name Aramis v1.3.0 \n";
     std::cout << "id author Federico Saitta\n";
     std::cout << "uciok\n";
 }

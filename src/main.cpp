@@ -5,7 +5,7 @@
 #include "init.h"
 
 // #define DEBUG
- #define BENCHMARK
+// #define BENCHMARK
 
 
 #include "benchmark_tests.h"

@@ -469,13 +469,12 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         				// can do more sophisticated code tho, not giving maluses for now
         				historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
         			}
-        			recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
+        		//	recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         			break;
         		}
         	}
         }
     }
-
     if (!legalMoves) { // we dont have any legal moves to make in this position
         if (inCheck) {
         	// we need to adjust this before sending it to the transposition table to make it independent of the path
@@ -485,7 +484,20 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         return 0; // we are in stalemate
     }
 
-	recordHash(bestEval, bestMove, hashFlag, depth);
+	hashFlag = HASH_FLAG_EXACT;
+
+	if (alpha >= beta)
+	{
+		// beta cutoff, fail high
+		hashFlag = HASH_FLAG_BETA;
+	}
+	else if (alpha <= originalAlpha)
+	{
+		// failed to raise alpha, fail low
+		hashFlag = HASH_FLAG_ALPHA;
+	}
+	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth);
+
     return bestEval; // known as fail-low node
 }
 
