@@ -5,7 +5,7 @@
 #include "init.h"
 
 // #define DEBUG
- #define BENCHMARK
+ //#define BENCHMARK
 
 
 #include "benchmark_tests.h"
@@ -13,13 +13,17 @@
 #include "movegen.h"
 #include "eval/evalparams.h"
 
+#include "/Users/federicosaitta/CLionProjects/ChessEngine/tuner/src/initTuner.h"
+
 int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
- //   UCI();
+    UCI();
+
+  //  initTuning(0, nullptr);
 
     logFile.close();
 

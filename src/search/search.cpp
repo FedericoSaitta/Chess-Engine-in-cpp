@@ -303,7 +303,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 			makeNullMove();
 
 			// more aggressive reduction
-			const int R = std::min( 4 + depth / 4, depth );
+			const int R = 3 + depth / 3;
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, NO_NULL);
 			undoNullMove();
 

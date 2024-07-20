@@ -19,6 +19,12 @@ include_directories(debug_tests)
 include_directories(eval)
 include_directories(search)
 
+find_package(Threads REQUIRED)
+
+#add_executable(tuner "initTuner.cpp" "tuner.cpp" "threadpool.cpp")
+
+#target_link_libraries(tuner PRIVATE Threads::Threads)
+
 # Add the executable
 add_executable(ChessEngine
         src/main.cpp
@@ -54,4 +60,22 @@ add_executable(ChessEngine
         src/search/movesort.h
         include/types.h
         src/eval/evalparams.h
+
+        tuner/src/engines/myeval.cpp
+        tuner/src/engines/myeval.h
+        tuner/src/config.h
+        tuner/src/initTuner.h
+        tuner/src/initTuner.h
+        tuner/src/threadpool.h
+        tuner/src/initTuner.cpp
+        tuner/src/threadpool.cpp
+        tuner/src/tuner.cpp
+        tuner/src/threadpool.cpp
+        tuner/src/config.h
+        tuner/src/threadpool.h
+        tuner/src/tuner.h
+        tuner/src/threadpool.h
+        tuner/src/tuner.cpp
+        tuner/src/threadpool.cpp
+        src/eval/new_evalparams.h
 )

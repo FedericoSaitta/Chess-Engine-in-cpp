@@ -5,7 +5,8 @@
 #include "../../include/macros.h"
 #include "../../include/inline_functions.h"
 #include "../../include/board.h"
-#include "evalparams.h"
+//#include "evalparams.h"
+#include "new_evalparams.h"
 
 #include <immintrin.h>
 #include <algorithm>
@@ -33,7 +34,6 @@ int evaluate() {
     uint32_t score[2]{};
 
     int gamePhase{};
-    int penalties[2]{}; // 0 is white, 1 is black
     int square{};
     U64 bitboardCopy{}; // we need to ofc make a copy as we dont want to alter the bitboard
 
@@ -51,53 +51,53 @@ int evaluate() {
             switch(bbPiece) {
                 case (PAWN):
                     // you could try and avoid conditional branching here
-                    if ( countBits(bitboards[PAWN] & fileMasks[square]) > 1) penalties[WHITE] += doublePawnPenalty * countBits(bitboards[PAWN] & fileMasks[square]);
+                    if ( countBits(bitboards[PAWN] & fileMasks[square]) > 1) score[WHITE] += doublePawnPenalty * countBits(bitboards[PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (bitboards[PAWN] & isolatedPawnMasks[square] ) == 0) penalties[WHITE] += isolatedPawnPenalty;
+                    if ( (bitboards[PAWN] & isolatedPawnMasks[square] ) == 0) score[WHITE] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (bitboards[BLACK_PAWN] & white_passedPawnMasks[square] ) == 0) penalties[WHITE] += passedPawnBonus[getRankFromSquare[square]];
+                    if ( (bitboards[BLACK_PAWN] & white_passedPawnMasks[square] ) == 0) score[WHITE] += passedPawnBonus[getRankFromSquare[square]];
                     break;
 
                 case (BLACK_PAWN):
                     // you could try and avoid conditional branching here
-                    if ( countBits(bitboards[BLACK_PAWN] & fileMasks[square]) > 1) penalties[BLACK] += doublePawnPenalty * countBits(bitboards[BLACK_PAWN] & fileMasks[square]);
+                    if ( countBits(bitboards[BLACK_PAWN] & fileMasks[square]) > 1) score[BLACK] += doublePawnPenalty * countBits(bitboards[BLACK_PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (bitboards[BLACK_PAWN] & isolatedPawnMasks[square] ) == 0) penalties[BLACK] += isolatedPawnPenalty;
+                    if ( (bitboards[BLACK_PAWN] & isolatedPawnMasks[square] ) == 0) score[BLACK] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (bitboards[PAWN] & black_passedPawnMasks[square] ) == 0) penalties[BLACK] += passedPawnBonus[7 - getRankFromSquare[square]];
+                    if ( (bitboards[PAWN] & black_passedPawnMasks[square] ) == 0) score[BLACK] += passedPawnBonus[7 - getRankFromSquare[square]];
                     break;
 
                 case (ROOK):
-                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) penalties[WHITE] += semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[WHITE] += openFileScore;
+                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += openFileScore;
 
                     score[WHITE] += RookMobility * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
                 case (BLACK_ROOK):
-                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) penalties[BLACK] += semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[BLACK] += openFileScore;
+                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += openFileScore;
 
                     score[BLACK] += RookMobility * countBits( getRookAttacks(square, occupancies[2]) );
                     break;
 
                 // if the kings are on semi-open or open files they will be given penalties
                 case (KING):
-                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) penalties[WHITE] -= semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[WHITE] -= openFileScore;
+                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] -= semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] -= openFileScore;
 
-                    penalties[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[WHITE] );
+                    score[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[WHITE] );
                     break;
 
                 case (BLACK_KING):
-                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) penalties[BLACK] -= semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) penalties[BLACK] -= openFileScore;
+                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] -= semiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] -= openFileScore;
 
-                    penalties[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[BLACK] );
+                    score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[BLACK] );
                     break;
 
 
@@ -145,7 +145,7 @@ int evaluate() {
     if (mgPhase > 24) mgPhase = 24;  // in case of early promotion
 
     const int egPhase = 24 - mgPhase;
-    return ((mgScore * mgPhase + egScore * egPhase) / 24) + penalties[side] - penalties[side^1];
+    return ((mgScore * mgPhase + egScore * egPhase) / 24);
 
 }
 

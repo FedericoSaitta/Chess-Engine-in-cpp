@@ -1,8 +1,9 @@
 //
 // Created by Federico Saitta on 18/07/2024.
 //
-
 #pragma once
+
+/*
 
 #include "evaluation.h"
 
@@ -25,6 +26,7 @@ constexpr int piece_value[6] = { S(82, 94), S(337, 281), S(365, 297), S(477, 512
 
 /* piece/sq tables */
 /* values from Rofchade: http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19 */
+/*
 constexpr int pawn_table[64] = {
     S(0 , 0), S(0 , 0), S(0 , 0), S(0 , 0), S(0 , 0), S(0 , 0), S(0 , 0), S(0 , 0),
     S(98 , 178), S(134 , 173), S(61 , 158), S(95 , 134), S(68 , 147), S(126 , 132), S(34 , 165), S(-11 , 187),
@@ -96,6 +98,16 @@ constexpr int king_table[64] = {
 };
 
 
+constexpr int doublePawnPenalty = S(-10, -10);
+constexpr int isolatedPawnPenalty = S(-10, -10);
+constexpr int passedPawnBonus[8] { S(0, 0), S(5, 5), S(10, 10), S(20, 20), S(35, 35),
+                                   S(60, 60), S(100, 100), S(200, 200)};
+
+constexpr int semiOpenFileScore { S(10, 10) };
+constexpr int openFileScore { S(15, 15) };
+
+constexpr int kingShieldBonus { S(5, 5) };
+
 inline const int* pesto_table[6] =
 {
     pawn_table,
@@ -106,14 +118,7 @@ inline const int* pesto_table[6] =
     king_table
 };
 
-
 constexpr int gamephaseInc[12] = {0, 1, 1, 2, 4, 0, 0, 1, 1, 2, 4, 0,};
 
-constexpr int doublePawnPenalty = -10;
-constexpr int isolatedPawnPenalty = -10;
-constexpr int passedPawnBonus[8] {0, 5, 10, 20, 35, 60, 100, 200};
 
-constexpr int semiOpenFileScore { 10 };
-constexpr int openFileScore { 15 };
-
-constexpr int kingShieldBonus { 5 };
+*/
