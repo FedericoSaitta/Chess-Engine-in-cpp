@@ -29,7 +29,6 @@ typedef struct tagHASHE {
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
 
-
 extern tt* transpositionTable;
 extern int transpotitionTableEntries;
 

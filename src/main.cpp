@@ -4,8 +4,8 @@
 #include "uci.h"
 #include "init.h"
 
- #define DEBUG
-// #define BENCHMARK
+// #define DEBUG
+ #define BENCHMARK
 
 
 #include "benchmark_tests.h"

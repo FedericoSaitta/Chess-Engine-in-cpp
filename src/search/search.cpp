@@ -292,10 +292,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
 
-
-		// return the evaluation, which could be the one from TT if we had a hit
-		// (it's  more accurate than the static one)
-
 		// maybe you can write TT entries here too???
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our side only has pawns on the board
@@ -307,7 +303,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 			makeNullMove();
 
 			// more aggressive reduction
-			const int R = 3 + depth / 3;
+			const int R = std::min( 4 + depth / 4, depth );
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, NO_NULL);
 			undoNullMove();
 
@@ -382,12 +378,10 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     		//Late move pruning (LMP)
 
     		// parameters obtained from CARP
-
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
     			skipQuietMoves= true;
     			continue;
     		}
-
     	}
 
 
@@ -420,7 +414,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    		//	){
     			&& !givesCheck(move)) { // maybe you should use this....
 
     			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
