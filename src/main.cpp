@@ -4,7 +4,7 @@
 #include "uci.h"
 #include "init.h"
 
-// #define DEBUG
+ #define DEBUG
 // #define BENCHMARK
 
 
@@ -19,7 +19,7 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-   // UCI();
+ //   UCI();
 
     logFile.close();
 

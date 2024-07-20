@@ -214,6 +214,13 @@ static int quiescenceSearch(int alpha, const int beta) {
     return bestEval; // node that fails low
 }
 
+static inline void updateKillersAndHistory(const int bestMove, const int depth) {
+	killerMoves[1][ply] = killerMoves[0][ply];
+	killerMoves[0][ply] = bestMove; // store killer moves
+
+	// can do more sophisticated code tho, not giving maluses for now
+	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+}
 
 static void makeNullMove() {
 	hashKey ^= sideKey;
@@ -238,7 +245,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	int score{};
 	int bestMove {};
 	int bestEval {-INF - 1};
-	int hashFlag{ HASH_FLAG_ALPHA };
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
 
@@ -446,8 +452,6 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         	bestEval = score;
 
         	if (score > alpha){
-        		hashFlag = HASH_FLAG_EXACT;
-
         		alpha = score;
         		bestMove = move; // store best move (for TT)
 
@@ -463,18 +467,15 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         		if (alpha >= beta) {
         			// helps with better move ordering in branches at the same depth
         			if (isQuiet) {
-        				killerMoves[1][ply] = killerMoves[0][ply];
-        				killerMoves[0][ply] = bestMove; // store killer moves
-
-        				// can do more sophisticated code tho, not giving maluses for now
-        				historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+        				updateKillersAndHistory(bestMove, depth);
         			}
-        		//	recordHash(beta, bestMove, HASH_FLAG_BETA, depth);
         			break;
         		}
         	}
         }
     }
+
+	// After we have looped over the possible moves, check for stalemate or checkmate
     if (!legalMoves) { // we dont have any legal moves to make in this position
         if (inCheck) {
         	// we need to adjust this before sending it to the transposition table to make it independent of the path
@@ -484,7 +485,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
         return 0; // we are in stalemate
     }
 
-	hashFlag = HASH_FLAG_EXACT;
+	int hashFlag = HASH_FLAG_EXACT;
 
 	if (alpha >= beta)
 	{
@@ -496,6 +497,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 		// failed to raise alpha, fail low
 		hashFlag = HASH_FLAG_ALPHA;
 	}
+
 	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth);
 
     return bestEval; // known as fail-low node

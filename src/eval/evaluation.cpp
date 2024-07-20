@@ -133,6 +133,11 @@ int evaluate() {
             }
         }
     }
+
+    // applying bishop pair bonus:
+    if (countBits(bitboards[WHITE_BISHOP]) > 1) score[WHITE] += bishopPairBonus;
+    if (countBits(bitboards[BLACK_BISHOP]) > 1) score[BLACK] += bishopPairBonus;
+
     const int mgScore = MgScore(score[side]) - MgScore(score[side^1]);
     const int egScore = EgScore(score[side]) - EgScore(score[side^1]);
 

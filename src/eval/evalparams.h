@@ -12,10 +12,14 @@
 #define MgScore(s) ((int16_t)((uint16_t)((unsigned)((s)))))
 #define EgScore(s) ((int16_t)((uint16_t)((unsigned)((s) + 0x8000) >> 16)))
 
+// These values will be multiplied by the number of available moves
 static constexpr int KnightMobility = S(4, 4);
 static constexpr int BishopMobility = S(5, 5);
 static constexpr int RookMobility = S(2, 4);
 static constexpr int QueenMobility = S(1, 2);
+
+// These values will be added bonuses and maluses
+static constexpr int bishopPairBonus = S(25, 50);
 
 constexpr int piece_value[6] = { S(82, 94), S(337, 281), S(365, 297), S(477, 512), S(1025, 936), S(0, 0) };
 
