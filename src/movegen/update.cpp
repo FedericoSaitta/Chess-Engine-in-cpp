@@ -4,13 +4,13 @@
 
 #include "update.h"
 
-#include "board.h"
-#include "hashtable.h"
-#include "macros.h"
+#include "../../include/board.h"
+#include "../../include/hashtable.h"
+#include "../../include/macros.h"
 
 #include <cstring>
-#include "inline_functions.h"
-#include "misc.h"
+#include "../../include/inline_functions.h"
+#include "../../include/misc.h"
 
 // this is for little endian board
 static const int castlingRightsConstant[64] = {

@@ -7,26 +7,28 @@
 #include <random>
 #include <cmath>
 #include <chrono>
-
-#include "update.h"
+#include <fstream>
+#include "../src/movegen/update.h"
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
-#include "movegen.h"
+#include "../src/movegen/movegen.h"
 
-static const std::string testFEN[] {
-    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-    "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
-    "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
-    "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
-    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
-    "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 "};
 
-static constexpr std::uint32_t testNodes[] {
-    4'865'609, 193'690'690, 674'624, 15'833'292, 89'941'194, 164'075'551};
 
-namespace Test::BenchMark{
+static std::vector<std::string> split(const std::string &str, const char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(str);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
 
+    return tokens;
+}
+
+
+namespace Test::BenchMark {
     static std::uint32_t nodes{};
 
     void perftDriver(const int depth) {
@@ -51,7 +53,7 @@ namespace Test::BenchMark{
         }
     }
 
-    std::uint32_t perft(const int depth) {
+    std::uint32_t perft(const int depth, const bool printInfo) {
         nodes = 0;
 
         const auto start = std::chrono::high_resolution_clock::now();
@@ -79,31 +81,54 @@ namespace Test::BenchMark{
 
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
 
-        // print results
-        printf("Depth: %d", depth);
-        std::cout << " Nodes: " << nodes;
-        std::cout << " Time: " << duration;
-        std::cout << " MNodes/s: " << nodes / (duration.count() * 1'000'000);
+        if (printInfo) {
+            // print results
+            printf("Depth: %d", depth);
+            std::cout << " Nodes: " << nodes;
+            std::cout << " Time: " << duration;
+            std::cout << " MNodes/s: " << nodes / (duration.count() * 1'000'000);
+        }
 
         return nodes;
     }
 
     // prints in red benchmark_tests that have not passed
-    void standardizedPerft() {
+    void standardPerft() {
+
+        std::ifstream file("/Users/federicosaitta/CLionProjects/ChessEngine/benchmark_tests/resources/standard.epd"); // Replace with the actual file path
+        if (!file.is_open()) {
+            std::cerr << "Failed to open the file." << std::endl;
+        }
 
         const auto start = std::chrono::high_resolution_clock::now();
-        for (int i=0; i < 6; i++) {
 
-            parseFEN(testFEN[i]);
-            if ( perft(5) == testNodes[i] ) {
-                std::cout << " FEN: " << testFEN[i] << '\n';
+        std::string line{};
+        while (std::getline(file, line)) {
 
-            } else {
-                std::cerr << " FEN: " << testFEN[i] << '\n';
+            std::vector<std::string> tokens = split(line, ';');
+
+            if (tokens.empty()) continue;
+
+            parseFEN(tokens[0]);
+
+            const int startDepth { std::stoi( &tokens[1][1] ) };
+            const int maxDepth = (tokens.size() - 1) + startDepth - 1;
+
+            for (int depth=startDepth; depth <= maxDepth; depth++) {
+                const int nodeCount = std::stoi( (split(tokens[depth - startDepth + 1], ' '))[1]);
+
+                if ( perft(depth, false) != nodeCount ){
+                    std::cerr << " Error in FEN: " << tokens[0]
+                    << " at depth: " << depth << std::endl;
+                }
+
             }
-        }
-        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
-        std::cout << "Test suite took: " << duration.count() << "s\n\n";
 
+        }
+
+        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+        std::cout << "Perft suite took: " << duration.count() << "s\n";
+
+        file.close();
     }
 }

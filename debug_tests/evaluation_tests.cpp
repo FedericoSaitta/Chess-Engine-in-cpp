@@ -50,7 +50,6 @@ static void swapColours() {
 
 
 namespace Test::Debug {
-
     // (a) normal board (b) reflect by swapping ranks and changing the color of all pieces; (c)
     void mirrorEval() {
 
@@ -75,18 +74,18 @@ namespace Test::Debug {
             if ( (whiteEval + blackEval) != 0) { std::cerr << "Mismatch between eval of the same position with switched sides\n"; }
 
             // Now we flip ranks and change colours
-         //   printBoardFancy();
+            //   printBoardFancy();
             mirrorBitboards();
             swapColours();
-          //  printBoardFancy();
+            //  printBoardFancy();
 
             int mirroredWhiteEval { evaluate() };
             side ^= 1;
             int mirroredBlackEval { evaluate() };
             side ^= 1;
 
-         //   std::cout << whiteEval << ' ' << blackEval << '\n';
-        //    std::cout << mirroredWhiteEval << ' ' << mirroredBlackEval << '\n';
+            //   std::cout << whiteEval << ' ' << blackEval << '\n';
+            //    std::cout << mirroredWhiteEval << ' ' << mirroredBlackEval << '\n';
 
             if ( (whiteEval != mirroredBlackEval) || (blackEval != mirroredWhiteEval)) {
                 std::cerr << "Mismatch between eval of the same position with mirrored boards\n";
@@ -98,4 +97,30 @@ namespace Test::Debug {
         file.close();
 
     }
+/*
+    void equalEvalTuner() {
+        const std::string fileName = "/Users/federicosaitta/CLionProjects/ChessEngine/debug_tests/resources/random_positions.epd";
+        std::ifstream file(fileName);
+
+        if (!file.is_open()) { std::cerr << "Error opening file: " << fileName << std::endl; }
+
+        std::string line;
+        while (std::getline(file, line)) {
+            std::vector<std::string> tokens = split(line);
+
+            std::string FEN{ tokens[0] + ' ' + tokens[1] + ' ' + tokens[2] + ' ' + tokens[3] };
+
+            parseFEN(FEN);
+
+            int originalEval { evaluate() };
+            int tunerEval{ static_cast<int>(myEval::myEvaluation::get_fen_eval_result(FEN).score) };
+
+            if (originalEval != tunerEval) {
+                std::cout << "Original: " << originalEval << " Tuner: " << tunerEval << '\n';
+                std::cerr << "The two evals are different" << std::endl;
+
+            }
+        }
+        std::cout << "Tuner test complete\n";
+    }*/
 }

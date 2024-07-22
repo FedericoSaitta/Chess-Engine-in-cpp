@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <__algorithm/ranges_move.h>
 
-#include "../include/update.h"
+#include "../movegen/update.h"
 #include "../include/hashtable.h"
 #include "../include/uci.h"
 #include "../include/board.h"
@@ -539,6 +539,9 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		// otherwise we set up the window for the next iteration
 		alpha = score - windowWidth;
 		beta = score + windowWidth;
+
+		// checking after the search to prevent from printing empty pv string
+		if (stopSearch) break;
 
 		// extracting the PV line and printing out in the terminal and logging file
         std::string pvString{};

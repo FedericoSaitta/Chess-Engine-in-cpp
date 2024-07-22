@@ -5,8 +5,7 @@
 #include "../../include/macros.h"
 #include "../../include/inline_functions.h"
 #include "../../include/board.h"
-//#include "evalparams.h"
-#include "new_evalparams.h"
+ #include "evalparams.h"
 
 #include <immintrin.h>
 #include <algorithm>
@@ -45,6 +44,7 @@ int evaluate() {
             square = pop_lsb(&bitboardCopy);
 
             score[bbPiece / 6] += eval_table[bbPiece][square];
+
             gamePhase += gamephaseInc[bbPiece];
 
             // Note that some of these masks do not consider if the pawns are in front or behind the pieces
@@ -87,15 +87,15 @@ int evaluate() {
 
                 // if the kings are on semi-open or open files they will be given penalties
                 case (KING):
-                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] -= semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] -= openFileScore;
+                    if ( (bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += kingSemiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += kingOpenFileScore;
 
                     score[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[WHITE] );
                     break;
 
                 case (BLACK_KING):
-                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] -= semiOpenFileScore;
-                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] -= openFileScore;
+                    if ( (bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += kingSemiOpenFileScore;
+                    if ( ( (bitboards[PAWN] | bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += kingOpenFileScore;
 
                     score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & occupancies[BLACK] );
                     break;
@@ -146,7 +146,6 @@ int evaluate() {
 
     const int egPhase = 24 - mgPhase;
     return ((mgScore * mgPhase + egScore * egPhase) / 24);
-
 }
 
 

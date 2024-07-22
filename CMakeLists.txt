@@ -18,6 +18,8 @@ include_directories(benchmark_tests)
 include_directories(debug_tests)
 include_directories(eval)
 include_directories(search)
+include_directories(movegen)
+
 
 find_package(Threads REQUIRED)
 
@@ -28,54 +30,47 @@ find_package(Threads REQUIRED)
 # Add the executable
 add_executable(ChessEngine
         src/main.cpp
-        include/movegen.h
-        src/movegen.cpp
+        src/movegen/movegen.h
+        src/movegen/movegen.cpp
         src/board.cpp
-        src/update.cpp
+        src/movegen/update.cpp
         src/init.cpp
         src/misc.cpp
         include/misc.h
-        debug_tests/bitmask_tests.cpp
-        benchmark_tests/benchmark_tests.h
+
         src/search/search.cpp
         include/macros.h
-        debug_tests/move_tests.cpp
-        benchmark_tests/perft_tests.cpp
+
         src/UCI.cpp
         src/eval/evaluation.h
-        benchmark_tests/puzzle_tests.cpp
+
         src/hashtable.cpp
         src/search/search.h
         include/uci.h
         include/hashtable.h
         include/init.h
         include/board.h
-        include/update.h
+        src/movegen/update.h
         include/inline_functions.h
         src/eval/evaluation.cpp
-        debug_tests/evaluation_tests.cpp
-        debug_tests/debug_tests.h
-        benchmark_tests/branching_factor.cpp
+
         src/search/movesort.cpp
         src/search/movesort.h
         include/types.h
-        src/eval/evalparams.h
 
-        tuner/src/engines/myeval.cpp
-        tuner/src/engines/myeval.h
-        tuner/src/config.h
-        tuner/src/initTuner.h
-        tuner/src/initTuner.h
-        tuner/src/threadpool.h
-        tuner/src/initTuner.cpp
-        tuner/src/threadpool.cpp
-        tuner/src/tuner.cpp
-        tuner/src/threadpool.cpp
-        tuner/src/config.h
-        tuner/src/threadpool.h
-        tuner/src/tuner.h
-        tuner/src/threadpool.h
-        tuner/src/tuner.cpp
-        tuner/src/threadpool.cpp
-        src/eval/new_evalparams.h
+        ## Needed for the engine to play
+        benchmark_tests/benchmark_tests.h
+        benchmark_tests/perft_tests.cpp
+        benchmark_tests/branching_factor.cpp
+
+        ## Needed for testing
+        benchmark_tests/puzzle_tests.cpp
+
+        debug_tests/evaluation_tests.cpp
+        debug_tests/debug_tests.h
+        debug_tests/move_tests.cpp
+        debug_tests/bitmask_tests.cpp
+
+        ## Needed for tuning
+
 )

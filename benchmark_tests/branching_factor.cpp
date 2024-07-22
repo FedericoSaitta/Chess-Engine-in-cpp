@@ -10,11 +10,11 @@
 #include <sstream>
 #include <cmath>
 
-#include "update.h"
+#include "../src/movegen/update.h"
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
-#include "movegen.h"
+#include "../src/movegen/movegen.h"
 #include "../src/search/search.h"
 #include "misc.h"
 #include "uci.h"

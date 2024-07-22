@@ -18,6 +18,7 @@ namespace Test::Debug {
     void historyScores();
 
     void mirrorEval();
+    void equalEvalTuner();
 }
 
 #endif //DEBUG_TESTS_H

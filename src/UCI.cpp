@@ -8,7 +8,7 @@
 
 #include "uci.h"
 
-#include "update.h"
+#include "movegen/update.h"
 #include "hashtable.h"
 #include "search/search.h"
 #include "board.h"

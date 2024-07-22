@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "movegen.h"
+#include "../src/movegen/movegen.h"
 #include <iostream>
 #include <vector>
 #include "macros.h"
