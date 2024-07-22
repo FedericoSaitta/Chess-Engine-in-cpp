@@ -12,7 +12,7 @@
 #include "movegen/movegen.h"
 
 
-int main(int argc, char** argv) {
+int main() {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
 
