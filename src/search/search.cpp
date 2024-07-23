@@ -127,7 +127,8 @@ static void isTimeUp() {
 	if ( (searchDuration.count() * 1'000) > timePerMove) stopSearch = 1;
 }
 static int isRepetition() {
-	for (int index=0; index < repetitionIndex; index++) {
+	for (int index=repetitionIndex - 1; index >= 0; index-= 2) {
+		// looping backwards
 		if (repetitionTable[index] == hashKey)
 			return 1; // repetition found
 	}
