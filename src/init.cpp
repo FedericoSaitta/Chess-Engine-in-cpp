@@ -46,6 +46,17 @@ constexpr int rookRelevantBits[64] {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
+constexpr int getFileFromSquare[64]{
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 0
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 1
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 2
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 3
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 4
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 5
+    0, 1, 2, 3, 4, 5, 6, 7, // Rank 6
+    0, 1, 2, 3, 4, 5, 6, 7  // Rank 7
+};
+
 // from this https://www.reddit.com/row/chessprogramming/comments/wsrf3s/is_there_any_place_i_can_copy_fancy_magic_numbers/
 constexpr U64 bishopMagics[64] {
     0xC00204004A0449ULL, 0x3020A20A02202000ULL, 0x4282881002004ULL, 0x8244250200140020ULL,

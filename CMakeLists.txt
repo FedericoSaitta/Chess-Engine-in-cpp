@@ -70,6 +70,8 @@ add_executable(ChessEngine
         debug_tests/debug_tests.h
         debug_tests/move_tests.cpp
         debug_tests/bitmask_tests.cpp
+        src/book/book.cpp
+        src/book/book.h
 
         ## Needed for tuning
 

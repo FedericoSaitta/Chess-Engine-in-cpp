@@ -38,7 +38,7 @@ extern U64 white_passedPawnMasks[64];
 extern U64 black_passedPawnMasks[64];
 
 extern const int getRankFromSquare[64];
-
+extern const int getFileFromSquare[64];
 
 void initAll(int ttSize=64);
 
