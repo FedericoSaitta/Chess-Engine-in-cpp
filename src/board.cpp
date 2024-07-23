@@ -22,10 +22,23 @@ const char* chessBoard[65] = {
 };
 
 
-static constexpr int charPieces[] = {
-    ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5,   // white
-    ['p'] = 6, ['n'] = 7, ['b'] = 8, ['r'] = 9, ['q'] = 10, ['k'] = 11  // black
-};
+static int charToPiece(const char c) {
+    switch (c) {
+        case 'P': return 0;  // White Pawn
+        case 'N': return 1;  // White Knight
+        case 'B': return 2;  // White Bishop
+        case 'R': return 3;  // White Rook
+        case 'Q': return 4;  // White Queen
+        case 'K': return 5;  // White King
+        case 'p': return 6;  // Black Pawn
+        case 'n': return 7;  // Black Knight
+        case 'b': return 8;  // Black Bishop
+        case 'r': return 9;  // Black Rook
+        case 'q': return 10; // Black Queen
+        case 'k': return 11; // Black King
+        default: return -1;  // Invalid piece
+    }
+}
 
 // think about using string view as you only need to read from the FEN string i think??
 void parseFEN(const std::string& fenString) {
@@ -54,7 +67,8 @@ void parseFEN(const std::string& fenString) {
         } else if (std::isdigit(c)) {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
-            SET_BIT(board.bitboards[charPieces[static_cast<unsigned char>(c)]], rank * 8 + file);
+            const int piece { charToPiece(static_cast<unsigned char>(c)) };
+            SET_BIT(board.bitboards[piece], rank * 8 + file);
             file++;
         }
     }

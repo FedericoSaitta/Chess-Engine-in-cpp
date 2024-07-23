@@ -24,7 +24,6 @@ enum Occupancies {
 inline int pieceType(const Piece pc){ return pc % 6; }
 inline int color(const Piece pc){ return pc / 6; }
 
-
 class Board {
 
 public:
@@ -35,10 +34,10 @@ public:
     int castle { 0 };
 
 
-    inline int getBitboard(const Piece pc) const { return bitboards[pc]; }
-    inline int getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
+    inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
+    inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
 
-    inline int getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
+    inline U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
 
 
     inline void resetBoard() {

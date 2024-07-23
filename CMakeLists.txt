@@ -3,16 +3,18 @@ project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
 
-# Debug builds (if needed)
-#set(CMAKE_BUILD_TYPE Debug)
-#add_compile_definitions(DEBUG)
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -Wall -Wextra -pedantic")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # MSVC specific flags
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /arch:AVX2 /fp:fast /permissive- /W4 /std:c++latest")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Ob2 /DNDEBUG")
+else()
+    # GCC/Clang specific flags
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
+endif()
 
-# Release builds
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
-
-# Include directories
 include_directories(include)
 include_directories(benchmark_tests)
 include_directories(debug_tests)
@@ -20,9 +22,8 @@ include_directories(eval)
 include_directories(search)
 include_directories(movegen)
 
-
-# Add the executable
 add_executable(ChessEngine
+        # Needed for the engine to play
         src/main.cpp
         src/movegen/movegen.h
         src/movegen/movegen.cpp
@@ -31,13 +32,10 @@ add_executable(ChessEngine
         src/init.cpp
         src/misc.cpp
         include/misc.h
-
         src/search/search.cpp
         include/macros.h
-
         src/UCI.cpp
         src/eval/evaluation.h
-
         src/hashtable.cpp
         src/search/search.h
         include/uci.h
@@ -47,24 +45,20 @@ add_executable(ChessEngine
         src/movegen/update.h
         include/inline_functions.h
         src/eval/evaluation.cpp
-
         src/search/movesort.cpp
         src/search/movesort.h
         include/types.h
 
-        ## Needed for the engine to play
         benchmark_tests/benchmark_tests.h
         benchmark_tests/perft_tests.cpp
         benchmark_tests/branching_factor.cpp
 
-        ## Needed for testing
+        # Needed for testing
         benchmark_tests/puzzle_tests.cpp
-
         debug_tests/evaluation_tests.cpp
         debug_tests/debug_tests.h
         debug_tests/move_tests.cpp
         debug_tests/bitmask_tests.cpp
 
-        ## Needed for tuning
-
+        # Needed for tuning
 )

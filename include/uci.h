@@ -5,7 +5,6 @@
 #pragma once
 #include <fstream>
 
-extern std::ofstream logFile;
 
 // All are in milliseconds
 extern int gameLengthTime;

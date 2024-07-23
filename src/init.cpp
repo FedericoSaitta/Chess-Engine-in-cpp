@@ -124,17 +124,17 @@ U64 black_passedPawnMasks[64]{};
 static U64 maskPawnAttacks(const int square, const int side) {
 
     U64 attacks{};
-    U64 board{};
+    U64 b{};
 
-    SET_BIT(board, square);
+    SET_BIT(b, square);
 
     if (!side) { // for white
-        if (notHFile & (board << 7)){ attacks |= (board << 7); }
-        if (notAFile & (board << 9)){ attacks |= (board << 9); }
+        if (notHFile & (b << 7)){ attacks |= (b << 7); }
+        if (notAFile & (b << 9)){ attacks |= (b << 9); }
     }
     else { // for black
-        if (notAFile & (board >> 7)){ attacks |= (board >> 7); }
-        if (notHFile & (board >> 9)){ attacks |= (board >> 9); }
+        if (notAFile & (b >> 7)){ attacks |= (b >> 7); }
+        if (notHFile & (b >> 9)){ attacks |= (b >> 9); }
     }
 
     return attacks;
@@ -143,36 +143,36 @@ static U64 maskPawnAttacks(const int square, const int side) {
 static U64 maskKnightMoves(const int square) {
 
     U64 attacks{};
-    U64 board{};
+    U64 b{};
 
-    SET_BIT(board, square);
+    SET_BIT(b, square);
 
-    if ((board << 17) & notAFile) attacks |= board << 17;
-    if ((board << 15) & notHFile) attacks |= board << 15;
-    if ((board << 10) & notABFile) attacks |= board << 10;
-    if ((board << 6) & notHGFile) attacks |= board << 6;
+    if ((b << 17) & notAFile) attacks |= b << 17;
+    if ((b << 15) & notHFile) attacks |= b << 15;
+    if ((b << 10) & notABFile) attacks |= b << 10;
+    if ((b << 6) & notHGFile) attacks |= b << 6;
 
-    if ((board >> 17) & notHFile) attacks |= board >> 17;
-    if ((board >> 15) & notAFile) attacks |= board >> 15;
-    if ((board >> 10) & notHGFile) attacks |= board >> 10;
-    if ((board >> 6) & notABFile) attacks |= board >> 6;
+    if ((b >> 17) & notHFile) attacks |= b >> 17;
+    if ((b >> 15) & notAFile) attacks |= b >> 15;
+    if ((b >> 10) & notHGFile) attacks |= b >> 10;
+    if ((b >> 6) & notABFile) attacks |= b >> 6;
 
     return attacks;
 }
 
 static U64 maskKingMoves(const int square) {
     U64 attacks{};
-    U64 board{};
+    U64 b{};
 
-    SET_BIT(board, square);
+    SET_BIT(b, square);
 
-    if (board << 8) attacks |= (board << 8);
-    if (board >> 8) attacks |= (board >> 8);
-    if ((board << 1) & notAFile) {
-        attacks |= (board << 1) | (board << 9) | (board >> 7);
+    if (b << 8) attacks |= (b << 8);
+    if (b >> 8) attacks |= (b >> 8);
+    if ((b << 1) & notAFile) {
+        attacks |= (b << 1) | (b << 9) | (b >> 7);
     }
-    if ((board >> 1) & notHFile) {
-        attacks |= (board >> 1) | (board >> 9) | (board << 7);
+    if ((b >> 1) & notHFile) {
+        attacks |= (b >> 1) | (b >> 9) | (b << 7);
     }
 
     return attacks;
@@ -305,14 +305,14 @@ static void initSliderAttacks(const int bishop) {
                 const U64 occupancy { setOccupancies(index, relevantBitsCount, attackMask) };
 
                 // for correctness this should be static casted
-                const int magicIndex = (occupancy * bishopMagics[square]) >> (64 - bishopRelevantBits[square]);
+                const U64 magicIndex = (occupancy * bishopMagics[square]) >> (64 - bishopRelevantBits[square]);
                 bitBishopAttacksTable[square][magicIndex] = bishopAttacksOnTheFly(square, occupancy);
 
             } else {
                 const U64 occupancy { setOccupancies(index, relevantBitsCount, attackMask) };
 
                 // for correctness this should be static casted
-                const int magicIndex = (occupancy * rookMagics[square]) >> (64 - rookRelevantBits[square]);
+                const U64 magicIndex = (occupancy * rookMagics[square]) >> (64 - rookRelevantBits[square]);
                 bitRookAttacksTable[square][magicIndex] = rookAttacksOnTheFly(square, occupancy);
             }
         }
@@ -321,13 +321,11 @@ static void initSliderAttacks(const int bishop) {
 
 
 static void initRandomKeys() {
-    //    std::random_device rd;
     constexpr unsigned int seed = 12345;
 
     std::mt19937 gen(seed);
     std::uniform_int_distribution<U64> dis(0, UINT64_MAX);
-
-
+    
     for (int piece=0; piece < 12; piece++) {
         for(int square=0; square < 64; square++) {
             randomPieceKeys[piece][square] = dis(gen);

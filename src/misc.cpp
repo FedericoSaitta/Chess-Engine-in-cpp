@@ -15,12 +15,19 @@
 // these could go under benchmark_tests but I will put more rigorous testing functions there.
 
 
-const char promotedPieces[] = { [WHITE_QUEEN] = 'q', [WHITE_ROOK] = 'r', [WHITE_BISHOP] = 'b', [WHITE_KNIGHT] = 'n',
-                            [BLACK_QUEEN] = 'q', [BLACK_ROOK] = 'r', [BLACK_BISHOP] = 'b', [BLACK_KNIGHT] = 'n',
-                            [0] =  ' ' }; // these are always lowercase for both colors
+const char promotedPieces[] { ' ', 'n', 'b', 'r', 'q', ' ',   // for white pieces
+                              ' ', 'n', 'b', 'r', 'q', ' ' }; // for black pieces
+
+#if defined(__unix__) || defined(__APPLE__)
 
 static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
+
+#elif defined(_WIN32) ||
+static const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
+                              "p", "n", "b", "r", "q", "k"}; // Black
+#endif
+
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
 static U64 mirrorHorizontal (U64 bb) {
@@ -48,8 +55,6 @@ void printBitBoard(const U64 bb, const bool mirrored) {
     std::cout << '\n';
 }
 
-
-
 static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
 static constexpr std::string_view playingSides[2] = {"White", "Black"};
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
@@ -64,7 +69,7 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
         }
     }
 
-    for (int square=63; square >= 0; --square) {
+    for (int square=63; square >= 0; square--) {
         if ((square + 1) % 8 == 0) std::cout << '\n' << (square + 1) / 8 << "| ";
 
         int piece { -1 };

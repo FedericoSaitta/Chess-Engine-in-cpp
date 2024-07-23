@@ -30,7 +30,7 @@ static std::vector<std::string> split(const std::string &str, const char delimit
 
 
 namespace Test::BenchMark {
-    static std::uint32_t nodes{};
+    static std::int64_t nodes{};
 
     void perftDriver(const int depth) {
 
@@ -54,7 +54,7 @@ namespace Test::BenchMark {
         }
     }
 
-    std::uint32_t perft(const int depth, const bool printInfo) {
+    std::int64_t perft(const int depth, const bool printInfo) {
         nodes = 0;
 
         const auto start = std::chrono::high_resolution_clock::now();
@@ -115,7 +115,7 @@ namespace Test::BenchMark {
             parseFEN(tokens[0]);
 
             const int startDepth { std::stoi( &tokens[1][1] ) };
-            const int maxDepth = (tokens.size() - 1) + startDepth - 1;
+            const int maxDepth = static_cast<int>(tokens.size()) - 1 + startDepth - 1;
 
             for (int depth=startDepth; depth <= maxDepth; depth++) {
                 const int nodeCount = std::stoi( (split(tokens[depth - startDepth + 1], ' '))[1]);

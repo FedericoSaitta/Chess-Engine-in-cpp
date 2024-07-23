@@ -30,7 +30,7 @@ void init_tables()
 
 
 int evaluate() {
-    uint32_t score[2]{};
+    int score[2]{};
 
     int gamePhase{};
     int square{};
@@ -99,7 +99,6 @@ int evaluate() {
 
                     score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & board.bitboards[BLACK_OCC] );
                     break;
-
 
 
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
