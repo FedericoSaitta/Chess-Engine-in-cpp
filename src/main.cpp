@@ -4,22 +4,17 @@
 #include "uci.h"
 #include "init.h"
 
+#include "benchmark_tests.h"
+#include "debug_tests.h"
+
 // #define DEBUG
 // #define BENCHMARK
 
-#include "benchmark_tests.h"
-#include "debug_tests.h"
-#include "movegen/movegen.h"
-
-int main(int argc, char** argv) {
-    const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
-    logFile.open(logFilePath, std::ios::app);
+int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
     UCI();
 
-
-    logFile.close();
 
 #ifdef BENCHMARK
     Test::BenchMark::staticSearch();

@@ -333,6 +333,7 @@ void generateMoves(MoveList& moveList) {
 ///
 ///
 
+/*
 enum MoveFlags : int {
 	QUIET = 0b0000, DOUBLE_PUSH = 0b0001,
 	OO = 0b0010, OOO = 0b0011,
@@ -355,11 +356,11 @@ public:
 
     inline Move(uint16_t m) { move = m; }
 
-    inline Move(int from, int to) : move(0) {
+    inline Move(const uint16_t from, const uint16_t to) : move(0) {
         move = (from << 6) | to;
     }
 
-    inline Move(int from, int to, MoveFlags flags) : move(0) {
+    inline Move(const uint16_t from, const uint16_t to, const MoveFlags flags) : move(0) {
         move = (flags << 12) | (from << 6) | to;
     }
 
@@ -374,6 +375,7 @@ public:
 };
 
 
+
 struct new_MoveList {
     Move moves[218];
     int count;
@@ -383,3 +385,4 @@ void new_addMove(new_MoveList& moveList, const Move move) {
     moveList.moves[moveList.count] = move;
     moveList.count++;
 }
+*/

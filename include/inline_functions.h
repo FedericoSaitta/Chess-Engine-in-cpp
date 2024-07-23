@@ -11,10 +11,10 @@
 
 // there are more complicated bit counting techniques but this actually all gets
 // optimized by the compiler
-inline int countBits(U64 board) {
+inline int countBits(U64 b) {
     // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
     int count{};
-    while (board) { board &= (board - 1); count++; }
+    while (b) { b &= (b - 1); count++; }
     return count;
 }
 

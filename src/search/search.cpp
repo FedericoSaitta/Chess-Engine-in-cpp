@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <variant>
+#include <chrono>
 
 #include "../include/macros.h"
 #include "../include/inline_functions.h"
@@ -62,7 +63,7 @@ void initSearchTables() {
 	constexpr float division = 300 / 100.0f;
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
-				LMR_table[depth][played] = base + log(depth) * log(played) / division; // formula from Berserk engine
+				LMR_table[depth][played] = static_cast<int>( base + log(depth) * log(played) / division ); // formula from Berserk engine
 			}
 		}
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
@@ -70,8 +71,8 @@ void initSearchTables() {
 	// Implement this once you have got improving heuristic done
 	// from Berserk chess engine
 	for(int depth = 1; depth < 64; depth++) {
-		LMP_table[0][depth] = 2.5 +  2.5 * depth * depth / 4.5;
-		LMP_table[1][depth] = 6.0 +  4.0 * depth * depth / 4.5;
+		LMP_table[0][depth] = static_cast<int>( 2.5 +  2.5 * depth * depth / 4.5 );
+		LMP_table[1][depth] = static_cast<int>( 6.0 +  4.0 * depth * depth / 4.5 );
 	}
 }
 
@@ -116,10 +117,10 @@ static int getMoveTime(const bool timeConstraint) {
 	const int timeAlloted = (board.side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
 	const int increment = (board.side == WHITE) ? whiteIncrementTime : blackIncrementTime;
 
-	int timePerMove{ timeAlloted / 30 + increment };
-	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
+	int moveTime { timeAlloted / 30 + increment };
+	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) moveTime = static_cast<int>(0.75 * increment);
 
-	return timePerMove;
+	return moveTime;
 }
 static void isTimeUp() {
 	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
@@ -128,7 +129,7 @@ static void isTimeUp() {
 }
 static int isRepetition() {
 	for (int index=repetitionIndex - 1; index >= 0; index-= 2) {
-		// looping backwards
+		// looping backwards over our previous keys
 		if (repetitionTable[index] == hashKey)
 			return 1; // repetition found
 	}
@@ -505,7 +506,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	timePerMove = getMoveTime(timeConstraint);
 
-	const int softTimeLimit = timePerMove / 3.0f;
+	const int softTimeLimit = static_cast<int>(timePerMove / 3.0f);
 	assert( (timePerMove > 0) && "Negative Time Per Move");
 
 	int alpha { -INF };

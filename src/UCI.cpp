@@ -17,8 +17,6 @@
 #include "benchmark_tests.h"
 
 
-
-std::ofstream logFile{};
 int gameLengthTime{};
 int whiteClockTime{};
 int blackClockTime{};
@@ -97,7 +95,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
     } else if (tokens[1] == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    } else { logFile << "Could not recognize input \n"; }
+    } else {  }
 
     parseFEN(FEN);
 
@@ -110,11 +108,11 @@ static void handlePosition(const std::vector<std::string>& tokens) {
             if (move) { //so if the move is != 0
                 repetitionIndex++;
                 repetitionTable[repetitionIndex] = hashKey;
-                if (!makeMove(move, 0)) { logFile << "Move is illegal \n";  repetitionIndex--; }
+                if (!makeMove(move, 0)) {  }
 
-            } else { std::cout << tokens[index];
-                logFile << "Move is not on the board \n";
+            } else {
             }
+
         }
     }
 }
