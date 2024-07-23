@@ -87,6 +87,7 @@ static void resetSearchStates() {
 
 	stopSearch = 0;
 }
+
 static void ageHistoryTable() {
 	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
@@ -172,7 +173,6 @@ static int quiescenceSearch(int alpha, const int beta) {
     generateMoves(moveList);
     sortMoves(moveList, 0);
 
-	const int originalAlpha { alpha };
 	int bestEval { standPat };
 
     for (int count=0; count < moveList.count; count++) {
@@ -214,7 +214,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     return bestEval; // node that fails low
 }
 
-static inline void updateKillersAndHistory(const int bestMove, const int depth) {
+static void updateKillersAndHistory(const int bestMove, const int depth) {
 	killerMoves[1][ply] = killerMoves[0][ply];
 	killerMoves[0][ply] = bestMove; // store killer moves
 
@@ -234,6 +234,7 @@ static void makeNullMove() {
 	repetitionIndex++;
 	repetitionTable[repetitionIndex] = hashKey;
 }
+
 static void undoNullMove() {
 	ply--;
 	repetitionIndex--;

@@ -15,3 +15,5 @@ enum Piece {
 // these return ints because they'll be directly used to index the piece bitboards
 inline int pieceType(const Piece pc){ return pc % 6; }
 inline int color(const Piece pc){ return pc / 6; }
+
+

@@ -11,7 +11,6 @@
 #include "debug_tests.h"
 #include "movegen/movegen.h"
 
-
 int main(int argc, char** argv) {
     const std::string logFilePath{ "/Users/federicosaitta/CLionProjects/ChessEngine/logfile.txt" };
     logFile.open(logFilePath, std::ios::app);
@@ -21,13 +20,6 @@ int main(int argc, char** argv) {
     UCI();
 
     logFile.close();
-
-    // nice article: https://web.archive.org/web/20071030220825/http://www.brucemo.com/compchess/programming/pvs.htm
-    // nice transposition table: https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
-
-    // good chess article:, really nice article for move generation
-    // https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
-
 
 #ifdef BENCHMARK
     Test::BenchMark::staticSearch();
