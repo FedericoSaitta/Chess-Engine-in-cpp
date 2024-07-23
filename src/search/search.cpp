@@ -116,9 +116,14 @@ static int getMoveTime(const bool timeConstraint) {
 	// We give 100 millisecond lag compensation
 	const int timeAlloted = (board.side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
 	const int increment = (board.side == WHITE) ? whiteIncrementTime : blackIncrementTime;
+	int moveTime{};
 
-	int moveTime { timeAlloted / 30 + increment };
-	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) moveTime = static_cast<int>(0.75 * increment);
+	if (movesToGo == 0) {
+		 moveTime = timeAlloted / 30 + increment;
+		if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) moveTime = static_cast<int>(0.75 * increment);
+	} else {
+		moveTime = timeAlloted / movesToGo;
+	}
 
 	return moveTime;
 }

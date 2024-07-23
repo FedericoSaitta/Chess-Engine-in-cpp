@@ -22,6 +22,8 @@ int whiteClockTime{};
 int blackClockTime{};
 int whiteIncrementTime{};
 int blackIncrementTime{};
+
+int movesToGo{};
 static bool isNewGame{true};
 
 // Helper function to split a string by space
@@ -34,6 +36,8 @@ void resetGameVariables() {
     blackClockTime = 0;
     whiteIncrementTime = 0;
     blackIncrementTime = 0;
+
+    movesToGo = 0;
 
     // reset the hash Table
     clearTranspositionTable();
@@ -56,7 +60,6 @@ static int parseMove(const std::string_view move) {
 
         if ( (getMoveStartSQ(moveList.moves[count]) == startSquare) &&  (getMoveTargetSQ(moveList.moves[count]) == endSquare) ){
             const int promotedPiece{ getMovePromPiece(moveList.moves[count]) };
-
 
             if (promotedPiece) {
 
@@ -134,8 +137,11 @@ static void handleGo(const std::vector<std::string>& tokens) {
                 whiteIncrementTime = std::stoi(tokens[6]);
                 blackIncrementTime = std::stoi(tokens[8]);
             }
-        }
 
+            else if ( tokens[5] == "movestogo" ) {
+                movesToGo = std::stoi(tokens[6]);
+            }
+        }
 
         if (isNewGame) {
             gameLengthTime = whiteClockTime;
@@ -163,6 +169,18 @@ static void handleGo(const std::vector<std::string>& tokens) {
     }
 }
 
+// for now we only handle hash size changes
+static void handleOption(const std::vector<std::string>& tokens) {
+
+    if (tokens[1] == "name") {
+        if (tokens[2] == "Hash") {
+            if ( (tokens [3] == "value") && (tokens.size() > 4) ) {
+                initTranspositionTable( std::stoi(tokens[4]) );
+            }
+        }
+    }
+}
+
 void UCI() {
     std::string line{};
 
@@ -177,6 +195,7 @@ void UCI() {
         else if ( command == "position") handlePosition(tokens); // though this seems expensive because of al lthe checks, 80 move game in 235 microsec
         else if ( command == "go") handleGo(tokens);
 
+        else if (command == "setoption") handleOption(tokens);
         else if ( command == "quit") break;
         else if ( command == "ucinewgame") resetGameVariables();
 

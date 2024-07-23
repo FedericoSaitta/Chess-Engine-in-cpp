@@ -13,6 +13,8 @@ extern int blackClockTime;
 extern int whiteIncrementTime;
 extern int blackIncrementTime;
 
+extern int movesToGo;
+
 void resetGameVariables();
 void UCI();
 
