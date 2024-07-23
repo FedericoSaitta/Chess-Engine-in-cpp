@@ -23,7 +23,7 @@ U64 sideKey{};
 
 U64 hashKey{};
 
-int transpotitionTableEntries{};
+std::int64_t transpotitionTableEntries{};
 tt* transpositionTable{ nullptr };
 
 U64 generateHashKey() { // to uniquely identify a position
@@ -49,8 +49,7 @@ U64 generateHashKey() { // to uniquely identify a position
 
 
 void initTranspositionTable(const int megaBytes) {
-    const int hashSize = 0x100000 * megaBytes;
-
+    const U64 hashSize = 0x100000 * megaBytes;
     transpotitionTableEntries = hashSize / sizeof(tt);
 
     if (transpositionTable != nullptr)
@@ -73,9 +72,10 @@ void clearTranspositionTable() {
         transpositionTable[index].depth=0;
         transpositionTable[index].flag=0;
         transpositionTable[index].score=0;
+        transpositionTable[index].bestMove=0;
     }
 }
-// value for when no hash is found
+
 
 
 int probeHash(const int alpha, const int beta, int* best_move, const int depth)

@@ -174,7 +174,7 @@ static void handleOption(const std::vector<std::string>& tokens) {
 
     if (tokens[1] == "name") {
         if (tokens[2] == "Hash") {
-            if ( (tokens [3] == "value") && (tokens.size() > 4) ) {
+            if ( (tokens [3] == "value") && (tokens.size() > 4) ){
                 initTranspositionTable( std::stoi(tokens[4]) );
             }
         }
