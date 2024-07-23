@@ -1,3 +1,5 @@
+
+#include "board.h"
 #include "macros.h"
 
 #include <vector>
@@ -7,6 +9,7 @@
 #include "hashtable.h"
 #include "search/search.h"
 
+Board board{};
 const char* chessBoard[65] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -18,11 +21,6 @@ const char* chessBoard[65] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", "--" //represents empty square
 };
 
-U64 bitboards[12]{};
-U64 occupancies[3]{};
-int side{};
-int enPassantSQ{};
-int castle{};
 
 static constexpr int charPieces[] = {
     ['P'] = 0, ['N'] = 1, ['B'] = 2, ['R'] = 3, ['Q'] = 4, ['K'] = 5,   // white
@@ -33,11 +31,7 @@ static constexpr int charPieces[] = {
 void parseFEN(const std::string& fenString) {
 
     // re-setting the board state each time a new FEN is parsed
-    memset(bitboards, 0ULL, sizeof(bitboards));
-    memset(occupancies, 0ULL, sizeof(occupancies));
-    side = 0;
-    castle = 0;
-    enPassantSQ = 0;
+    board.resetBoard();
 
     repetitionIndex = 0;
     memset(repetitionTable, 0, sizeof(repetitionTable));
@@ -60,38 +54,38 @@ void parseFEN(const std::string& fenString) {
         } else if (std::isdigit(c)) {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
-            SET_BIT(bitboards[charPieces[static_cast<unsigned char>(c)]], rank * 8 + file);
+            SET_BIT(board.bitboards[charPieces[static_cast<unsigned char>(c)]], rank * 8 + file);
             file++;
         }
     }
 
-    side = (parts[1][0] == 'w') ? WHITE : BLACK;
+    board.side = (parts[1][0] == 'w') ? WHITE : BLACK;
 
     for (const char c : parts[2]) {
         switch (c) {
-            case 'K': castle |= WK; break;
-            case 'Q': castle |= WQ; break;
-            case 'k': castle |= BK; break;
-            case 'q': castle |= BQ; break;
+            case 'K': board.castle |= WK; break;
+            case 'Q': board.castle |= WQ; break;
+            case 'k': board.castle |= BK; break;
+            case 'q': board.castle |= BQ; break;
             default: break;
         }
     }
 
 
     if(parts[3][0] == '-') {
-        enPassantSQ = 64; // the 64th index represents the 'outside the board' square
+        board.enPassantSq = 64; // the 64th index represents the 'outside the board' square
     } else {
         const int col { parts[3][0] - 'a'};
         const int row { 8 - (parts[3][1] - '0') };
-        enPassantSQ = 56 - 8 * row + col;
+        board.enPassantSq = 56 - 8 * row + col;
     }
 
 
     // Lastly populate the white and black occupancy bitboards
     for (int bbPiece=0; bbPiece < 6; bbPiece++) {
-        occupancies[0] |= bitboards[bbPiece]; // for white
-        occupancies[1] |= bitboards[bbPiece + 6]; // for black
-        occupancies[2] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
+        board.bitboards[WHITE_OCC] |= board.bitboards[bbPiece]; // for white
+        board.bitboards[BLACK_OCC] |= board.bitboards[bbPiece + 6]; // for black
+        board.bitboards[BOTH_OCC] |= (board.bitboards[bbPiece] | board.bitboards[bbPiece + 6]); // for both
     }
 
     // Now we initialize the zobrist hash key

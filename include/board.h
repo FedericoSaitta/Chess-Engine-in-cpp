@@ -6,19 +6,20 @@
 
 
 #include <iostream>
-
 #include "macros.h"
+#include "types.h"
+
 extern const char* chessBoard[65];
+
+extern Board board;
 
 void parseFEN(const std::string& fenString);
 
-extern U64 bitboards[12]; // Pawn, Knight, Bishop, Rook, Queen, King, p, n, b, r, q, k
-extern U64 occupancies[3]; // white, black, both sides combined
+#define COPY_BOARD()             \
+Board boardCopy = board;         \
+U64 hashKeyCopy = hashKey;       \
 
-extern int side; // side to move
-extern int enPassantSQ; // index from 0 to 64, 64 represents no en-passant is on the board
-extern int castle; // 4-bit integer of the form qkQK, if bit is turned on then castling is available
-
-
-
-
+// restore board state
+#define RESTORE_BOARD()       \
+board = boardCopy;            \
+hashKey = hashKeyCopy;

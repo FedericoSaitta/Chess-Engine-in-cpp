@@ -21,12 +21,6 @@ include_directories(search)
 include_directories(movegen)
 
 
-find_package(Threads REQUIRED)
-
-#add_executable(tuner "initTuner.cpp" "tuner.cpp" "threadpool.cpp")
-
-#target_link_libraries(tuner PRIVATE Threads::Threads)
-
 # Add the executable
 add_executable(ChessEngine
         src/main.cpp

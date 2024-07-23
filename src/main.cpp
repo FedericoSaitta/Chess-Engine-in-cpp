@@ -16,8 +16,9 @@ int main(int argc, char** argv) {
     logFile.open(logFilePath, std::ios::app);
 
     initAll(256); // Done at compile time :), using 256 MB size hash
-
     UCI();
+    Test::BenchMark::standardPerft();
+
 
     logFile.close();
 

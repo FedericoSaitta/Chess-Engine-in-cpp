@@ -148,11 +148,11 @@ static void handleGo(const std::vector<std::string>& tokens) {
     else if (tokens[1] == "movetime") {
         // need to fix this
 
-        if (side == WHITE) whiteClockTime = std::stoi(tokens[2]);
+        if (board.side == WHITE) whiteClockTime = std::stoi(tokens[2]);
         else blackClockTime = std::stoi(tokens[2]);
 
         if (isNewGame) {
-            gameLengthTime = (side == WHITE) ? whiteClockTime : blackClockTime;
+            gameLengthTime = (board.side == WHITE) ? whiteClockTime : blackClockTime;
             isNewGame = false;
         }
 

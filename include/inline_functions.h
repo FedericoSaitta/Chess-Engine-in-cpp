@@ -94,33 +94,33 @@ inline int isSqAttacked(const int square, const int side) {
 
     // we use side^1 to look at the opponent's attacks and + 6 * side to look at our own pieces, side = 1 for black
     // attacked by pawns
-    if ( (bitPawnAttacks[side^1][square] & bitboards[PAWN + 6 * side]) ) return 1;
+    if ( (bitPawnAttacks[side^1][square] & board.bitboards[PAWN + 6 * side]) ) return 1;
 
     // attacked by knight
-    if ( bitKnightAttacks[square] & bitboards[KNIGHT + 6 * side] ) return 1;
+    if ( bitKnightAttacks[square] & board.bitboards[KNIGHT + 6 * side] ) return 1;
 
     // attacked by bishop
-    if ( (getBishopAttacks(square, occupancies[2]) & bitboards[BISHOP + 6 * side] ) ) return 1;
+    if ( (getBishopAttacks(square, board.bitboards[BOTH_OCC]) & board.bitboards[BISHOP + 6 * side] ) ) return 1;
 
     // attacked by rook
-    if ( (getRookAttacks(square, occupancies[2]) & bitboards[ROOK + 6 * side] ) ) return 1;
+    if ( (getRookAttacks(square, board.bitboards[BOTH_OCC]) & board.bitboards[ROOK + 6 * side] ) ) return 1;
 
     // attacked by queen
-    if ( (getQueenAttacks(square, occupancies[2]) & bitboards[QUEEN + 6 * side] ) ) return 1;
+    if ( (getQueenAttacks(square, board.bitboards[BOTH_OCC]) & board.bitboards[QUEEN + 6 * side] ) ) return 1;
 
     // attacked by king
-    if ( bitKingAttacks[square] & bitboards[KING + 6 * side] ) return 1;
+    if ( bitKingAttacks[square] & board.bitboards[KING + 6 * side] ) return 1;
 
     return 0;
 }
 
 inline int getCapturedPiece(const int targetSquare) {
-    const int startPiece { PAWN + 6 * (side^1) };
-    const int endPiece { KING + 6 * (side^1) };
+    const int startPiece { PAWN + 6 * (board.side^1) };
+    const int endPiece { KING + 6 * (board.side^1) };
     int targetPiece{};
 
     for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-        if ( GET_BIT(bitboards[bbPiece], targetSquare) ) {
+        if ( GET_BIT(board.bitboards[bbPiece], targetSquare) ) {
             targetPiece = bbPiece;
             break;
         }

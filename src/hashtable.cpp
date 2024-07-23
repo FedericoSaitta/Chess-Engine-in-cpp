@@ -32,7 +32,7 @@ U64 generateHashKey() { // to uniquely identify a position
 
 
     for (int piece=0; piece<12; piece++) {
-        tempPieceBitboard = bitboards[piece];
+        tempPieceBitboard = board.bitboards[piece];
 
         while (tempPieceBitboard) {
             const int square = pop_lsb(&tempPieceBitboard);
@@ -40,9 +40,9 @@ U64 generateHashKey() { // to uniquely identify a position
         }
     }
 
-    if (enPassantSQ != 64) key ^= randomEnPassantKeys[enPassantSQ];
-    key ^= randomCastlingKeys[castle];
-    if (side == BLACK) key ^= sideKey; // only done if side to move is black
+    if (board.enPassantSq != 64) key ^= randomEnPassantKeys[board.enPassantSq];
+    key ^= randomCastlingKeys[board.castle];
+    if (board.side == BLACK) key ^= sideKey; // only done if side to move is black
 
     return key;
 }

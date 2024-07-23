@@ -26,7 +26,6 @@
 #pragma once
 
 #include <cstdint>
-#include "types.h"
 
 #define U64 std::uint64_t
 
@@ -125,21 +124,3 @@
 #define getMoveDoublePush(move) ((move) & 0x200000)
 #define getMoveEnPassant(move) ((move) & 0x400000)
 #define getMoveCastling(move) ((move) & 0x800000)
-
-#define COPY_BOARD()                                              \
-U64 bitboardCopy[12], occupanciesCopy[3];                          \
-int sideCopy, enPassantCopy, castleCopy;                           \
-memcpy(bitboardCopy, bitboards, 96);                                \
-memcpy(occupanciesCopy, occupancies, 24);                          \
-U64 hashKeyCopy = hashKey;                                          \
-sideCopy = side, enPassantCopy = enPassantSQ, castleCopy = castle;   \
-
-// restore board state
-#define RESTORE_BOARD()                                              \
-memcpy(bitboards, bitboardCopy, 96);                                \
-memcpy(occupancies, occupanciesCopy, 24);                            \
-hashKey = hashKeyCopy;                                                \
-side = sideCopy, enPassantSQ = enPassantCopy, castle = castleCopy;   \
-
-
-

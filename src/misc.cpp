@@ -59,8 +59,8 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
     //before you were mirroring in place, very problematic!!!!
     U64 mirrorredBB[12]{};
     for (int piece=0; piece < 12; piece++) {
-        if (bitboards[piece]) {
-            mirrorredBB[piece] = mirrorHorizontal(bitboards[piece]);
+        if (board.bitboards[piece]) {
+            mirrorredBB[piece] = mirrorHorizontal(board.bitboards[piece]);
         }
     }
 
@@ -83,12 +83,12 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
 
     std::string castleRightsString{};
     for (int i = 0; i < 4; ++i) {
-        if (castle & (1 << i)) { castleRightsString += castlePieces[i]; }
+        if (board.castle & (1 << i)) { castleRightsString += castlePieces[i]; }
     }
 
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
-    std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
-              << ", En Passant: " << chessBoard[enPassantSQ] << '\n';
+    std::cout << playingSides[board.side] << " to move, Castling: " << castleRightsString
+              << ", En Passant: " << chessBoard[board.enPassantSq] << '\n';
     std::cout << "HashKey: " << hashKey << '\n';
 }
 

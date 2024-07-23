@@ -3,6 +3,7 @@
 //
 #include "benchmark_tests.h"
 
+#include "types.h"
 #include <iostream>
 #include <random>
 #include <cmath>
@@ -100,6 +101,8 @@ namespace Test::BenchMark {
             std::cerr << "Failed to open the file." << std::endl;
         }
 
+        uint64_t totalNodes{};
+
         const auto start = std::chrono::high_resolution_clock::now();
 
         std::string line{};
@@ -117,6 +120,7 @@ namespace Test::BenchMark {
             for (int depth=startDepth; depth <= maxDepth; depth++) {
                 const int nodeCount = std::stoi( (split(tokens[depth - startDepth + 1], ' '))[1]);
 
+                totalNodes += nodeCount;
                 if ( perft(depth, false) != nodeCount ){
                     std::cerr << " Error in FEN: " << tokens[0]
                     << " at depth: " << depth << std::endl;
@@ -127,7 +131,7 @@ namespace Test::BenchMark {
         }
 
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
-        std::cout << "Perft suite took: " << duration.count() << "s\n";
+        std::cout << "Perft suite took: " << duration.count() << "s, Nodes: " << totalNodes << '\n';
 
         file.close();
     }

@@ -12,7 +12,7 @@
 #include "search.h"
 
 #include <assert.h>
-#include <__algorithm/ranges_move.h>
+#include "board.h"
 
 #include "../movegen/update.h"
 #include "../include/hashtable.h"
@@ -113,8 +113,8 @@ static int getMoveTime(const bool timeConstraint) {
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// We give 100 millisecond lag compensation
-	const int timeAlloted = (side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
-	const int increment = (side == WHITE) ? whiteIncrementTime : blackIncrementTime;
+	const int timeAlloted = (board.side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
+	const int increment = (board.side == WHITE) ? whiteIncrementTime : blackIncrementTime;
 
 	int timePerMove{ timeAlloted / 30 + increment };
 	if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) timePerMove = (0.75 * increment);
@@ -135,7 +135,7 @@ static int isRepetition() {
 }
 
 static U64 nonPawnMaterial() {
-	return ( bitboards[QUEEN + 6 * side] | bitboards[ROOK + 6 * side] | bitboards[BISHOP + 6 * side] | bitboards[KNIGHT + 6 * side]);
+	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
 static int givesCheck(const int move) {
@@ -143,7 +143,7 @@ static int givesCheck(const int move) {
 	COPY_BOARD()
 	makeMove(move, 0);
 
-	const int opponentInCheck { isSqAttacked( bsf(bitboards[KING + 6 * side]) , side^1 ) };
+	const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
 
 	RESTORE_BOARD()
 	return opponentInCheck;
@@ -224,10 +224,10 @@ static void updateKillersAndHistory(const int bestMove, const int depth) {
 
 static void makeNullMove() {
 	hashKey ^= sideKey;
-	if (enPassantSQ != 64) hashKey ^= randomEnPassantKeys[enPassantSQ];
+	if (board.enPassantSq != 64) hashKey ^= randomEnPassantKeys[board.enPassantSq];
 
-	side ^= 1; // make null move
-	enPassantSQ = 64; // resetting en-passant to null-square
+	board.side ^= 1; // make null move
+	board.enPassantSq = 64; // resetting en-passant to null-square
 
 	// we change plies so white and black killers remain in sync for negamax search
 	ply++;
@@ -266,11 +266,11 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 	nodes++;
 
-	const int inCheck{ isSqAttacked( bsf(bitboards[KING + 6 * side]), side^1) };
+	const int inCheck{ isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]), board.side^1) };
 
 	int legalMoves{};
 
-	// Search extension if side is in check
+	// Search extension if board.side is in check
 	if (inCheck) depth++;
 
 	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
@@ -295,7 +295,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 
 		// maybe you can write TT entries here too???
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
-		// Do not attempt null move pruning in case our side only has pawns on the board
+		// Do not attempt null move pruning in case our board.side only has pawns on the board
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
 		if (depth >= 3 && nonPawnMaterial() && canNull) {

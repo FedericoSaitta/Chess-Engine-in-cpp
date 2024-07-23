@@ -1,20 +1,46 @@
-# Chess engine in c++
+# <div align="center">Aramis</div>
+<div align="center">
 
 [![lichess-bullet](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=bullet)](https://lichess.org/@/Aramis-Bot/perf/bullet)
 [![lichess-blitz](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=blitz)](https://lichess.org/@/Aramis-Bot/perf/blitz)
 [![lichess-rapid](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=rapid)](https://lichess.org/@/Aramis-Bot/perf/rapid)
+</div>
 
 To play against this engine head to: https://lichess.org/@/Aramis-Bot.
 
 This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
-Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor with 
-version 1 achieving a rating of 2050 ELO in bullet. Please contact me for any advice, critique or question about the bot :) 
+Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor and will 
+be soon sent to CCRL to test its performance against other engines. Please contact me for any advice, critique or question about the bot :)
 
-If you are also thinking on embarking on the journey of building a chess engine
-I'd advise to take is slowly and enjoy watching a stupid machine learn to play some decent moves, furthermore I advise to start
-by implementing simple algorithms at first, and only once speed matters, to change them. Move generation speed might seem like 
-a deciding factor of a chess engine's strength, but it only accounts for around 5 - 10% of the time spent by the program, 
-good move ordering and aggressive pruning techniques with a good evaluation matter a lot more for reaching higher plies.
+
+## Build Guide:
+This project uses **CMake** for build configuration.
+
+### Prerequisites
+Before you start, make sure you have the following software installed:
+- **CMake**: Version 3.15 or higher. [Download CMake](https://cmake.org/download/)
+- **Compiler**: Ensure you have a C++ compiler installed (GCC, Clang, or MSVC).
+- **Git**: For cloning the repository. [Download Git](https://git-scm.com/)
+
+### Cloning the Repository
+To get started, clone the repository using the following command:
+
+```bash
+git clone https://github.com/FedericoSaitta/Chess-Engine-in-cpp
+cd ChessEngine
+```
+### Building the project
+Head to the directory where the repository is located and run:
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+### Running the executable
+```bash
+./ChessEngine
+```
 
 ## Technical Details:
 
@@ -25,56 +51,40 @@ good move ordering and aggressive pruning techniques with a good evaluation matt
 implemented. This is a simpler though slower approach due to the creation and destruction of bitboard objects.
 
 #### Board Evaluation:
-- Uses simple scores for each piece on the board
-- Uses simple piece square tables
+- Hand-Crafted-Evaluation tuned with Texel Tuner (Gediminas Masaitis)
+- Tapered evaluation which considers piece position on the board, and their mobility
+- Rooks and Queens gain bonuses for being on semi-open and open files
+- King evaluation: 
+  - semi-open and open file malus
+  - pawn-shield bonus
+- Pawn evaluation: 
+  - isolated, passed and double pawns
 
-#### Searching Algorithm:
-- Move ordering by: PV move, MVV-LVA, Killer 1, Killer 2, History moves, remaining moves.
-- Negamax with quiescence search algorithm capped at 64 plies (32 moves)
-- Iterative deepening with Principal Variation Search principle with a zero-width window
+#### Searching Algorithm Features:
+- Move ordering by: Hash move, MVV-LVA, Killer 1, Killer 2, History moves, remaining moves.
+- History table ageing after each turn.
+- Fail-soft Negamax
+- Quiescence search
+- Iterative deepening
+- Principal Variation Search.
+- Aspiration windows
+- Late Move reductions
+- Null Move Pruning
+- Reverse Futility Pruning
+- Delta Pruning
+- Razoring
+- Late Move Pruning
+- Check Extension
 
 #### Time Management:
-- simple time control that decides allowed thinking time based on how much of the total game time has been exhausted
-- search is only stopped once the current depth has been searched fully
+- Hard bound given by (Time / 30) + Increment
+- Soft bound given by (Time Per Move) / 3
 
 #### Performance BenchMarks of the latest version:
 - These test have been run on 1,6 GHz Dual-Core Intel Core i5 (Macbook Air 2017)
 
 ##### Perft Test:
-
-Depth: 5 Nodes: 4'865'609 Time: 0.164552s MNodes/s: 29.5688 FEN: start position
-Depth: 5 Nodes: 193'690'690 Time: 6.06453s MNodes/s: 31.9383 FEN: kiwipete
-Depth: 5 Nodes: 164'075'551 Time: 5.37829s MNodes/s: 30.507 FEN: r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10
-
-##### Node Pruning Test:
-
-This test consists of searching for a mate in 5 (10 plies), FEN: "N1bk3r/P5pp/3b1p2/3B4/R2nP1nq/3P3N/1BP3KP/4Q2R b - - 0 1"
-Here is the UCI output of the iterative deepening search, we know the mate has been successfully found as the
-evaluation shoots up to (50'000 - 9) = 48991.
-
-info score cp -620 depth 1 nodes 63 nps 1'863'574 pv h4e1  
-info score cp -620 depth 2 nodes 336 nps 1'767'211 pv h4e1  h1e1  
-info score cp -620 depth 3 nodes 2'298 nps 5'086'017 pv h4e1  h1e1  d4c2  
-info score cp -615 depth 4 nodes 10'869 nps 1'655'877 pv h4e1  h1e1  d4c2  e1c1  
-info score cp -600 depth 5 nodes 68'036 nps 5'800'927 pv h4e1  h1e1  d4c2  e1c1  c2e3  
-info score cp -415 depth 6 nodes 293'208 nps 1'552'472 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  
-info score cp -415 depth 7 nodes 1'590'135 nps 4'861'336 pv h4e1  h1e1  d4c2  e1g1  g4e3  g2h1  e3d5  
-info score cp -225 depth 8 nodes 6'215'900 nps 1'572'247 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  
-info score cp -225 depth 9 nodes 28'527'536 nps 5'212'807 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  f3e1  
-info score cp 48991 depth 10 nodes 98'297'385 nps 1'607'238 pv h4h3  g2h3  g4e3  d5e6  c8e6  h3h4  d4f3  h4h5  e6g4  
-bestmove h4h3
-
-Mating Move: h4h3 Time taken: 71.1204ss
-
---------------------------------------------------
-Results of ChessEngine_V2-5 vs ChessEngine_V2-6 (30+1, NULL, NULL, scrapedOpenings.epd):
-Elo: -36.18 +/- 16.01, nElo: -54.83 +/- 24.08
-LOS: 0.00 %, DrawRatio: 39.25 %, PairsRatio: 0.56
-Games: 800, Wins: 149, Losses: 232, Draws: 419, Points: 358.5 (44.81 %)
-Ptnml(0-2): [27, 129, 157, 74, 13]
--------------------------------------
-More aggressive null move, and added reverse futility pruning
-
+Passes the standard.epd test with 4.8 Billion nodes in 184.3 s, so 26 MNps.
 
 #### Engine vs. Engine Match Results: 
 
@@ -84,17 +94,18 @@ Please note that though the versions are improving over time, the gain is not li
 are a rough measure of playing strength, and will only be confirmed or denied once the engine participates in larger 
 testing suites.
 
-| Version | ELO Gain     | Estimated ELO |
-|---------|--------------|---------------|
-| 1.2.7   | +15 +/- 10   | 2310          |
-| 1.2.6   | +36 +/- 16   | 2300          |
-| 1.2.5   | +46 +/- 18   | 2280          |
-| 1.2.4   | +69 +/- 20   | 2250          |
-| 1.2.3   | +35 +/- 20   | 2200          |
-| 1.2.2   | +65 +/- 20   | 2180          |
-| 1.2.1   | +223 +/- 41  | 2120          |
-| 1.2.0   | +200 +/- 43  | 1900          |
-| 1.1.0   | ------------ | 1700          |
+| Version | ELO Gain | Estimated ELO |
+|---------|----------|---------------|
+| 1.3.0   | 115 ± 15 | 2300          |
+| 1.2.7   | 15 ± 10  | 2190          |
+| 1.2.6   | 36 ± 16  | 2180          |
+| 1.2.5   | 46 ± 18  | 2160          |
+| 1.2.4   | 69 ± 20  | 2130          |
+| 1.2.3   | 35 ± 20  | 2080          |
+| 1.2.2   | 65 ± 20  | 2060          |
+| 1.2.1   | 223 ± 41 | 2000          |
+| 1.2.0   | 200 ± 43 | 1780          |
+| 1.1.0   | -------- | 1600          |
 
 
 #### Patches:
@@ -107,18 +118,15 @@ testing suites.
 - v1.2.5: More aggressive LMR (now reduces moves by dept/3 after the first six have been searched)
 - v1.2.6: Improved LMR formula based on Berserk engine (log * log)
 - v1.2.7: Added basic LMP (** I believe current implementation is faulty)
+- v1.3.0: Few performance improvements in evaluation (+20), switch to fail-soft negamax (+20), bishop pair
+bonus and texel tuning (+70)
 
-- Note that some minor details are not listed here, eg. v1.2.0 greatly improved time management over v1.1.0 which lead 
-to a few wins due to v1.1.0 flagging.
 
 #### Future Improvements:
 - Futility pruning
-- Refactoring Eval function with S macro as used in other engines (eg. Weiss)
 - More accurate History move scoring
 - SEE and pruning captures based on it
-- Tuning of evaluation parameters
 - More complex time management for longer time controls
-- Opening book
 
 #### Credits: 
 This engine has been largely inspired by the work of many successful programmers such as Sebastian Lague, Maksim Korzh and 

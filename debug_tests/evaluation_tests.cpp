@@ -26,24 +26,24 @@ U64 flipVertical(U64 x) {
 
 static void mirrorBitboards() {
     for (int piece=0; piece < 12; piece++) {
-        bitboards[piece] = flipVertical(bitboards[piece]);
+        board.bitboards[piece] = flipVertical(board.bitboards[piece]);
     }
 }
 
 static void swapColours() {
     for (int piece=0; piece < 6; piece++) {
-        const U64 tempCopy{ bitboards[piece] };
+        const U64 tempCopy{ board.bitboards[piece] };
 
-        bitboards[piece] = bitboards[piece + 6];
-        bitboards[piece + 6] = tempCopy;
+        board.bitboards[piece] = board.bitboards[piece + 6];
+        board.bitboards[piece + 6] = tempCopy;
     }
 
-    memset(occupancies, 0ULL, sizeof(occupancies));
+    board.resetOcc();
 
     for (int bbPiece=0; bbPiece < 6; bbPiece++) {
-        occupancies[0] |= bitboards[bbPiece]; // for white
-        occupancies[1] |= bitboards[bbPiece + 6]; // for black
-        occupancies[2] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
+        board.bitboards[WHITE_OCC] |= board.bitboards[bbPiece]; // for white
+        board.bitboards[BLACK_OCC] |= board.bitboards[bbPiece + 6]; // for black
+        board.bitboards[BOTH_OCC] |= (board.bitboards[bbPiece] | board.bitboards[bbPiece + 6]); // for both
     }
 }
 
@@ -66,9 +66,9 @@ namespace Test::Debug {
 
             parseFEN(FEN);
             int whiteEval { evaluate() };
-            side ^= 1;
+            board.side ^= 1;
             int blackEval { evaluate() };
-            side ^= 1;
+            board.side ^= 1;
 
             // White and black should return a zero-sum eval, if they dont we are overcounting white or black pieces
             if ( (whiteEval + blackEval) != 0) { std::cerr << "Mismatch between eval of the same position with switched sides\n"; }
@@ -80,9 +80,9 @@ namespace Test::Debug {
             //  printBoardFancy();
 
             int mirroredWhiteEval { evaluate() };
-            side ^= 1;
+            board.side ^= 1;
             int mirroredBlackEval { evaluate() };
-            side ^= 1;
+            board.side ^= 1;
 
             //   std::cout << whiteEval << ' ' << blackEval << '\n';
             //    std::cout << mirroredWhiteEval << ' ' << mirroredBlackEval << '\n';

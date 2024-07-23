@@ -10,7 +10,6 @@
 #include "macros.h"
 
 
-
 void printBitBoard(U64 bb, bool mirrored=false);
 void printBoardFancy();
 
