@@ -23,7 +23,7 @@ const char promotedPieces[] { ' ', 'n', 'b', 'r', 'q', ' ',   // for white piece
 static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
 
-#elif defined(_WIN32) ||
+#elif defined(_WIN32)
 static const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
                               "p", "n", "b", "r", "q", "k"}; // Black
 #endif

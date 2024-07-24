@@ -13,6 +13,7 @@
 #include "search.h"
 
 #include <assert.h>
+#include <cmath>
 #include "board.h"
 
 #include "../movegen/update.h"
@@ -63,7 +64,7 @@ void initSearchTables() {
 	constexpr float division = 300 / 100.0f;
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
-				LMR_table[depth][played] = static_cast<int>( base + log(depth) * log(played) / division ); // formula from Berserk engine
+				LMR_table[depth][played] = static_cast<int>( base + std::log(depth) * std::log(played) / division ); // formula from Berserk engine
 			}
 		}
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;

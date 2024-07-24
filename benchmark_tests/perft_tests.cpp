@@ -6,7 +6,7 @@
 #include "types.h"
 #include <iostream>
 #include <random>
-#include <cmath>
+#include <cstdint>
 #include <chrono>
 #include <fstream>
 #include "../src/movegen/update.h"
@@ -14,7 +14,6 @@
 #include "hashtable.h"
 #include "board.h"
 #include "../src/movegen/movegen.h"
-
 
 
 static std::vector<std::string> split(const std::string &str, const char delimiter) {
