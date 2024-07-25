@@ -8,14 +8,11 @@
 
 **[Play against Aramis on Lichess](https://lichess.org/@/Aramis-Bot)**
 
----
-
 ## Introduction
 
 Aramis is a uci-compliant chess engine that does not have its own GUI. This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
 Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor and will
 be soon sent to CCRL to test its performance against other engines. Please contact me for any advice, critique or question about the bot :)
----
 
 ## Table of Contents
 
