@@ -107,7 +107,8 @@ void sortMoves(MoveList& moveList, const int bestMove) {
 	}
 
 	// Sort moves based on their scores in descending order
-	std::ranges::sort(scoredMoves, [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+	// have to use stable sort in this case, not too sure why.... but i guess can lead to slow down
+	std::ranges::stable_sort(scoredMoves, [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
 		return a.first > b.first; // Descending order
 	});
 
