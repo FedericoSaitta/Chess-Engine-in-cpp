@@ -150,7 +150,6 @@ static void handleGo(const std::vector<std::string>& tokens) {
         iterativeDeepening(64, true);
     }
     else if (tokens[1] == "movetime") {
-        // need to fix this
 
         if (board.side == WHITE) whiteClockTime = std::stoi(tokens[2]);
         else blackClockTime = std::stoi(tokens[2]);
@@ -160,7 +159,10 @@ static void handleGo(const std::vector<std::string>& tokens) {
             isNewGame = false;
         }
 
-        iterativeDeepening(64, true); // for now just does a 7 ply search
+        // you should write about this once you have got the time and version 1 is already on the way
+        movesToGo = 1;
+
+        iterativeDeepening(64, true);
     }
 
     else { // also look at how your GUI tells you the time

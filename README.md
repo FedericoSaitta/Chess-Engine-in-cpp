@@ -42,6 +42,33 @@ cmake --build .
 ./ChessEngine
 ```
 
+
+### UCI commands:
+`position`:
+- `startpos`
+- `fen`
+- `fen moves`
+
+`go`:
+- `depth x`
+- `perft x`
+- `wtime x btime x`:
+  - `winc x binc x`
+  - `movestogo x`
+
+`setoption name Hash value x`, by default the hash size is of 256 MegaBytes. \
+`uci`, `isready`, `ucinewgame`, `quit`.
+
+### Extra-UCI commands:
+`bench` to run a pre-established search-test suite.
+- It is useful for checking the correct engine behaviour in the case you build the project on your own. 
+As of v1.3.0 (25/07/2024) the correct results are: 
+- Nodes: 7.2748 Million, Branching Ratio: 3.14648 and the Time is depended on hardware, though the test should not take
+more than 15 seconds on most machines.
+
+`display` to print the current board-state in the terminal, on unix machines pieces will be displayed, on windows, letters will be used
+to represent the pieces.
+
 ## Technical Details:
 
 #### Move Generation:
@@ -96,16 +123,16 @@ testing suites.
 
 | Version | ELO Gain | Estimated ELO |
 |---------|----------|---------------|
-| 1.3.0   | 115 ± 15 | 2300          |
-| 1.2.7   | 15 ± 10  | 2190          |
-| 1.2.6   | 36 ± 16  | 2180          |
-| 1.2.5   | 46 ± 18  | 2160          |
-| 1.2.4   | 69 ± 20  | 2130          |
-| 1.2.3   | 35 ± 20  | 2080          |
-| 1.2.2   | 65 ± 20  | 2060          |
-| 1.2.1   | 223 ± 41 | 2000          |
-| 1.2.0   | 200 ± 43 | 1780          |
-| 1.1.0   | -------- | 1600          |
+| 1.3.0   | 115 ± 15 | 2250          |
+| 1.2.7   | 15 ± 10  | 2140          |
+| 1.2.6   | 36 ± 16  | 2130          |
+| 1.2.5   | 46 ± 18  | 2110          |
+| 1.2.4   | 69 ± 20  | 2080          |
+| 1.2.3   | 35 ± 20  | 2030          |
+| 1.2.2   | 65 ± 20  | 2010          |
+| 1.2.1   | 223 ± 41 | 1950          |
+| 1.2.0   | 200 ± 43 | 1730          |
+| 1.1.0   | -------- | 1550          |
 
 
 #### Patches:
