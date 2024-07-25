@@ -58,13 +58,13 @@ static int timePerMove { 0 };
 
 constexpr int maxHistoryScore{ 1'600 };
 
-auto startSearchTime = std::chrono::high_resolution_clock::now();
-std::chrono::duration<float> searchDuration{ 0 };
+auto startSearchTime = std::chrono::steady_clock::now();
+std::chrono::duration<double> searchDuration{ 0.0 };
 
 
 void initSearchTables() {
-	constexpr std::double_t base = 75 / 100.0;
-	constexpr std::double_t division = 300 / 100.0f;
+	constexpr std::double_t base = 75.0 / 100.0;
+	constexpr std::double_t division = 300.0 / 100.0;
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
 				LMR_table[depth][played] = static_cast<int>( base + std::log(depth) * std::log(played) / division ); // formula from Berserk engine
@@ -93,11 +93,12 @@ static void resetSearchStates() {
 	stopSearch = 0;
 }
 
+constexpr double ratio = 0.125;
 static void ageHistoryTable() {
 	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
-			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] / 8) );
+			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] * ratio) );
 		}
 	}
 }
