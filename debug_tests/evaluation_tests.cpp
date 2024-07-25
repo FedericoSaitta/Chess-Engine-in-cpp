@@ -84,7 +84,7 @@ namespace Test::Debug {
             int mirroredBlackEval { evaluate() };
             board.side ^= 1;
 
-            //   std::cout << whiteEval << ' ' << blackEval << '\n';
+            std::cout << whiteEval << ' ' << blackEval << '\n';
             //    std::cout << mirroredWhiteEval << ' ' << mirroredBlackEval << '\n';
 
             if ( (whiteEval != mirroredBlackEval) || (blackEval != mirroredWhiteEval)) {

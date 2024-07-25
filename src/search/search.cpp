@@ -13,6 +13,7 @@
 #include "search.h"
 
 #include <assert.h>
+#include <cstdint>
 #include <cmath>
 #include "board.h"
 
@@ -24,14 +25,16 @@
 #include "../include/misc.h"
 #include "movesort.h"
 
-#define DO_NULL 1
-#define NO_NULL 0
+enum NodeType {
+	DONT_NULL=0,
+	DO_NULL,
+};
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
 
 int ply{};
-static std::uint32_t nodes{};
+static std::int64_t nodes{};
 
 int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
 int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
@@ -60,8 +63,8 @@ std::chrono::duration<float> searchDuration{ 0 };
 
 
 void initSearchTables() {
-	constexpr float base = 75 / 100.0f;
-	constexpr float division = 300 / 100.0f;
+	constexpr std::double_t base = 75 / 100.0;
+	constexpr std::double_t division = 300 / 100.0f;
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
 				LMR_table[depth][played] = static_cast<int>( base + std::log(depth) * std::log(played) / division ); // formula from Berserk engine
@@ -94,7 +97,7 @@ static void ageHistoryTable() {
 	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
-			historyMoves[a][b] = std::min(maxHistoryScore, historyMoves[a][b] / 8);
+			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] / 8) );
 		}
 	}
 }
@@ -169,7 +172,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     const int standPat{ evaluate() };
 
 	// delta pruning
-	if (standPat < alpha - 975) return alpha;
+	if (standPat < (alpha - 975) ) return alpha;
 
 	if (standPat >= beta) return standPat; // fail soft
 
@@ -248,7 +251,7 @@ static void undoNullMove() {
 	repetitionIndex--;
 }
 
-static int negamax(int alpha, const int beta, int depth, const int canNull) {
+static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
 	pvLength[ply] = ply;
 	int score{};
@@ -282,7 +285,7 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 	if (inCheck) depth++;
 
 	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
-	if (depth < 3 && !pvNode && !inCheck &&  std::abs(beta - 1) > -INF + 100)
+	if (depth < 3 && (!pvNode) && (!inCheck) &&  (std::abs(beta - 1) > (-INF + 100) ) )
 	{
 		// new addition avoid having to re-evaluate if we already have a tt eval
 		const int staticEval{ (ttHit) ? score : evaluate() };
@@ -312,8 +315,8 @@ static int negamax(int alpha, const int beta, int depth, const int canNull) {
 			makeNullMove();
 
 			// more aggressive reduction
-			const int R = 3 + depth / 3;
-			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, NO_NULL);
+			const int R = static_cast<int>(3 + depth / 3);
+			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, DONT_NULL);
 			undoNullMove();
 
 			RESTORE_BOARD() // un-making the null move
@@ -512,7 +515,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	timePerMove = getMoveTime(timeConstraint);
 
-	const int softTimeLimit = static_cast<int>(timePerMove / 3.0f);
+	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 	assert( (timePerMove > 0) && "Negative Time Per Move");
 
 	int alpha { -INF };
@@ -558,13 +561,13 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 		// check if we need to send mating scores
 		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
-			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
-			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		} else {
-			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(nodes / depthDuration.count())
+			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
 		}
 		currentDepth++; // we can proceed to the next iteration
