@@ -6,12 +6,35 @@
 [![lichess-rapid](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=rapid)](https://lichess.org/@/Aramis-Bot/perf/rapid)
 </div>
 
-To play against this engine head to: https://lichess.org/@/Aramis-Bot.
+**[Play against Aramis on Lichess](https://lichess.org/@/Aramis-Bot)**
 
-This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
-Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor and will 
+---
+
+## Introduction
+
+**Aramis** is a uci-compliant chess engine that does not have its own GUI. This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
+Because of the performance improvement brought by the C++ compiler, this engine has already surpassed its predecessor and will
 be soon sent to CCRL to test its performance against other engines. Please contact me for any advice, critique or question about the bot :)
+---
 
+## Table of Contents
+
+- [Build Guide](#build-guide)
+  - [Prerequisites](#prerequisites)
+  - [Cloning the Repository](#cloning-the-repository)
+  - [Building the Project](#building-the-project)
+  - [Running the Executable](#running-the-executable)
+- [UCI Commands](#uci-commands)
+- [Extra-UCI Commands](#extra-uci-commands)
+- [Technical Details](#technical-details)
+  - [Move Generation](#move-generation)
+  - [Board Evaluation](#board-evaluation)
+  - [Searching Algorithm Features](#searching-algorithm-features)
+  - [Time Management](#time-management)
+  - [Perft Test](#perft-test)
+  - [Engine vs. Engine Match Results](#engine-vs-engine-match-results)
+- [Patches](#patches)
+- [Credits](#credits)
 
 ## Build Guide:
 This project uses **CMake** for build configuration.
@@ -24,7 +47,6 @@ Before you start, make sure you have the following software installed:
 
 ### Cloning the Repository
 To get started, clone the repository using the following command:
-
 ```bash
 git clone https://github.com/FedericoSaitta/Chess-Engine-in-cpp
 cd ChessEngine
@@ -41,7 +63,6 @@ cmake --build .
 ```bash
 ./ChessEngine
 ```
-
 
 ### UCI commands:
 `position`:
@@ -72,46 +93,54 @@ to represent the pieces.
 ## Technical Details:
 
 #### Move Generation:
-- Plain Magic Bitboards for move generation of all sliding and leaping pieces.
-- Pawn pushes, En-Passant and Castling move generation is done on the fly.
-- As opposed to updating a board with a Make-UnMake move approach, a Copy-Restore board approach has been 
-implemented. This is a simpler though slower approach due to the creation and destruction of bitboard objects.
+- [X] Plain Magic Bitboards for all sliding and leaping pieces.
+- [X] Pawn pushes, En-Passant and Castling move generation is done on the fly.
+- [X] Copy-Restore approach is used to play and undo moves on the board
+- [ ] Make-UnMake move and full Position class implementation
+- [ ] Legal move generation
+- [ ] Staged move generation
 
 #### Board Evaluation:
-- Hand-Crafted-Evaluation tuned with Texel Tuner (Gediminas Masaitis)
-- Tapered evaluation which considers piece position on the board, and their mobility
-- Rooks and Queens gain bonuses for being on semi-open and open files
-- King evaluation: 
-  - semi-open and open file malus
-  - pawn-shield bonus
-- Pawn evaluation: 
-  - isolated, passed and double pawns
+- [X] Hand-Crafted-Evaluation tuned with Texel tuner
+- [X] Tapered evaluation which considers piece position on the board, and their mobility
+- [X] Rooks and Queens gain bonuses for being on semi-open and open files
+- King evaluation:
+  - [X] semi-open and open file malus
+  - [X] pawn-shield bonus
+- Pawn evaluation:
+  - [X] isolated, passed and double pawns
+  - [ ] pawn phalanx
+  - [ ] unstoppable passer
 
 #### Searching Algorithm Features:
-- Move ordering by: Hash move, MVV-LVA, Killer 1, Killer 2, History moves, remaining moves.
-- History table ageing after each turn.
-- Fail-soft Negamax
-- Quiescence search
-- Iterative deepening
-- Principal Variation Search.
-- Aspiration windows
-- Late Move reductions
-- Null Move Pruning
-- Reverse Futility Pruning
-- Delta Pruning
-- Razoring
-- Late Move Pruning
-- Check Extension
+- [X] Move ordering by: Hash move, MVV-LVA, Killer 1, Killer 2, History moves, remaining moves.
+- [X] History table ageing after each turn.
+- [X] Fail-soft Negamax
+- [X] Quiescence search
+- [X] Iterative deepening
+- [X] Principal Variation Search.
+- [X] Aspiration windows
+- [X] Check Extension
+- [X] Late Move reductions
+- [X] Null Move Pruning
+- [X] Reverse Futility Pruning
+- [X] Delta Pruning
+- [X] Razoring
+- [X] Late Move Pruning
+- [ ] Tuning of Late Move Pruning
+- [ ] Futility pruning
+- [ ] Improving heuristic 
+- [ ] Modern history scores and bonuses
+- [ ] SEE pruning in quiesce
+- [ ] 50-move rule and insufficient material draws
+- [ ] Tuning of search parameters
 
 #### Time Management:
-- Hard bound given by (Time / 30) + Increment
-- Soft bound given by (Time Per Move) / 3
+- [X] Hard bound given by (Time / 30) + Increment
+- [X] Soft bound given by (Time Per Move) / 3
 
-#### Performance BenchMarks of the latest version:
-- These test have been run on 1,6 GHz Dual-Core Intel Core i5 (Macbook Air 2017)
-
-##### Perft Test:
-Passes the standard.epd test with 4.8 Billion nodes in 184.3 s, so 26 MNps.
+#### Perft Test:
+On a 1.6 GHz Dual-Core Intel Core i5 (Macbook Air 2017), passes the standard.epd test with 4.8 Billion nodes in 184.3 s, so 26 MNps.
 
 #### Engine vs. Engine Match Results: 
 
@@ -144,18 +173,12 @@ testing suites.
 - v1.2.4: Improvement to move sorting algorithm (from O(N^2) to O(NlogN)), added delta pruning
 - v1.2.5: More aggressive LMR (now reduces moves by dept/3 after the first six have been searched)
 - v1.2.6: Improved LMR formula based on Berserk engine (log * log)
-- v1.2.7: Added basic LMP (** I believe current implementation is faulty)
+- v1.2.7: Added basic LMP (though this needs to be re-tuned)
 - v1.3.0: Few performance improvements in evaluation (+20), switch to fail-soft negamax (+20), bishop pair
 bonus and texel tuning (+70)
 
-
-#### Future Improvements:
-- Futility pruning
-- More accurate History move scoring
-- SEE and pruning captures based on it
-- More complex time management for longer time controls
-
-#### Credits: 
-This engine has been largely inspired by the work of many successful programmers such as Sebastian Lague, Maksim Korzh and 
-Bluefever Software who all have amazing videos on chess engine programming on YouTube. Lastly, this would not have been 
-possible without the resources provided by the Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 
+#### Credits:
+- Maksim Korzh for his incredible chess programming in c series which was invaluable while implementing bitboard move-generation and transposition table.
+- Gediminas Masaitis for his Texel tuner without which the evaluation would be much weaker.
+- Sebastian Lague for his chess videos and small-chessbot tournament which sparked my interest in chess programming.
+- The Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 
