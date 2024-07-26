@@ -19,7 +19,7 @@ struct MoveList {
 };
 
 inline void addMove(MoveList& moveList, const int move) {
-    moveList.moves[moveList.count] = std::make_pair(move, 0);
+    moveList.moves[moveList.count] = {move, 0};
     moveList.count++;
 }
 
