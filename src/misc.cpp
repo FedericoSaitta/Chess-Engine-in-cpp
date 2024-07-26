@@ -20,11 +20,11 @@ const char promotedPieces[] { ' ', 'n', 'b', 'r', 'q', ' ',   // for white piece
 
 #if defined(__unix__) || defined(__APPLE__)
 
-static const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
+const char* unicodePieces[] { "♟", "♞", "♝", "♜", "♛", "♚", // White
                               "♙", "♘", "♗", "♖", "♕", "♔"}; // Black
 
 #elif defined(_WIN32)
-static const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
+const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
                               "p", "n", "b", "r", "q", "k"}; // Black
 #endif
 

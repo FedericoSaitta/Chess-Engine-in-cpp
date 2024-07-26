@@ -79,7 +79,6 @@ void initSearchTables() {
 		LMP_table[1][depth] = static_cast<int>( 6.0 +  4.0 * depth * depth / 4.5 );
 	}
 }
-
 static void resetSearchStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
 	memset(pvLength, 0, sizeof(pvLength));
@@ -237,7 +236,7 @@ static void updateKillersAndHistory(const int bestMove, const int depth) {
 	killerMoves[0][ply] = bestMove; // store killer moves
 
 	// can do more sophisticated code tho, not giving maluses for now
-	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += depth * depth;
+	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += (depth * depth);
 }
 
 static void makeNullMove() {

@@ -18,6 +18,7 @@ void printMove(int move);
 void printMovesList(const MoveList& moveList);
 
 extern const char promotedPieces[];
+extern const char* unicodePieces[];
 
 std::string algebraicNotation(int move);
 

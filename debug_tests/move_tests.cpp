@@ -81,55 +81,68 @@ namespace Test::Debug{
         MoveList moveList{};
         generateMoves(moveList);
 
+        giveScores(moveList, 0);
         for (int count=0; count < moveList.count; count++) {
-            printMove(moveList.moves[count].first);
-            std::cout << " score: " << scoreMove(moveList.moves[count].first) << '\n';
+            const int move { moveList.moves[count].first };
+            const int score { moveList.moves[count].second };
+
+            printMove( move );
+            std::cout << " score: " << score << '\n';
         }
 
-        //sortMoves(moveList, 0);
+
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
-            printMove(moveList.moves[count].first);
-            std::cout << " score: " << scoreMove(moveList.moves[count].first)<< '\n';
+            const int move{ pickBestMove(moveList, count) };
+            const int score { moveList.moves[count].second };
+
+            printMove( move );
+            std::cout << " score: " << score << '\n';
         }
     }
 
 
 
-    static void printHistoryTable(const int a) {
+    static void printHistoryTable(const int piece) {
         for (int square=0; square < 64; square++) {
-            std::cout << historyMoves[a][square] << ' ';
+            std::cout << historyMoves[piece][square] << ' ';
             if ( (square + 1) % 8 == 0) std::cout << '\n';
-        }
-    }
-
-    static void ageHistoryTable() {
-        for (int a=0; a < 64; a++) {
-            for (int b=0; b<64; b++) {
-                // make sure we dont go over the limit
-                historyMoves[a][b] = std::min(180, historyMoves[a][b] / 8);
-            }
         }
     }
 
     void historyScores() {
         //resetGameVariables();
         parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+
         MoveList moveList{};
         generateMoves(moveList);
 
-        iterativeDeepening(10, false);
+        giveScores(moveList, 0);
+        for (int count=0; count < moveList.count; count++) {
+            const int move { moveList.moves[count].first };
+            const int score { moveList.moves[count].second };
 
-        for (int a=0; a < 64; a++) {
-            std::cout << "History Table Square: " << chessBoard[a] << '\n';
-            printHistoryTable(a);
+            printMove( move );
+            std::cout << " score: " << score << '\n';
         }
 
-        ageHistoryTable();
-
+        iterativeDeepening(10, false);
+        std::cout << "AGED HISTORY TABLE:\n";
         for (int piece=0; piece < 12; piece++) {
-            std::cout << "History Table: " << piece << '\n';
+            std::cout << "History Table: " << unicodePieces[piece] << '\n';
             printHistoryTable(piece);
+        }
+
+        // now we check how the move scores have changed
+        generateMoves(moveList);
+        giveScores(moveList, 0);
+        std::cout << "\nSorted moves\n";
+        for (int count=0; count < moveList.count; count++) {
+            const int move{ pickBestMove(moveList, count) };
+            const int score { moveList.moves[count].second };
+
+            printMove( move );
+            std::cout << " score: " << score << '\n';
         }
     }
 }

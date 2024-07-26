@@ -51,7 +51,7 @@ static int mvv_lva[12][12] = {
 	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
 };
-
+constexpr int hashTableBonus{ 30'000 };
 constexpr int principalVariationBonus{ 20'000 }; // so PV is always above captures
 constexpr int captureBonus{ 10'000 }; // so captures are always above killers
 constexpr int firstKiller{ 9'000 };
@@ -89,7 +89,7 @@ int scoreMove(const int move) {
 	return historyMoves[movePiece][targetSquare];
 }
 
-constexpr int hashTableBonus{ 30'000 };
+
 
 void giveScores(MoveList& moveList, const int bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
@@ -108,7 +108,7 @@ int pickBestMove(MoveList& moveList, const int start) {
     int bestMoveIndex{ start };
 
 	for (int index = start; index < moveList.count; ++index) {
-		if (moveList.moves[index].second > bestMoveScore) {
+		if (moveList.moves[index].second >= bestMoveScore) {
 			bestMoveScore = moveList.moves[index].second;
 			bestMoveIndex = index;
 		}
