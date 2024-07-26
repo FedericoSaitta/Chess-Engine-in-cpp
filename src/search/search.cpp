@@ -106,7 +106,7 @@ static void ageHistoryTable() {
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
-        if ( moveList.moves[count] == pvTable[0][ply] ) {
+        if ( moveList.moves[count].first == pvTable[0][ply] ) {
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
 
@@ -168,6 +168,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 	nodes++;
 
+	// here for now
+
     if ( ply > (MAX_PLY - 1) ) return evaluate();
 
     const int standPat{ evaluate() };
@@ -183,19 +185,23 @@ static int quiescenceSearch(int alpha, const int beta) {
 
     MoveList moveList;
     generateMoves(moveList);
-    sortMoves(moveList, 0);
+
+	const int totalMoves { moveList.count };
+	giveScores(moveList, 0); // as there is no bestmove
 
 	int bestEval { standPat };
 
-    for (int count=0; count < moveList.count; count++) {
+    for (int count=0; count < totalMoves; count++) {
         COPY_BOARD()
+
+    	const int move { pickBestMove(moveList, count ) };
 
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
         // makeMove returns 1 for legal moves, we only want to look at captures
-        if( !makeMove(moveList.moves[count], 1) ) { // meaning its illegal or its not a capture
+        if( !makeMove(move, 1) ) { // meaning its illegal or its not a capture
             ply--;
         	repetitionIndex--;
             continue;
@@ -370,7 +376,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	// if we are following PV line, we enable scoring
     if (followPV) enablePVscoring(moveList);
 
-    sortMoves(moveList, bestMove);
+	const int totalMoves { moveList.count };
+	giveScores(moveList, bestMove);
 
 	int movesSearched{};
 
@@ -380,8 +387,9 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 	const int originalAlpha {alpha};
 
-    for (int count=0; count < moveList.count; count++) {
-    	const int move { moveList.moves[count] };
+    for (int count=0; count < totalMoves; count++) {
+    	const int move { pickBestMove(moveList, count ) };
+
     	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
     	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
 
@@ -461,7 +469,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         		alpha = score;
         		bestMove = move; // store best move (for TT)
 
-        		pvTable[ply][ply] = moveList.moves[count];
+        		pvTable[ply][ply] = move;
         		// copy move from deeper plies to curernt ply
         		for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
         			pvTable[ply][nextPly] = pvTable[ply + 1][nextPly];

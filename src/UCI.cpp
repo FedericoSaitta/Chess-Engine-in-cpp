@@ -58,17 +58,17 @@ static int parseMove(const std::string_view move) {
 
     for (int count=0; count< moveList.count; count++) {
 
-        if ( (getMoveStartSQ(moveList.moves[count]) == startSquare) &&  (getMoveTargetSQ(moveList.moves[count]) == endSquare) ){
-            const int promotedPiece{ getMovePromPiece(moveList.moves[count]) };
+        if ( (getMoveStartSQ(moveList.moves[count].first) == startSquare) &&  (getMoveTargetSQ(moveList.moves[count].first) == endSquare) ){
+            const int promotedPiece{ getMovePromPiece(moveList.moves[count].first) };
 
             if (promotedPiece) {
 
-                if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count];
-                if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count];
+                if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count].first;
 
-            } else { return moveList.moves[count]; }
+            } else { return moveList.moves[count].first; }
         }
     }
     return 0; // returns null move

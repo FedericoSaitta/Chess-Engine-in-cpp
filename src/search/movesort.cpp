@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <utility>
 
 /*  MOVE SORTING ORDER
 	1. PV Move
@@ -51,16 +52,12 @@ static int mvv_lva[12][12] = {
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
 };
 
-constexpr int hashTableBonus{ 30'000 }; // so if we have a hashed move we search it first
 constexpr int principalVariationBonus{ 20'000 }; // so PV is always above captures
 constexpr int captureBonus{ 10'000 }; // so captures are always above killers
 constexpr int firstKiller{ 9'000 };
 constexpr int secondKiller{ 8'000 };
 
-
-
 int scoreMove(const int move) {
-
 	if (scorePV && (pvTable[0][ply] == move)) {
 		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
 		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
@@ -92,28 +89,32 @@ int scoreMove(const int move) {
 	return historyMoves[movePiece][targetSquare];
 }
 
-void sortMoves(MoveList& moveList, const int bestMove) {
-	// Pair moves with their scores
-	std::vector<std::pair<int, int>> scoredMoves(moveList.count);
+constexpr int hashTableBonus{ 30'000 };
 
+void giveScores(MoveList& moveList, const int bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
-		int score;
+		const int move{ moveList.moves[count].first };
 
-		if (bestMove == moveList.moves[count]) score = hashTableBonus;
+		// assigning the scores
+		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
+		else moveList.moves[count].second = scoreMove(move);
+	}
+}
 
-		else score = scoreMove(moveList.moves[count]);
 
-		scoredMoves[count] = std::make_pair(score, moveList.moves[count]);
+int pickBestMove(MoveList& moveList, const int start) {
+
+    int bestMoveScore{};
+    int bestMoveIndex{ start };
+
+	for (int index = start; index < moveList.count; ++index) {
+		if (moveList.moves[index].second > bestMoveScore) {
+			bestMoveScore = moveList.moves[index].second;
+			bestMoveIndex = index;
+		}
 	}
 
-	// Sort moves based on their scores in descending order
-	// have to use stable sort in this case, not too sure why.... but i guess can lead to slow down
-	std::ranges::stable_sort(scoredMoves, [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-		return a.first > b.first; // Descending order
-	});
+    std::swap(moveList.moves[start], moveList.moves[bestMoveIndex]);
 
-	// Update moveList with sorted moves
-	for (int i = 0; i < moveList.count; ++i) {
-		moveList.moves[i] = scoredMoves[i].second;
-	}
+	return moveList.moves[start].first;
 }

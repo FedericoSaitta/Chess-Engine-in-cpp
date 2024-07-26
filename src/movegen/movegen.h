@@ -14,12 +14,12 @@
 
 
 struct MoveList {
-    int moves[256];
+    std::pair<int, int> moves[256];
     int count;
 };
 
 inline void addMove(MoveList& moveList, const int move) {
-    moveList.moves[moveList.count] = move;
+    moveList.moves[moveList.count] = std::make_pair(move, 0);
     moveList.count++;
 }
 

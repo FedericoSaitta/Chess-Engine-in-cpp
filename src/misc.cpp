@@ -130,7 +130,7 @@ void printMovesList(const MoveList& moveList) {
     std::cout << "Move  Piece PromPiece Capture DoublePush EnPassant Castling \n";
 
     for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
-        const int move {moveList.moves[moveCount]};
+        const int move {moveList.moves[moveCount].first};
         std::printf("%s%s%c   ", chessBoard[getMoveStartSQ(move)],
                           chessBoard[getMoveTargetSQ(move)],
                           promotedPieces[getMovePromPiece(move)] );

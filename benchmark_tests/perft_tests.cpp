@@ -45,7 +45,7 @@ namespace Test::BenchMark {
         {
             COPY_BOARD();
 
-            if (!makeMove(moveList.moves[moveCount], 0)) continue;
+            if (!makeMove(moveList.moves[moveCount].first, 0)) continue;
 
             perftDriver(depth - 1);
 
@@ -64,7 +64,7 @@ namespace Test::BenchMark {
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
             COPY_BOARD();
 
-            if (!makeMove(moveList.moves[moveCount], 0)) continue;
+            if (!makeMove(moveList.moves[moveCount].first, 0)) continue;
 
             //const std::uint32_t cumulativeNodes {nodes};
 
@@ -73,9 +73,9 @@ namespace Test::BenchMark {
             RESTORE_BOARD();
             // Print parent moves for debugging purposes
             //const std::uint32_t oldNodes {nodes - cumulativeNodes};
-            //printf("     move: %s%s%c  nodes: %ld\n", chessBoard[getMoveStartSQ(moveList.moves[moveCount])],
-            // chessBoard[getMoveTargettSQ(moveList.moves[moveCount])],
-            // promotedPieces[getMovePromPiece(moveList.moves[moveCount])],
+            //printf("     move: %s%s%c  nodes: %ld\n", chessBoard[getMoveStartSQ(moveList.moves[count].first)],
+            // chessBoard[getMoveTargettSQ(moveList.moves[count].first)],
+            // promotedPieces[getMovePromPiece(moveList.moves[count].first)],
             // oldNodes);
         }
 

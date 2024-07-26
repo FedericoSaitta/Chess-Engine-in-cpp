@@ -10,11 +10,15 @@
 // #define DEBUG
 // #define BENCHMARK
 
+#include "search/search.h"
+#include "board.h"
 int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
+
     UCI();
-    
+
+    // r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
 #ifdef BENCHMARK
     Test::BenchMark::staticSearch();
     Test::BenchMark::matingPuzzles();
