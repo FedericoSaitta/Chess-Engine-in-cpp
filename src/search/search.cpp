@@ -113,6 +113,7 @@ static void enablePVscoring(const MoveList& moveList) {
         }
     }
 }
+
 static int getMoveTime(const bool timeConstraint) {
 
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
@@ -194,6 +195,7 @@ static int quiescenceSearch(int alpha, const int beta) {
         COPY_BOARD()
 
     	const int move { pickBestMove(moveList, count ) };
+    	//const int move { moveList.moves[count].first };
 
         ply++;
     	repetitionIndex++;

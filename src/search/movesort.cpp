@@ -89,7 +89,23 @@ int scoreMove(const int move) {
 	return historyMoves[movePiece][targetSquare];
 }
 
+/* OLD SORTING
+void sortMoves(MoveList& moveList, const int bestMove) {
+	// Pair moves with their scores
+	for (int count = 0; count < moveList.count; ++count) {
 
+	if (bestMove == moveList.moves[count].first) moveList.moves[count].second = hashTableBonus;
+	else moveList.moves[count].second = scoreMove(moveList.moves[count].first);
+	}
+
+	// Sort moves based on their scores in descending order
+	// have to use stable sort in this case, not too sure why.... but i guess can lead to slow down
+	std::stable_sort(moveList.moves, moveList.moves + moveList.count,
+					[](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+						return a.second > b.second; // Sort by score in descending order
+					});
+}
+*/
 
 void giveScores(MoveList& moveList, const int bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
@@ -104,16 +120,15 @@ void giveScores(MoveList& moveList, const int bestMove) {
 
 int pickBestMove(MoveList& moveList, const int start) {
 
-    int bestMoveScore{};
+    int bestMoveScore{ moveList.moves[start].second };
     int bestMoveIndex{ start };
 
 	for (int index = start; index < moveList.count; ++index) {
-		if (moveList.moves[index].second >= bestMoveScore) {
+		if (moveList.moves[index].second > bestMoveScore) {
 			bestMoveScore = moveList.moves[index].second;
 			bestMoveIndex = index;
 		}
 	}
-
     std::swap(moveList.moves[start], moveList.moves[bestMoveIndex]);
 
 	return moveList.moves[start].first;
