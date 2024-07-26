@@ -81,7 +81,7 @@ cmake --build .
 `bench` to run a pre-established search-test suite.
 - It is useful for checking the correct engine behaviour in the case you build the project on your own. 
 As of v1.3.0 (25/07/2024) the correct results are: 
-- Nodes: 7.29163 Million, Branching Ratio: 3.15436 and the Time is depended on hardware, though the test should not take
+- Nodes: 7.93029 Million, Branching Ratio: 3.16303 and the Time is depended on hardware, though the test should not take
 more than 15 seconds on most machines.
 
 `display` to print the current board-state in the terminal, on unix machines pieces will be displayed, on windows, letters will be used
