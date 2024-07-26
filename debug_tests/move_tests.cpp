@@ -102,7 +102,6 @@ namespace Test::Debug{
     }
 
 
-
     static void printHistoryTable(const int piece) {
         for (int square=0; square < 64; square++) {
             std::cout << historyMoves[piece][square] << ' ';
@@ -110,30 +109,11 @@ namespace Test::Debug{
         }
     }
 
-    void historyScores() {
-        //resetGameVariables();
-        parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
+    void printMoveOrdering() {
         MoveList moveList{};
         generateMoves(moveList);
 
-        giveScores(moveList, 0);
-        for (int count=0; count < moveList.count; count++) {
-            const int move { moveList.moves[count].first };
-            const int score { moveList.moves[count].second };
-
-            printMove( move );
-            std::cout << " score: " << score << '\n';
-        }
-
-        iterativeDeepening(10, false);
-        std::cout << "AGED HISTORY TABLE:\n";
-        for (int piece=0; piece < 12; piece++) {
-            std::cout << "History Table: " << unicodePieces[piece] << '\n';
-            printHistoryTable(piece);
-        }
-
-        // now we check how the move scores have changed
         generateMoves(moveList);
         giveScores(moveList, 0);
         std::cout << "\nSorted moves\n";
@@ -142,8 +122,25 @@ namespace Test::Debug{
             const int score { moveList.moves[count].second };
 
             printMove( move );
-            std::cout << " score: " << score << '\n';
+            std::cout << ": " << unicodePieces[getMovePiece(move)] << " score: " << score << '\n';
         }
+    }
+
+    void historyScores() {
+        //resetGameVariables();
+        parseFEN("rnbqkb1r/pppppppp/5n2/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 3");
+
+        printMoveOrdering();
+        iterativeDeepening(3, false);
+
+        std::cout << "AGED HISTORY TABLE:\n";
+        for (int piece=0; piece < 12; piece++) {
+            std::cout << "History Table: " << unicodePieces[piece] << '\n';
+            printHistoryTable(piece);
+        }
+
+        // now we check how the move scores have changed and display move ordering
+        printMoveOrdering();
     }
 }
 

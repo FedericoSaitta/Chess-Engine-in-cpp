@@ -15,6 +15,7 @@
 #include "macros.h"
 #include "misc.h"
 #include "benchmark_tests.h"
+#include "debug_tests.h"
 
 
 int gameLengthTime{};
@@ -183,6 +184,7 @@ static void handleOption(const std::vector<std::string>& tokens) {
     }
 }
 
+
 void UCI() {
     std::string line{};
 
@@ -203,8 +205,9 @@ void UCI() {
 
         // NON-UCI COMMANDS
         else if (command == "bench")  Test::BenchMark::staticSearch();
-        else if ( command == "display" ) printBoardFancy();
-        else if ( command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
+        else if (command == "display" ) printBoardFancy();
+        else if (command == "moveOrdering") Test::Debug::printMoveOrdering();
+        else if (command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
 }
 

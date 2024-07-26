@@ -15,6 +15,7 @@ namespace Test::Debug {
     void moveEncodingAndDecoding();
     void moveSorting();
 
+    void printMoveOrdering();
     void historyScores();
 
     void mirrorEval();

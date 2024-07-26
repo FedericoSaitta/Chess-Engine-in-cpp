@@ -234,9 +234,11 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 static void updateKillersAndHistory(const int bestMove, const int depth) {
+	//if (killerMoves[0][ply] != bestMove) { FROM WEISS CHESS ENGINE
+//	}
+
 	killerMoves[1][ply] = killerMoves[0][ply];
 	killerMoves[0][ply] = bestMove; // store killer moves
-
 	// can do more sophisticated code tho, not giving maluses for now
 	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += (depth * depth);
 }
@@ -478,9 +480,11 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
         		pvLength[ply] = pvLength[ply + 1];
 
+
         		// fail-hard beta cut off
         		if (alpha >= beta) {
         			// helps with better move ordering in branches at the same depth
+
         			if (isQuiet) {
         				updateKillersAndHistory(bestMove, depth);
         			}
