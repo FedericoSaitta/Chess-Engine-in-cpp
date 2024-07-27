@@ -69,6 +69,7 @@ set(SOURCE_FILES
 
         benchmark_tests/benchmark_tests.h
         debug_tests/debug_tests.h
+        src/search/searchparams.h
 )
 
 # Add executable

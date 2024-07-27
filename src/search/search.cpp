@@ -4,13 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <variant>
 #include <chrono>
 
 #include "../include/macros.h"
 #include "../include/inline_functions.h"
 
 #include "search.h"
+#include "searchparams.h"
 
 #include <assert.h>
 #include <cstdint>
@@ -24,11 +24,6 @@
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
 #include "movesort.h"
-
-enum NodeType {
-	DONT_NULL=0,
-	DO_NULL,
-};
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
@@ -48,19 +43,9 @@ static int followPV{}; // if it is true then we follow the principal variation
 static int LMR_table[MAX_PLY][MAX_PLY];
 static int LMP_table[2][MAX_PLY];
 
-constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
-constexpr int reductionLimit { 3 };
-
-constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
-
-static int stopSearch { 0 };
-static int timePerMove { 0 };
-
-constexpr int maxHistoryScore{ 1'600 };
 
 auto startSearchTime = std::chrono::steady_clock::now();
 std::chrono::duration<double> searchDuration{ 0.0 };
-
 
 void initSearchTables() {
 	constexpr std::double_t base = 75.0 / 100.0;
@@ -92,12 +77,12 @@ static void resetSearchStates() {
 	stopSearch = 0;
 }
 
-constexpr double ratio = 0.125;
+
 static void ageHistoryTable() {
 	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
-			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] * ratio) );
+			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] * historyAgeRatio) );
 		}
 	}
 }
@@ -108,7 +93,6 @@ static void enablePVscoring(const MoveList& moveList) {
         if ( moveList.moves[count].first == pvTable[0][ply] ) {
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
-
         	break; 
         }
     }
@@ -134,7 +118,6 @@ static int getMoveTime(const bool timeConstraint) {
 }
 static void isTimeUp() {
 	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
-
 	if ( (searchDuration.count() * 1'000) > timePerMove) stopSearch = 1;
 }
 static int isRepetition() {
@@ -168,8 +151,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 	nodes++;
 
-	// here for now
-
     if ( ply > (MAX_PLY - 1) ) return evaluate();
 
     const int standPat{ evaluate() };
@@ -192,26 +173,24 @@ static int quiescenceSearch(int alpha, const int beta) {
 	int bestEval { standPat };
 
     for (int count=0; count < totalMoves; count++) {
-        COPY_BOARD()
-
     	const int move { pickBestMove(moveList, count ) };
-    	//const int move { moveList.moves[count].first };
 
+    	COPY_BOARD()
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
-        // makeMove returns 1 for legal moves, we only want to look at captures
-        if( !makeMove(move, 1) ) { // meaning its illegal or its not a capture
+        // Undo Illegal Moves or non-captures
+        if( !makeMove(move, 1) ) {
             ply--;
         	repetitionIndex--;
             continue;
         }
 
         const int score = -quiescenceSearch(-beta, -alpha);
+
         ply--;
     	repetitionIndex--;
-
         RESTORE_BOARD()
 
  		if (stopSearch) return 0; // If the time is up, we return 0;
@@ -234,11 +213,11 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 static void updateKillersAndHistory(const int bestMove, const int depth) {
-	//if (killerMoves[0][ply] != bestMove) { FROM WEISS CHESS ENGINE
+//	if (killerMoves[0][ply] != bestMove) { // FROM WEISS CHESS ENGINE
+		killerMoves[1][ply] = killerMoves[0][ply];
+		killerMoves[0][ply] = bestMove; // store killer moves
 //	}
 
-	killerMoves[1][ply] = killerMoves[0][ply];
-	killerMoves[0][ply] = bestMove; // store killer moves
 	// can do more sophisticated code tho, not giving maluses for now
 	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += (depth * depth);
 }
@@ -264,35 +243,29 @@ static void undoNullMove() {
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
 	pvLength[ply] = ply;
-	int score{};
 	int bestMove {};
 	int bestEval {-INF - 1};
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
 
-
-	// ply && used to ensure we dont read from the transposition table at the root node
 	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
 
 	// reading the TT table, if we the move has already been searched, we return its evaluation
-	score = probeHash(alpha, beta, &bestMove, depth);
+	// ply && used to ensure we dont read from the transposition table at the root node
+	int score = probeHash(alpha, beta, &bestMove, depth);
 	const bool ttHit = score != NO_HASH_ENTRY;
 	if (ply && ttHit && !pvNode) return score;
 
 
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
-
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
 	nodes++;
 
 	const int inCheck{ isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]), board.side^1) };
 
-	int legalMoves{};
-
-	// Search extension if board.side is in check
-	if (inCheck) depth++;
+	if (inCheck) depth++; // Search extension if board.side is in check
 
 	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
 	if (depth < 3 && (!pvNode) && (!inCheck) &&  (std::abs(beta - 1) > (-INF + 100) ) )
@@ -306,7 +279,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	}
 
 	if (!pvNode && !inCheck && ply) {
-
 		/* WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7*/
 		// reverse futility pruning
 		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
@@ -376,30 +348,28 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     MoveList moveList;
     generateMoves(moveList);
 
-	// if we are following PV line, we enable scoring
-    if (followPV) enablePVscoring(moveList);
+    if (followPV) enablePVscoring(moveList); // check if we are in a principal-variation node
 
 	const int totalMoves { moveList.count };
-	giveScores(moveList, bestMove);
-
+	const int originalAlpha {alpha};
+	int legalMoves{};
 	int movesSearched{};
-
-	//MoveList quietList;
 	int quietMoveCount{};
 	bool skipQuietMoves{ false };
 
-	const int originalAlpha {alpha};
+	// score the moves before picking the best one
+	giveScores(moveList, bestMove);
 
     for (int count=0; count < totalMoves; count++) {
     	const int move { pickBestMove(moveList, count ) };
 
-    	// enPassant is already a capture so this also considers en-Passant as non-quiet moves
+    	// En-passant are captures, so they are non-quiet
     	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
 
     	if (isQuiet && skipQuietMoves) continue;
 
+    	// ****  LATE MOVE PRUNING (LMP) **** //
     	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
-    		//Late move pruning (LMP)
 
     		// parameters obtained from CARP
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
@@ -408,33 +378,28 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		}
     	}
 
-
         COPY_BOARD()
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
-
-        // makeMove returns 1 for legal moves
+        // Undo Illegal Moves
         if( !makeMove(move, 0) ) { // meaning its illegal
             ply--;
         	repetitionIndex--;
             continue;
         }
 
-        // increment legalMoves
         legalMoves++;
-
-    	// no need to check enPassant as we do count it as a capture
-    	// needed for improvements to move ordereing etc.
     	if (isQuiet) quietMoveCount++; // we only add to counter if the quiet move is actually legal
 
-
-    	// LMR from https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
+    	// ****  LATE MOVE REDUCTION (LMR) **** //
     	if(movesSearched == 0) {
+    		// https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
     		// First move, use full-window search // this is the principal variation move
     		score = -negamax(-beta, -alpha, depth-1, DO_NULL);
-    	} else {
+    	}
+    	else {
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check

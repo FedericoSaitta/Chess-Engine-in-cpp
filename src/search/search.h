@@ -5,6 +5,12 @@
 
 #include "../../include/hashtable.h"
 
+enum NodeType {
+    DONT_NULL=0,
+    DO_NULL,
+};
+
+
 #define MAX_PLY 64
 
 #define INF 50'000
