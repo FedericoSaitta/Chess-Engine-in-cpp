@@ -124,3 +124,6 @@
 #define getMoveDoublePush(move) ((move) & 0x200000)
 #define getMoveEnPassant(move) ((move) & 0x400000)
 #define getMoveCastling(move) ((move) & 0x800000)
+
+// 0000 0000 1111 1111 0000 0000 0000 0000
+#define getMoveFlags(move) ((move) & 0x00ff00)

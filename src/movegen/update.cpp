@@ -192,3 +192,39 @@ int makeMove(const int move, const int onlyCaptures){
     }
     return 0;
 }
+
+void undoMove(const int move) {
+    const int startSQ { getMoveStartSQ(move) };
+    const int targetSQ { getMoveTargetSQ(move) };
+    const int piece { getMovePiece(move) };
+    const int promPiece { getMovePromPiece(move) };
+    const int capture { getMoveCapture(move) };
+    const int doublePush { getMoveDoublePush(move) };
+    const int enPassant { getMoveEnPassant(move) };
+    const int castling { getMoveCastling(move) };
+
+    switch( getMoveFlags(move) ){
+
+
+        // follow through behaviour for promotion captures
+        case W_PC_KNIGHT:
+        case W_PC_BISHOP:
+        case W_PC_ROOK:
+        case W_PC_QUEEN:
+        break;
+
+
+        case B_PC_KNIGHT:
+        case B_PC_BISHOP:
+        case B_PC_ROOK:
+        case B_PC_QUEEN:
+
+
+
+        break;
+
+
+        default: break;
+    }
+
+}
