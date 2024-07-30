@@ -13,6 +13,7 @@
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
+#include "misc.h"
 #include "../src/movegen/movegen.h"
 
 
@@ -66,17 +67,21 @@ namespace Test::BenchMark {
 
             if (!makeMove(moveList.moves[moveCount].first, 0)) continue;
 
-            //const std::uint32_t cumulativeNodes {nodes};
+            const std::int64_t cumulativeNodes {nodes};
 
             perftDriver(depth - 1);
 
             RESTORE_BOARD();
+
             // Print parent moves for debugging purposes
-            //const std::uint32_t oldNodes {nodes - cumulativeNodes};
-            //printf("     move: %s%s%c  nodes: %ld\n", chessBoard[getMoveStartSQ(moveList.moves[count].first)],
-            // chessBoard[getMoveTargettSQ(moveList.moves[count].first)],
-            // promotedPieces[getMovePromPiece(moveList.moves[count].first)],
-            // oldNodes);
+            /*
+            const std::int64_t oldNodes {nodes - cumulativeNodes};
+            printf("     move: %s%s%c  nodes: %ld\n", chessBoard[moveList.moves[moveCount].first.from()],
+             chessBoard[(moveList.moves[moveCount].first.to())],
+             promotedPieces[moveList.moves[moveCount].first.promotionPiece()],
+             oldNodes);
+             */
+
         }
 
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;

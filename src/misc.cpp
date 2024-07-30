@@ -55,34 +55,55 @@ void printBitBoard(const U64 bb, const bool mirrored) {
     std::cout << '\n';
 }
 
+
+#include <stdio.h>
+
+static void mirrorRows(int array[64]) {
+    // Iterate over each row
+    for (int row = 0; row < 8; ++row) {
+        int start = row * 8;  // Start index of the current row
+        int end = start + 7;  // End index of the current row
+
+        // Swap elements to reverse the row
+        while (start < end) {
+            // Swap elements at 'start' and 'end'
+            int temp = array[start];
+            array[start] = array[end];
+            array[end] = temp;
+
+            // Move towards the middle
+            ++start;
+            --end;
+        }
+    }
+}
+
 static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
 static constexpr std::string_view playingSides[2] = {"White", "Black"};
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
+    Piece mirrorredMailBox[64] {};
 
-    // we first have to mirror all our bitboards
+    for (int row = 0; row < 8; ++row) {
+        int start = row * 8;  // Start index of the current row
+        int end = start + 7;  // End index of the current row
 
-    //before you were mirroring in place, very problematic!!!!
-    U64 mirrorredBB[12]{};
-    for (int piece=0; piece < 12; piece++) {
-        if (board.bitboards[piece]) {
-            mirrorredBB[piece] = mirrorHorizontal(board.bitboards[piece]);
+        // Swap elements to reverse the row
+        while (start < end) {
+            // Swap elements at 'start' and 'end'
+            mirrorredMailBox[start] = board.mailbox[end];
+            mirrorredMailBox[end] = board.mailbox[start];
+
+            ++start;
+            --end;
         }
     }
 
     for (int square=63; square >= 0; square--) {
         if ((square + 1) % 8 == 0) std::cout << '\n' << (square + 1) / 8 << "| ";
 
-        int piece { -1 };
+        const Piece piece { mirrorredMailBox[square] };
 
-        for (int bbPiece=0; bbPiece < 12; bbPiece++) {
-
-            if ( GET_BIT(mirrorredBB[bbPiece], square) ) {
-                piece = bbPiece;
-                break;
-            }
-        }
-
-        const char* symbol{ (piece == -1) ? "." : unicodePieces[piece] };
+        const char* symbol{ (piece == NO_PIECE) ? "." : unicodePieces[piece] };
         std::cout << ' ' << symbol << ' ';
     }
 
@@ -110,16 +131,16 @@ void printAttackedSquares(const int side) {
 }
 
 // for UCI protocol
-void printMove(const int move) {
-    std::printf("%s%s%c", chessBoard[getMoveStartSQ(move)],
-                          chessBoard[getMoveTargetSQ(move)],
-                          promotedPieces[getMovePromPiece(move)] );
+void printMove(const Move move) {
+    std::printf("%s%s%c", chessBoard[move.from()],
+                          chessBoard[move.to()],
+                          promotedPieces[move.promotionPiece()] );
 }
 
-std::string algebraicNotation(const int move) {
-    std::string a { chessBoard[getMoveStartSQ(move)] };
-    std::string b { chessBoard[getMoveTargetSQ(move)]};
-    std::string c{ promotedPieces[getMovePromPiece(move)]};
+std::string algebraicNotation(const Move move) {
+    std::string a { chessBoard[move.from()] };
+    std::string b { chessBoard[move.to()]};
+    std::string c{ promotedPieces[move.promotionPiece()]};
 
     return a + b + c;
 }
@@ -129,8 +150,9 @@ std::string algebraicNotation(const int move) {
 void printMovesList(const MoveList& moveList) {
     std::cout << "Move  Piece PromPiece Capture DoublePush EnPassant Castling \n";
 
+    /*
     for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
-        const int move {moveList.moves[moveCount].first};
+        const int Move {moveList.moves[moveCount].first};
         std::printf("%s%s%c   ", chessBoard[getMoveStartSQ(move)],
                           chessBoard[getMoveTargetSQ(move)],
                           promotedPieces[getMovePromPiece(move)] );
@@ -143,6 +165,7 @@ void printMovesList(const MoveList& moveList) {
         std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
         std::cout << '\n';
     }
+    */
 }
 
 std::vector<std::string> split(const std::string& str) {

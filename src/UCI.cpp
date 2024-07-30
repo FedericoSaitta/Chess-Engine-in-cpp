@@ -42,14 +42,14 @@ void resetGameVariables() {
 
     // reset the hash Table
     clearTranspositionTable();
-    memset(historyMoves, 0, sizeof(historyMoves));
+    memset(historyScores, 0, sizeof(historyScores));
 
     repetitionIndex = 0;
     repetitionTable[150] = 0;
 }
 
 
-static int parseMove(const std::string_view move) {
+static Move parseMove(const std::string_view move) {
 
     const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
     const int endSquare = (move[2] - 'a') + (move[3] - '0') * 8 - 8;
@@ -59,8 +59,8 @@ static int parseMove(const std::string_view move) {
 
     for (int count=0; count< moveList.count; count++) {
 
-        if ( (getMoveStartSQ(moveList.moves[count].first) == startSquare) &&  (getMoveTargetSQ(moveList.moves[count].first) == endSquare) ){
-            const int promotedPiece{ getMovePromPiece(moveList.moves[count].first) };
+        if ( ((moveList.moves[count].first).from() == startSquare) &&  ((moveList.moves[count].first).to() == endSquare) ){
+            const int promotedPiece{ moveList.moves[count].first.promotionPiece() };
 
             if (promotedPiece) {
 
@@ -107,9 +107,9 @@ static void handlePosition(const std::vector<std::string>& tokens) {
 
         for (int index=(3 + shiftIndex); index < static_cast<int>(tokens.size()); index++) {
 
-            const int move = parseMove(tokens[index]);
+            const Move move = parseMove(tokens[index]);
 
-            if (move) { //so if the move is != 0
+            if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move is != 0
                 repetitionIndex++;
                 repetitionTable[repetitionIndex] = hashKey;
                 if (!makeMove(move, 0)) {  }

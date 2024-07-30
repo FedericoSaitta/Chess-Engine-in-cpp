@@ -111,19 +111,3 @@
 #define SET_BIT(board, square) ((board) |= (1ULL << (square)))
 #define SET_BIT_FALSE(board, square) ((board) &= ~(1ULL << (square)))
 #define GET_BIT(board, square) (((board) >> (square)) & 1ULL)
-
-#define ENCODE_MOVE(start, target, piece, promoted, capture, doublePush, enPassant, castling) \
-((start) | ((target) << 6) | ((piece) << 12) | ((promoted) << 16) | ((capture) << 20) | \
-((doublePush) << 21) | ((enPassant) << 22) | ((castling) << 23))
-
-#define getMoveStartSQ(move) ((move) & 0x3f)
-#define getMoveTargetSQ(move) (((move) >> 6) & 0x3f)
-#define getMovePiece(move) (((move) >> 12) & 0xf)
-#define getMovePromPiece(move) (((move) >> 16) & 0xf)
-#define getMoveCapture(move) ((move) & 0x100000)
-#define getMoveDoublePush(move) ((move) & 0x200000)
-#define getMoveEnPassant(move) ((move) & 0x400000)
-#define getMoveCastling(move) ((move) & 0x800000)
-
-// 0000 0000 1111 1111 0000 0000 0000 0000
-#define getMoveFlags(move) ((move) & 0x00ff00)

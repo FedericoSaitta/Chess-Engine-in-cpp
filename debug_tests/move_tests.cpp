@@ -16,7 +16,7 @@
 
 
 namespace Test::Debug{
-
+    /*
     void moveEncodingAndDecoding() {
 
         std::random_device rd;
@@ -34,6 +34,7 @@ namespace Test::Debug{
             int doublePush{ (num > 0.5) ? 1 : 0 };
             int enPassant{ (num > 0.5) ? 1 : 0 };
             int castling{ (num > 0.5) ? 1 : 0 };
+
 
             int move = ENCODE_MOVE(start, target, piece, promPiece, capture, doublePush, enPassant, castling);
 
@@ -73,6 +74,7 @@ namespace Test::Debug{
 
         std::cout << "moveEncodingAndDecoding Test successful" << '\n';
     }
+    */
 
 
     void moveSorting() {
@@ -83,7 +85,7 @@ namespace Test::Debug{
 
         giveScores(moveList, 0);
         for (int count=0; count < moveList.count; count++) {
-            const int move { moveList.moves[count].first };
+            const Move move { moveList.moves[count].first };
             const int score { moveList.moves[count].second };
 
             printMove( move );
@@ -93,7 +95,7 @@ namespace Test::Debug{
 
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
-            const int move{ pickBestMove(moveList, count) };
+            const Move move{ pickBestMove(moveList, count) };
             const int score { moveList.moves[count].second };
 
             printMove( move );
@@ -104,7 +106,7 @@ namespace Test::Debug{
 
     static void printHistoryTable(const int piece) {
         for (int square=0; square < 64; square++) {
-            std::cout << historyMoves[piece][square] << ' ';
+            std::cout << historyScores[piece][square] << ' ';
             if ( (square + 1) % 8 == 0) std::cout << '\n';
         }
     }
@@ -118,11 +120,11 @@ namespace Test::Debug{
         giveScores(moveList, 0);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
-            const int move{ pickBestMove(moveList, count) };
+            const Move move{ pickBestMove(moveList, count) };
             const int score { moveList.moves[count].second };
 
             printMove( move );
-            std::cout << ": " << unicodePieces[getMovePiece(move)] << " score: " << score << '\n';
+            std::cout << ": " << unicodePieces[board.mailbox[move.from()]] << " score: " << score << '\n';
         }
     }
 

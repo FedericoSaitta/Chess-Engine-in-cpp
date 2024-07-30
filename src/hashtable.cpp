@@ -72,13 +72,13 @@ void clearTranspositionTable() {
         transpositionTable[index].depth=0;
         transpositionTable[index].flag=0;
         transpositionTable[index].score=0;
-        transpositionTable[index].bestMove=0;
+        transpositionTable[index].bestMove=Move(0, 0);
     }
 }
 
 
 
-int probeHash(const int alpha, const int beta, int* best_move, const int depth)
+int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
 {
     // creates a pointer to the hash entry
     const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
@@ -108,7 +108,7 @@ int probeHash(const int alpha, const int beta, int* best_move, const int depth)
     return NO_HASH_ENTRY; // in case we dont get a tt hit
 }
 
-void recordHash(int score, const int bestMove, const int flag, const int depth)
+void recordHash(int score, const Move bestMove, const int flag, const int depth)
 {
     tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
 

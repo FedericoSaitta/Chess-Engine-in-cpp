@@ -13,8 +13,12 @@ enum PieceType { PAWN = 0, KNIGHT = 1, BISHOP = 2, ROOK = 3, QUEEN = 4, KING = 5
 
 enum Piece {
     WHITE_PAWN=0, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
-    BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING, EMPTY,
+    BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING, NO_PIECE,
 };
+
+constexpr Piece make_piece(Color c, PieceType pt) {
+    return Piece(6 * c + pt);
+}
 
 enum Occupancies {
     WHITE_OCC=12, BLACK_OCC, BOTH_OCC
@@ -37,53 +41,104 @@ struct UndoInfo {
     //double pushed on the previous move
     int enPassSq;
 
-    constexpr UndoInfo() : entry(0), captured(EMPTY), enPassSq(64) {}
+    constexpr UndoInfo() : entry(0), captured(NO_PIECE), enPassSq(64) {}
 
     //This preserves the entry bitboard across moves
     UndoInfo(const UndoInfo& prev) :
-        entry(prev.entry), captured(EMPTY), enPassSq(64) {}
+        entry(prev.entry), captured(NO_PIECE), enPassSq(64) {}
 };
 
 enum MoveFlags : int {
-    QUIET = 0b0000'0000,
+    QUIET = 0b0000, DOUBLE_PUSH = 0b0001,
+    OO = 0b0010, OOO = 0b0011,
+    CAPTURE = 0b1000,
 
-    W_PR_KNIGHT = 0b0000'0001, W_PR_BISHOP = 0b0000'0010, W_PR_ROOK = 0b0000'0011, W_PR_QUEEN = 0b0000'0100,
-    B_PR_KNIGHT = 0b0000'0111, B_PR_BISHOP = 0b0000'1000, B_PR_ROOK = 0b0000'1001, B_PR_QUEEN = 0b0000'1010,
-
-    CAPTURE = 0b0001'0000,
-
-    W_PC_KNIGHT = 0b0001'0001, W_PC_BISHOP = 0b0001'0010, W_PC_ROOK = 0b0001'0011, W_PC_QUEEN = 0b0001'0100,
-    B_PC_KNIGHT = 0b0001'0111, B_PC_BISHOP = 0b0001'1000, B_PC_ROOK = 0b0001'1001, B_PC_QUEEN = 0b0001'1010,
-
-    DOUBLE_PUSH = 0b0010'0000,
-    EN_PASSANT = 0b0100'0000,
-    OO = 0b1000'0000,
+    CAPTURES = 0b1111,
+    EN_PASSANT = 0b1010,
+    PROMOTIONS = 0b0111,
+    PROMOTION_CAPTURES = 0b1100,
+    PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
+    PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
 };
 
+class Move {
+private:
+    //The internal representation of the move
+    uint16_t move;
+public:
+    //Defaults to a null move (a1a1)
+    inline Move() : move(0) {}
 
+    inline Move(uint16_t m) { move = m; }
 
+    inline Move(const uint16_t from, const uint16_t to) : move(0) {
+        move = (from << 6) | to;
+    }
+
+    inline Move(const uint16_t from, const uint16_t to, const MoveFlags flags) : move(0) {
+        move = (flags << 12) | (from << 6) | to;
+    }
+
+    inline int to() const { return int(move & 0x3f); }
+    inline int from() const { return int((move >> 6) & 0x3f); }
+    inline int to_from() const { return move & 0xffff; }
+    inline MoveFlags flags() const { return MoveFlags((move >> 12) & 0xf); }
+
+    inline bool is_capture() const {
+        return (move >> 12) & CAPTURE;
+    }
+
+    // this is also quite sketchy
+    inline bool is_promotion() const {
+        return (move >> 12) > 3;
+    }
+
+    // this can be written so much better
+    inline PieceType promotionPiece() const {
+        switch(move >> 12) {
+            case(PR_KNIGHT): return KNIGHT;
+            case(PC_KNIGHT): return KNIGHT;
+
+            case(PR_BISHOP): return BISHOP;
+            case(PC_BISHOP): return BISHOP;
+
+            case(PR_ROOK): return ROOK;
+            case(PC_ROOK): return ROOK;
+
+            case(PR_QUEEN): return QUEEN;
+            case(PC_QUEEN): return QUEEN;
+            default: ;
+        }
+        return PAWN;
+    }
+
+    bool operator==(Move a) const { return to_from() == a.to_from(); }
+    bool operator!=(Move a) const { return to_from() != a.to_from(); }
+};
 
 
 class Board {
 
 public:
-    UndoInfo history[256];
-
+  //  UndoInfo history[256];
     U64 bitboards[15]; // last 3 represent the occupancies
+
+    Piece mailbox[64];
 
     int side{ WHITE };
     int enPassantSq{ 64 };
     int castle { 0 };
-
 
     inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
     inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
 
     inline U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
 
-
     inline void resetBoard() {
         memset(bitboards, 0ULL, sizeof(bitboards));
+
+        for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
+
         side = WHITE;
         enPassantSq = 64;
         castle = 0;
@@ -92,6 +147,11 @@ public:
         bitboards[WHITE_OCC] = 0ULL;
         bitboards[BLACK_OCC] = 0ULL;
         bitboards[BOTH_OCC] = 0ULL;
+    }
+
+    inline void resetAll() {
+        resetBoard();
+        resetOcc();
     }
 
 };

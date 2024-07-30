@@ -8,6 +8,7 @@
 
 #include "hashtable.h"
 #include "search/search.h"
+#include "../include/types.h"
 
 Board board{};
 const char* chessBoard[65] = {
@@ -22,21 +23,21 @@ const char* chessBoard[65] = {
 };
 
 
-static int charToPiece(const char c) {
+static Piece charToPiece(const char c) {
     switch (c) {
-        case 'P': return 0;  // White Pawn
-        case 'N': return 1;  // White Knight
-        case 'B': return 2;  // White Bishop
-        case 'R': return 3;  // White Rook
-        case 'Q': return 4;  // White Queen
-        case 'K': return 5;  // White King
-        case 'p': return 6;  // Black Pawn
-        case 'n': return 7;  // Black Knight
-        case 'b': return 8;  // Black Bishop
-        case 'r': return 9;  // Black Rook
-        case 'q': return 10; // Black Queen
-        case 'k': return 11; // Black King
-        default: return -1;  // Invalid piece
+        case 'P': return WHITE_PAWN;  // White Pawn
+        case 'N': return WHITE_KNIGHT;  // White Knight
+        case 'B': return WHITE_BISHOP;  // White Bishop
+        case 'R': return WHITE_ROOK;  // White Rook
+        case 'Q': return WHITE_QUEEN;  // White Queen
+        case 'K': return WHITE_KING;  // White King
+        case 'p': return BLACK_PAWN;  // Black Pawn
+        case 'n': return BLACK_KNIGHT;  // Black Knight
+        case 'b': return BLACK_BISHOP;  // Black Bishop
+        case 'r': return BLACK_ROOK;  // Black Rook
+        case 'q': return BLACK_QUEEN; // Black Queen
+        case 'k': return BLACK_KING; // Black King
+        default: return NO_PIECE;  // Invalid piece
     }
 }
 
@@ -44,7 +45,8 @@ static int charToPiece(const char c) {
 void parseFEN(const std::string& fenString) {
 
     // re-setting the board state each time a new FEN is parsed
-    board.resetBoard();
+    board.resetAll();
+  //  board.resetBoard();
 
     repetitionIndex = 0;
     memset(repetitionTable, 0, sizeof(repetitionTable));
@@ -67,8 +69,9 @@ void parseFEN(const std::string& fenString) {
         } else if (std::isdigit(c)) {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
-            const int piece { charToPiece(static_cast<unsigned char>(c)) };
+            const Piece piece { charToPiece(static_cast<unsigned char>(c)) };
             SET_BIT(board.bitboards[piece], rank * 8 + file);
+            board.mailbox[rank * 8 + file] = piece;
             file++;
         }
     }
@@ -84,7 +87,6 @@ void parseFEN(const std::string& fenString) {
             default: break;
         }
     }
-
 
     if(parts[3][0] == '-') {
         board.enPassantSq = 64; // the 64th index represents the 'outside the board' square

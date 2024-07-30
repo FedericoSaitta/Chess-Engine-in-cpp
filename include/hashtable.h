@@ -5,6 +5,7 @@
 #pragma once
 
 #include "macros.h"
+#include "types.h"
 extern U64 randomPieceKeys[12][64];
 extern U64 randomEnPassantKeys[64];
 extern U64 randomCastlingKeys[16];
@@ -24,7 +25,7 @@ typedef struct tagHASHE {
     int depth;
     int flag;
     int score;
-    int bestMove;
+    Move bestMove;
 }   tt;
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
@@ -35,8 +36,8 @@ extern std::int64_t transpotitionTableEntries;
 
 void initTranspositionTable(int megaBytes);
 void clearTranspositionTable();
-int probeHash(int alpha, int beta, int* best_move, int depth);
-void recordHash(int score, int best_move, int flag, int depth);
+int probeHash(int alpha, int beta, Move* best_move, int depth);
+void recordHash(int score, Move best_move, int flag, int depth);
 
 int checkHashOccupancy();
 

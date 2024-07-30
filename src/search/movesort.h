@@ -5,10 +5,11 @@
 #pragma once
 
 #include "../movegen/movegen.h"
+#include "../include/types.h"
 #include <vector>
 
-int scoreMove(int move);
+int scoreMove(Move move);
 
-void giveScores(MoveList& moveList, int bestMove);
+void giveScores(MoveList& moveList, Move bestMove);
 
-int pickBestMove(MoveList& moveList, int start);
+Move pickBestMove(MoveList& moveList, int start);

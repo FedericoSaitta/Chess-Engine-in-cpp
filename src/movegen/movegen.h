@@ -14,11 +14,11 @@
 
 
 struct MoveList {
-    std::pair<int, int> moves[256];
+    std::pair<Move, int> moves[256];
     int count;
 };
 
-inline void addMove(MoveList& moveList, const int move) {
+inline void addMove(MoveList& moveList, const Move move) {
     moveList.moves[moveList.count].first = move;
     moveList.count++;
 }

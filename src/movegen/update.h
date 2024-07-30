@@ -4,5 +4,7 @@
 
 #pragma once
 
-int makeMove(int move, int onlyCaptures);
+#include "../include/types.h"
+
+int makeMove(Move move, int onlyCaptures);
 

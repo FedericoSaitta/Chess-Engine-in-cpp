@@ -27,7 +27,27 @@ int main() {
 
     initAll(256); // Done at compile time :), using 256 MB size hash
 
-    UCI();
+  //  UCI();
+    Test::BenchMark::standardPerft();
+
+    /*
+    parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
+
+    printBitBoard(board.bitboards[PAWN]);
+
+    SET_BIT_FALSE(board.bitboards[PAWN], A2);
+    SET_BIT(board.bitboards[PAWN], A3);
+
+    printBitBoard(board.bitboards[PAWN]);
+
+    parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
+    printBitBoard(board.bitboards[PAWN]);
+
+    board.bitboards[PAWN] ^= ( (1ULL << A2) | (1ULL << A3) );
+
+    printBitBoard(board.bitboards[PAWN]);
+    */
+
 
 #ifdef BENCHMARK
     Test::BenchMark::staticSearch();

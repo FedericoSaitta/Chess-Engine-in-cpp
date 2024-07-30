@@ -32,7 +32,8 @@ void generateMoves(MoveList& moveList) {
         // these are the special cases that dont have
         // generate WHITE pawn moves and WHITE king castling moves
         if (board.side == WHITE) {
-            if (piece == PAWN) { // loop over WHITE pawn b1
+            if (piece == PAWN) {
+                // loop over WHITE pawn b1
 
                 while(b1) {
                     startSquare = pop_lsb(&b1);
@@ -44,22 +45,21 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT, 0, 0, 0, 0) );
-
+                            addMove(moveList, Move(startSquare, targetSquare, PR_QUEEN) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_ROOK) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_BISHOP) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_KNIGHT) );
 
                         } else {
                             // one square ahead
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
-                            // two squares ahead
+                            addMove(moveList, Move(startSquare, targetSquare) );
+
+                            // two square ahead
                             if ( (startSquare >= A2) && (startSquare <= H2) && !GET_BIT(board.bitboards[BOTH_OCC], targetSquare + 8)) {
-                                addMove(moveList, ENCODE_MOVE(startSquare, targetSquare + 8, piece, 0, 0, 1, 0, 0) );
+                                addMove(moveList, Move(startSquare, targetSquare + 8, DOUBLE_PUSH) );
                             }
                         }
                     }
-
                     // need to initialize the attack b1, can only capture BLACK piececs
                     attacks = bitPawnAttacks[WHITE][startSquare] & board.bitboards[BLACK_OCC];
 
@@ -68,13 +68,13 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT, 1, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_QUEEN) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_ROOK) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_BISHOP) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_KNIGHT) );
 
                         } else {
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                         }
                     }
 
@@ -84,11 +84,11 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, EN_PASSANT) );
                         }
                     }
                 }
-            } // this works
+            }// this works
 
             if (piece == KING) {
                 // king board.side castling
@@ -96,7 +96,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F1) && !GET_BIT(board.bitboards[BOTH_OCC], G1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(F1, BLACK) ) {
-                            addMove(moveList, ENCODE_MOVE(E1, G1, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, Move(E1, G1, OO) );
                         }
                     }
                 }
@@ -106,12 +106,12 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B1) && !GET_BIT(board.bitboards[BOTH_OCC], C1) && !GET_BIT(board.bitboards[BOTH_OCC], D1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(D1, BLACK) ) {
-                            addMove(moveList, ENCODE_MOVE(E1, C1, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, Move(E1, C1, OOO) );
                         }
                     }
                 }
-
             }
+
         } else {
             // generate BLACK pawn moves and BLACK king castling moves
             if (piece == (PAWN + 6) ) { // loop over WHITE pawn b1
@@ -126,18 +126,18 @@ void generateMoves(MoveList& moveList) {
                         // pawn promotion, maybe change this to row check or something?
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP + 6, 0, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT + 6, 0, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_QUEEN) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_ROOK) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_BISHOP) );
+                            addMove(moveList, Move(startSquare, targetSquare, PR_KNIGHT) );
 
                         } else {
                             // one square ahead
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare) );
 
                             // two squares ahead
                             if ( (startSquare >= A7) && (startSquare <= H7) && !GET_BIT(board.bitboards[BOTH_OCC], targetSquare - 8)) {
-                                addMove(moveList, ENCODE_MOVE(startSquare, targetSquare - 8, piece, 0, 0, 1, 0, 0) );
+                                addMove(moveList, Move(startSquare, targetSquare - 8, DOUBLE_PUSH) );
                             }
                         }
                     }
@@ -149,12 +149,13 @@ void generateMoves(MoveList& moveList) {
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, QUEEN + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, ROOK + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, BISHOP + 6, 1, 0, 0, 0) );
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, KNIGHT + 6, 1, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_QUEEN) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_ROOK) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_BISHOP) );
+                            addMove(moveList, Move(startSquare, targetSquare, PC_KNIGHT) );
+
                         } else {
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                         }
                     }
                     // generate enPassantCaptures
@@ -163,7 +164,7 @@ void generateMoves(MoveList& moveList) {
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
-                            addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 1, 0) );
+                            addMove(moveList, Move(startSquare, targetSquare, EN_PASSANT) );
                         }
                     }
                 }
@@ -175,7 +176,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F8) && !GET_BIT(board.bitboards[BOTH_OCC], G8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(F8, WHITE) ) {
-                            addMove(moveList, ENCODE_MOVE(E8, G8, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, Move(E8, G8,OO) );
                         }
                     }
                 }
@@ -185,7 +186,7 @@ void generateMoves(MoveList& moveList) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B8) && !GET_BIT(board.bitboards[BOTH_OCC], C8) && !GET_BIT(board.bitboards[BOTH_OCC], D8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(D8, WHITE) ) {
-                            addMove(moveList, ENCODE_MOVE(E8, C8, piece, 0, 0, 0, 0, 1) );
+                            addMove(moveList, Move(E8, C8, OOO) );
                         }
                     }
                 }
@@ -207,10 +208,10 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare) );
 
                     } else {  // capture moves
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                     }
                 }
             }
@@ -230,10 +231,10 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare) );
 
                     } else {  // capture moves
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                     }
                 }
             }
@@ -247,16 +248,15 @@ void generateMoves(MoveList& moveList) {
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getRookAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
-
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare) );
 
                     } else {  // capture moves
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                     }
                 }
             }
@@ -275,10 +275,10 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare) );
 
                     } else {  // capture moves
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                     }
                 }
             }
@@ -297,10 +297,10 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 0, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare) );
 
                     } else {  // capture moves
-                        addMove(moveList, ENCODE_MOVE(startSquare, targetSquare, piece, 0, 1, 0, 0, 0) );
+                        addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
                     }
                 }
             }

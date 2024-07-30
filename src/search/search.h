@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../../include/hashtable.h"
+#include "../include/types.h"
 
 enum NodeType {
     DONT_NULL=0,
@@ -22,10 +23,10 @@ extern U64 repetitionTable[1'000];
 extern int repetitionIndex;
 
 extern int scorePV;
-extern int pvTable[64][64];
+extern Move pvTable[64][64];
 
-extern int killerMoves[2][128];
-extern int historyMoves[12][64];
+extern Move killerMoves[2][128];
+extern int historyScores[12][64];
 
 void initSearchTables();
 void clearHistoryTable();

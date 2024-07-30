@@ -31,10 +31,10 @@ int repetitionIndex{};
 int ply{};
 static std::int64_t nodes{};
 
-int killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-int historyMoves[12][64]{}; // zero initialization to ensure no random bonuses to moves
+Move killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
+int historyScores[12][64]{}; // zero initialization to ensure no random bonuses to moves
 
-int pvTable[64][64]{};
+Move pvTable[64][64]{};
 static int pvLength[64]{};
 
 int scorePV{};
@@ -82,7 +82,7 @@ static void ageHistoryTable() {
 	for (int a=0; a < 12; a++) {
 		for (int b=0; b<64; b++) {
 			// make sure we dont go over the limit
-			historyMoves[a][b] = std::min(maxHistoryScore, static_cast<int>(historyMoves[a][b] * historyAgeRatio) );
+			historyScores[a][b] = std::min(maxHistoryScore, static_cast<int>(historyScores[a][b] * historyAgeRatio) );
 		}
 	}
 }
@@ -133,7 +133,7 @@ static U64 nonPawnMaterial() {
 	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
-static int givesCheck(const int move) {
+static int givesCheck(const Move move) {
 	// Returns true if the current move puts the opponent in check
 	COPY_BOARD()
 	makeMove(move, 0);
@@ -173,7 +173,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 	int bestEval { standPat };
 
     for (int count=0; count < totalMoves; count++) {
-    	const int move { pickBestMove(moveList, count ) };
+    	const Move move { pickBestMove(moveList, count ) };
 
     	COPY_BOARD()
         ply++;
@@ -212,14 +212,14 @@ static int quiescenceSearch(int alpha, const int beta) {
     return bestEval; // node that fails low
 }
 
-static void updateKillersAndHistory(const int bestMove, const int depth) {
+static void updateKillersAndHistory(const Move bestMove, const int depth) {
 //	if (killerMoves[0][ply] != bestMove) { // FROM WEISS CHESS ENGINE
 		killerMoves[1][ply] = killerMoves[0][ply];
 		killerMoves[0][ply] = bestMove; // store killer moves
 //	}
 
 	// can do more sophisticated code tho, not giving maluses for now
-	historyMoves[getMovePiece(bestMove)][getMoveTargetSQ(bestMove)] += (depth * depth);
+	historyScores[board.mailbox[bestMove.from()]][bestMove.to()] += (depth * depth);
 }
 
 static void makeNullMove() {
@@ -243,7 +243,7 @@ static void undoNullMove() {
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
 	pvLength[ply] = ply;
-	int bestMove {};
+	Move bestMove {};
 	int bestEval {-INF - 1};
 
 	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
@@ -361,10 +361,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	giveScores(moveList, bestMove);
 
     for (int count=0; count < totalMoves; count++) {
-    	const int move { pickBestMove(moveList, count ) };
+    	const Move move { pickBestMove(moveList, count ) };
 
     	// En-passant are captures, so they are non-quiet
-    	const bool isQuiet = ( !getMoveCapture(move) && !getMovePromPiece(move));
+    	const bool isQuiet = ( !move.is_capture() && !move.is_promotion());
 
     	if (isQuiet && skipQuietMoves) continue;
 

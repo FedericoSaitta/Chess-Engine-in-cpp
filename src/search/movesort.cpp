@@ -57,7 +57,7 @@ constexpr int captureBonus{ 10'000 }; // so captures are always above killers
 constexpr int firstKiller{ 9'000 };
 constexpr int secondKiller{ 8'000 };
 
-int scoreMove(const int move) {
+int scoreMove(const Move move) {
 	if (scorePV && (pvTable[0][ply] == move)) {
 		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
 		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
@@ -66,10 +66,10 @@ int scoreMove(const int move) {
 		return principalVariationBonus;
 	}
 
-	const int movePiece = getMovePiece(move);
-	const int targetSquare = getMoveTargetSQ(move);
+	const int movePiece = board.mailbox[move.from()];
+	const int targetSquare = move.to();
 
-	if (getMoveCapture(move)) {
+	if (move.is_capture()) {
 		int targetPiece{ PAWN }; // in case we make an enPassant capture, which our loop would miss
 
 		// copied from makeMove function
@@ -80,13 +80,13 @@ int scoreMove(const int move) {
 	}
 
 	// scoring promotions, should check this....
-	const int promPiece { getMovePromPiece(move) };
+	const int promPiece { move.promotionPiece() };
 	if (promPiece != 0) return mvv_lva[PAWN][promPiece] + captureBonus;
 
 	if (killerMoves[0][ply] == move) return firstKiller;
 	if (killerMoves[1][ply] == move) return secondKiller;
 
-	return historyMoves[movePiece][targetSquare];
+	return historyScores[movePiece][targetSquare];
 }
 
 /* OLD SORTING
@@ -107,9 +107,9 @@ void sortMoves(MoveList& moveList, const int bestMove) {
 }
 */
 
-void giveScores(MoveList& moveList, const int bestMove) {
+void giveScores(MoveList& moveList, const Move bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
-		const int move{ moveList.moves[count].first };
+		const Move move{ moveList.moves[count].first };
 
 		// assigning the scores
 		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
@@ -118,7 +118,7 @@ void giveScores(MoveList& moveList, const int bestMove) {
 }
 
 
-int pickBestMove(MoveList& moveList, const int start) {
+Move pickBestMove(MoveList& moveList, const int start) {
 
     int bestMoveScore{ moveList.moves[start].second };
     int bestMoveIndex{ start };
