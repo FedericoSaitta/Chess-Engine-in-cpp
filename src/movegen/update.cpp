@@ -143,6 +143,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	
 	if(!onlyCaptures) {
 		COPY_BOARD();
+
 		if (history[gamePly].enPassSq != 64) { hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq]; }
 
 		// these is something funky going on with this
@@ -202,11 +203,8 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 				move_piece_quiet(move.from(), move.to());
 				if (side == WHITE) {
 					remove_piece(move.to() + 8);
-					hashKey ^= randomPieceKeys[PAWN + 6][move.to() + 8]; // hash the removal of the opponent's PAWN
-
 				} else {
 					remove_piece(move.to() - 8);
-					hashKey ^= randomPieceKeys[PAWN][move.to() - 8];
 				}
 			break;
 
@@ -287,7 +285,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 			return 0;
 		}
 
-		/*
+		/* FOR ZOBRIST DEBUGGING PURPOSES from Marksim Kozh
 		U64 new_hasKey = generateHashKey();
 		// if this doesnt match we output an error
 		if (new_hasKey != hashKey) {

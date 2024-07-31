@@ -10,6 +10,7 @@
 #include <bit>
 #include <iostream>
 #include "init.h"
+#include <cmath>
 
 enum Color { WHITE = 0, BLACK = 1 };
 
@@ -59,14 +60,19 @@ struct UndoInfo {
 enum MoveFlags : int {
     QUIET = 0b0000, DOUBLE_PUSH = 0b0001,
     OO = 0b0010, OOO = 0b0011,
+
+    PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
+
     CAPTURE = 0b1000,
+
+    PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
+
 
   //  CAPTURES = 0b1111,
     EN_PASSANT = 0b1010,
- //   PROMOTIONS = 0b0111,
+    PROMOTIONS = 0b0111,
  //   PROMOTION_CAPTURES = 0b1100,
-    PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
-    PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
+
 };
 
 class Move {
@@ -103,7 +109,9 @@ public:
 
     // this can be written so much better
     inline PieceType promotionPiece() const {
-        switch(move >> 12) {
+        return PieceType( std::max( ( (move >> 12) & PROMOTIONS) - 3, 0) );
+
+        /*
             case(PR_KNIGHT): return KNIGHT;
             case(PC_KNIGHT): return KNIGHT;
 
@@ -118,6 +126,7 @@ public:
             default: ;
         }
         return PAWN;
+        */
     }
 
     bool operator==(Move a) const { return to_from() == a.to_from(); }
@@ -162,8 +171,12 @@ public:
         resetOcc();
     }
 
-    inline Piece getMovePiece(Move move) {
+    inline Piece getMovePiece(const Move move) const {
         return mailbox[move.from()];
+    }
+
+    inline Piece getCapturedPiece(const Move move) const {
+        return mailbox[move.to()];
     }
 
 
@@ -176,6 +189,7 @@ public:
     void undo(const Move move);
     int makeMove(const Move move, const int onlyCaptures);
 
+    /*
     inline int checkParallel() {
         int countBitboards{};
         int countMailBox{};
@@ -193,5 +207,5 @@ public:
         return 0;
 
     }
-
+    */
 };

@@ -73,7 +73,7 @@ int scoreMove(const Move move) {
 		int targetPiece{ PAWN }; // in case we make an enPassant capture, which our loop would miss
 
 		// copied from makeMove function
-		targetPiece = getCapturedPiece(targetSquare);
+		targetPiece = board.getCapturedPiece(move);
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
 		return mvv_lva[movePiece][targetPiece] + captureBonus;

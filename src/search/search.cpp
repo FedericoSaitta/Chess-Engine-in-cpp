@@ -136,6 +136,7 @@ static U64 nonPawnMaterial() {
 }
 
 static int givesCheck(const Move move) {
+
 	// Returns true if the current move puts the opponent in check
 	COPY_BOARD()
 	board.makeMove(move, 0);
@@ -263,7 +264,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
-	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
+	if ( depth < 1 ) {
+		return evaluate(); // FOR NOW
+		return quiescenceSearch(alpha, beta);
+	}
 
 	nodes++;
 
@@ -305,7 +309,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			// more aggressive reduction
 			const int R = static_cast<int>(3 + depth / 3);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, DONT_NULL);
-			board.undoNullMove();
+			undoNullMove();
 
 			RESTORE_BOARD() // un-making the null move
 
@@ -410,7 +414,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			&& !givesCheck(move)) { // maybe you should use this....
+    			){
+    		//	&& !givesCheck(move)) { // maybe you should use this....
 
     			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 

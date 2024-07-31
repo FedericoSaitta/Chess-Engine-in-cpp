@@ -113,18 +113,3 @@ inline int isSqAttacked(const int square, const int side) {
 
     return 0;
 }
-
-inline int getCapturedPiece(const int targetSquare) {
-    const int startPiece { PAWN + 6 * (board.side^1) };
-    const int endPiece { KING + 6 * (board.side^1) };
-    int targetPiece{};
-
-    for (int bbPiece=startPiece; bbPiece <= endPiece; bbPiece++) {
-        if ( GET_BIT(board.bitboards[bbPiece], targetSquare) ) {
-            targetPiece = bbPiece;
-            break;
-        }
-    }
-
-    return targetPiece;
-}

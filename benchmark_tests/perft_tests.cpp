@@ -49,10 +49,6 @@ namespace Test::BenchMark {
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) {
                 continue;
             }
-
-     //       printMove(moveList.moves[moveCount].first);
-     //       board.checkParallel();
-
             perftDriver(depth - 1);
 
             board.undo(moveList.moves[moveCount].first);
@@ -90,9 +86,6 @@ namespace Test::BenchMark {
              oldNodes);
             std::cout << std::endl;
             */
-
-
-
         }
 
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
