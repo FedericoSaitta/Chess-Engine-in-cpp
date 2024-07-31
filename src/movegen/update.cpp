@@ -140,9 +140,10 @@ void Board::undo(const Move move) {
 }
 
 int Board::makeMove(const Move move, const int onlyCaptures) {
-	
+
 	if(!onlyCaptures) {
-		COPY_BOARD();
+
+		COPY_HASH();
 
 		if (history[gamePly].enPassSq != 64) { hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq]; }
 
@@ -280,7 +281,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 		if ( isSqAttacked(bsf( bitboards[KING + 6 * (side^1)] ), side)) {
 			// square is illegal so we take it back
 			undo(move);
-			RESTORE_BOARD();
+			RESTORE_HASH();
 
 			return 0;
 		}
@@ -305,3 +306,23 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	}
 	return 0;
 }
+
+
+void Board::nullMove() {
+	board.side ^= 1; // make null move
+	hashKey ^= sideKey;
+
+	board.gamePly++;
+	board.history[board.gamePly] = UndoInfo(board.history[board.gamePly - 1]);
+
+	if (board.history[board.gamePly].enPassSq != 64) {
+		hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
+	}
+}
+
+
+void Board::undoNullMove() {
+	board.side ^= 1;
+	board.gamePly--;
+}
+

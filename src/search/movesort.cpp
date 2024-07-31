@@ -4,7 +4,6 @@
 #include "../include/board.h"
 #include "../include/inline_functions.h"
 
-#include <vector>
 #include <algorithm>
 #include <utility>
 
@@ -66,17 +65,9 @@ int scoreMove(const Move move) {
 		return principalVariationBonus;
 	}
 
-	const int movePiece = board.mailbox[move.from()];
-	const int targetSquare = move.to();
-
 	if (move.is_capture()) {
-		int targetPiece{ PAWN }; // in case we make an enPassant capture, which our loop would miss
-
-		// copied from makeMove function
-		targetPiece = board.getCapturedPiece(move);
-
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
-		return mvv_lva[movePiece][targetPiece] + captureBonus;
+		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
 
 	// scoring promotions, should check this....
@@ -86,26 +77,9 @@ int scoreMove(const Move move) {
 	if (killerMoves[0][ply] == move) return firstKiller;
 	if (killerMoves[1][ply] == move) return secondKiller;
 
-	return historyScores[movePiece][targetSquare];
+	return historyScores[ board.mailbox[move.from()] ][ move.to() ];
 }
 
-/* OLD SORTING
-void sortMoves(MoveList& moveList, const int bestMove) {
-	// Pair moves with their scores
-	for (int count = 0; count < moveList.count; ++count) {
-
-	if (bestMove == moveList.moves[count].first) moveList.moves[count].second = hashTableBonus;
-	else moveList.moves[count].second = scoreMove(moveList.moves[count].first);
-	}
-
-	// Sort moves based on their scores in descending order
-	// have to use stable sort in this case, not too sure why.... but i guess can lead to slow down
-	std::stable_sort(moveList.moves, moveList.moves + moveList.count,
-					[](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-						return a.second > b.second; // Sort by score in descending order
-					});
-}
-*/
 
 void giveScores(MoveList& moveList, const Move bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {

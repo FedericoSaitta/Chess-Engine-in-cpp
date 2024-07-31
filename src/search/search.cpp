@@ -46,7 +46,7 @@ static int LMR_table[MAX_PLY][MAX_PLY];
 static int LMP_table[2][MAX_PLY];
 
 
-auto startSearchTime = std::chrono::steady_clock::now();
+std::chrono::steady_clock::time_point startSearchTime;
 std::chrono::duration<double> searchDuration{ 0.0 };
 
 void initSearchTables() {
@@ -119,7 +119,7 @@ static int getMoveTime(const bool timeConstraint) {
 	return moveTime;
 }
 static void isTimeUp() {
-	searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
+	searchDuration = std::chrono::steady_clock::now() - startSearchTime;
 	if ( (searchDuration.count() * 1'000) > timePerMove) stopSearch = 1;
 }
 static int isRepetition() {
@@ -135,16 +135,16 @@ static U64 nonPawnMaterial() {
 	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
-static int givesCheck(const Move move) {
+static int givesCheck(const Move move, Board position) {
 
 	// Returns true if the current move puts the opponent in check
-	COPY_BOARD()
-	board.makeMove(move, 0);
+	COPY_HASH()
+	position.makeMove(move, 0);
 
-	const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
+	const int opponentInCheck { isSqAttacked( bsf(position.bitboards[KING + 6 * position.side]) , position.side^1 ) };
 
-	board.undo(move);
-	RESTORE_BOARD()
+	position.undo(move);
+	RESTORE_HASH()
 	return opponentInCheck;
 }
 
@@ -179,7 +179,7 @@ static int quiescenceSearch(int alpha, const int beta) {
     for (int count=0; count < totalMoves; count++) {
     	const Move move { pickBestMove(moveList, count ) };
 
-    	COPY_BOARD()
+    	COPY_HASH()
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
@@ -196,7 +196,7 @@ static int quiescenceSearch(int alpha, const int beta) {
         ply--;
     	repetitionIndex--;
     	board.undo(move);
-        RESTORE_BOARD()
+        RESTORE_HASH()
 
  		if (stopSearch) return 0; // If the time is up, we return 0;
 
@@ -227,23 +227,6 @@ static void updateKillersAndHistory(const Move bestMove, const int depth) {
 	historyScores[board.mailbox[bestMove.from()]][bestMove.to()] += (depth * depth);
 }
 
-static void makeNullMove() {
-	hashKey ^= sideKey;
-	if (board.history[board.gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
-
-	board.side ^= 1; // make null move
-	board.history[board.gamePly].enPassSq = 64; // resetting en-passant to null-square
-
-	// we change plies so white and black killers remain in sync for negamax search
-	ply++;
-	repetitionIndex++;
-	repetitionTable[repetitionIndex] = hashKey;
-}
-
-static void undoNullMove() {
-	ply--;
-	repetitionIndex--;
-}
 
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
@@ -265,7 +248,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (ply > MAX_PLY - 1) return evaluate();
 	if ( depth < 1 ) {
-		return evaluate(); // FOR NOW
 		return quiescenceSearch(alpha, beta);
 	}
 
@@ -287,31 +269,40 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	}
 
 
-	/*
+
 	if (!pvNode && !inCheck && ply) {
 		 // WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
 		// reverse futility pruning
 		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
+
 		const int eval { ttHit ? score : evaluate() };
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
+
+
 
 		// maybe you can write TT entries here too???
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our board.side only has pawns on the board
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
-		if (depth >= 3 && nonPawnMaterial() && canNull) {
-			COPY_BOARD()
 
-			makeNullMove();
+		if (depth >= 3  && canNull && nonPawnMaterial()) {
+			COPY_HASH()
+
+			ply++;
+			repetitionIndex++;
+			repetitionTable[repetitionIndex] = hashKey;
+			board.nullMove();
 
 			// more aggressive reduction
 			const int R = static_cast<int>(3 + depth / 3);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, DONT_NULL);
-			undoNullMove();
 
-			RESTORE_BOARD() // un-making the null move
+			board.undoNullMove();
+			ply--;
+			repetitionIndex--;
+			RESTORE_HASH() // un-making the null move
 
 			if (stopSearch) return 0;
 			if (nullMoveScore >= beta) return beta;
@@ -354,7 +345,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			}
 		}
 	}
-	*/
+
 
     MoveList moveList;
     generateMoves(moveList);
@@ -389,7 +380,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		}
     	}
 
-        COPY_BOARD()
+        COPY_HASH()
         ply++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
@@ -414,8 +405,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			){
-    		//	&& !givesCheck(move)) { // maybe you should use this....
+    			&& !givesCheck(move, board)) { // maybe you should use this....
 
     			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 
@@ -435,7 +425,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         ply--;
     	repetitionIndex--;
     	board.undo(move);
-        RESTORE_BOARD()
+        RESTORE_HASH()
 
     	if (stopSearch) return 0;
 
@@ -554,18 +544,18 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		// check if we need to send mating scores
 		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
 			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
-			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
 			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
-			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 		} else {
 			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
-			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << '\n';
+			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 		}
 		currentDepth++; // we can proceed to the next iteration
 
     }
-    std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << '\n';
+    std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 
 	// Post searching cleanups that can be done during the opponent's turn
 	ageHistoryTable();

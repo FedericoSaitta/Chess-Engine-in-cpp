@@ -110,23 +110,6 @@ public:
     // this can be written so much better
     inline PieceType promotionPiece() const {
         return PieceType( std::max( ( (move >> 12) & PROMOTIONS) - 3, 0) );
-
-        /*
-            case(PR_KNIGHT): return KNIGHT;
-            case(PC_KNIGHT): return KNIGHT;
-
-            case(PR_BISHOP): return BISHOP;
-            case(PC_BISHOP): return BISHOP;
-
-            case(PR_ROOK): return ROOK;
-            case(PC_ROOK): return ROOK;
-
-            case(PR_QUEEN): return QUEEN;
-            case(PC_QUEEN): return QUEEN;
-            default: ;
-        }
-        return PAWN;
-        */
     }
 
     bool operator==(Move a) const { return to_from() == a.to_from(); }
@@ -188,6 +171,9 @@ public:
 
     void undo(const Move move);
     int makeMove(const Move move, const int onlyCaptures);
+
+    void nullMove();
+    void undoNullMove();
 
     /*
     inline int checkParallel() {

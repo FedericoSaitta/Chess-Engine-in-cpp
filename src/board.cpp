@@ -107,3 +107,5 @@ void parseFEN(const std::string& fenString) {
     // Now we initialize the zobrist hash key
     hashKey = generateHashKey();
 }
+
+

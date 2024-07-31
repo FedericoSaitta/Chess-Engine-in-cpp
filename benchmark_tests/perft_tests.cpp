@@ -15,6 +15,9 @@
 #include "board.h"
 #include "misc.h"
 #include "../src/movegen/movegen.h"
+#include <sstream>
+#include <filesystem>
+#include <fstream>
 
 
 static std::vector<std::string> split(const std::string &str, const char delimiter) {
@@ -44,7 +47,7 @@ namespace Test::BenchMark {
 
         for (int moveCount = 0; moveCount < moveList.count; moveCount++)
         {
-            COPY_BOARD();
+            COPY_HASH();
 
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) {
                 continue;
@@ -52,7 +55,7 @@ namespace Test::BenchMark {
             perftDriver(depth - 1);
 
             board.undo(moveList.moves[moveCount].first);
-            RESTORE_BOARD();
+            RESTORE_HASH();
         }
     }
 
@@ -65,7 +68,7 @@ namespace Test::BenchMark {
         generateMoves(moveList);
 
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
-            COPY_BOARD();
+            COPY_HASH();
 
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) continue;
 
@@ -74,7 +77,7 @@ namespace Test::BenchMark {
             perftDriver(depth - 1);
 
             board.undo(moveList.moves[moveCount].first);
-            RESTORE_BOARD();
+            RESTORE_HASH();
 
             // Print parent moves for debugging purposes
             /*
@@ -94,7 +97,7 @@ namespace Test::BenchMark {
             // print results
             printf("Depth: %d", depth);
             std::cout << " Nodes: " << nodes;
-            std::cout << " Time: " << duration;
+            std::cout << " Time: " << duration.count();
             std::cout << " MNodes/s: " << nodes / (duration.count() * 1'000'000);
         }
 
@@ -104,8 +107,10 @@ namespace Test::BenchMark {
     // prints in red benchmark_tests that have not passed
     void standardPerft() {
 
-        std::ifstream file("/Users/federicosaitta/CLionProjects/ChessEngine/benchmark_tests/resources/standard.epd"); // Replace with the actual file path
-        if (!file.is_open()) {
+      //  std::filesystem::path epdPath = std::filesystem::current_path() / "resources" / "file.epd";
+        std::ifstream epdFile("../benchmark_tests/standard.epd");
+
+        if (!epdFile.is_open()) {
             std::cerr << "Failed to open the file." << std::endl;
         }
 
@@ -114,7 +119,7 @@ namespace Test::BenchMark {
         const auto start = std::chrono::high_resolution_clock::now();
 
         std::string line{};
-        while (std::getline(file, line)) {
+        while (std::getline(epdFile, line)) {
 
             std::vector<std::string> tokens = split(line, ';');
 
@@ -141,6 +146,6 @@ namespace Test::BenchMark {
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
         std::cout << "Perft suite took: " << duration.count() << "s, Nodes: " << totalNodes << '\n';
 
-        file.close();
+        epdFile.close();
     }
 }
