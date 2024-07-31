@@ -28,7 +28,7 @@ static const int castlingRightsConstant[64] = {
 
 
 //Moves a piece to an empty square. Note that it is an error if the <to> square contains a piece
-void Board::move_piece_quiet(const int from, const int to) {
+void Board::movePieceQuiet(const int from, const int to) {
     const Piece piece { mailbox[from] };
 
     hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
@@ -40,7 +40,7 @@ void Board::move_piece_quiet(const int from, const int to) {
 
 }
 
-void Board::move_piece(const int from, const int to) {
+void Board::movePiece(const int from, const int to) {
 	
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
@@ -56,13 +56,13 @@ void Board::move_piece(const int from, const int to) {
 	mailbox[from] = NO_PIECE;
 }
 
-void Board::put_piece(Piece pc, int s) {
+void Board::putPiece(const Piece pc, const int s) {
 	mailbox[s] = pc;
 	bitboards[pc] |= (1ULL << s);
 	hashKey ^= randomPieceKeys[pc][s];
 }
 
-void Board::remove_piece(const int s) {
+void Board::removePiece(const int s) {
 	// for now just checking
 	hashKey ^= randomPieceKeys[mailbox[s]][s];
 	bitboards[mailbox[s]] &= ~(1ULL << s);
@@ -74,57 +74,56 @@ void Board::remove_piece(const int s) {
 void Board::undo(const Move move) {
 	MoveFlags type = move.flags();
 	const Color C { static_cast<Color>(side) };
-	const Color Opponent { static_cast<Color>(side^1) };
 
 	switch (type) {
 		case QUIET:
-			move_piece_quiet(move.to(), move.from());
+			movePieceQuiet(move.to(), move.from());
 		break;
 		case DOUBLE_PUSH:
-			move_piece_quiet(move.to(), move.from());
+			movePieceQuiet(move.to(), move.from());
 		break;
 		case OO:
 			if (C == BLACK) {
-				move_piece_quiet(G1, E1);
-				move_piece_quiet(F1, H1);
+				movePieceQuiet(G1, E1);
+				movePieceQuiet(F1, H1);
 			} else {
-				move_piece_quiet(G8, E8);
-				move_piece_quiet(F8, H8);
+				movePieceQuiet(G8, E8);
+				movePieceQuiet(F8, H8);
 			}
 		break;
 		case OOO:
 			if (C == BLACK) {
-				move_piece_quiet(C1, E1);
-				move_piece_quiet(D1, A1);
+				movePieceQuiet(C1, E1);
+				movePieceQuiet(D1, A1);
 			} else {
-				move_piece_quiet(C8, E8);
-				move_piece_quiet(D8, A8);
+				movePieceQuiet(C8, E8);
+				movePieceQuiet(D8, A8);
 			}
 		break;
 		case EN_PASSANT:
-			move_piece_quiet(move.to(), move.from());
-			put_piece(make_piece(C, PAWN), move.to() + ((C == WHITE) ? 8 : -8));
+			movePieceQuiet(move.to(), move.from());
+			putPiece(make_piece(C, PAWN), move.to() + ((C == WHITE) ? 8 : -8));
 
 		break;
 		case PR_KNIGHT:
 		case PR_BISHOP:
 		case PR_ROOK:
 		case PR_QUEEN:
-			remove_piece(move.to());
-		    put_piece(make_piece(~C, PAWN), move.from());
+			removePiece(move.to());
+		    putPiece(make_piece(~C, PAWN), move.from());
 
 		break;
 		case PC_KNIGHT:
 		case PC_BISHOP:
 		case PC_ROOK:
 		case PC_QUEEN:
-			remove_piece(move.to());
-			put_piece(make_piece(~C, PAWN), move.from());
-			put_piece(history[gamePly].captured, move.to());
+			removePiece(move.to());
+			putPiece(make_piece(~C, PAWN), move.from());
+			putPiece(history[gamePly].captured, move.to());
 		break;
 		case CAPTURE:
-			move_piece_quiet(move.to(), move.from());
-			put_piece(history[gamePly].captured, move.to());
+			movePieceQuiet(move.to(), move.from());
+			putPiece(history[gamePly].captured, move.to());
 		break;
 	}
 
@@ -147,28 +146,25 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 		if (history[gamePly].enPassSq != 64) { hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq]; }
 
-		// these is something funky going on with this
 		side ^= 1; // change side
 		hashKey ^= sideKey;
 
 		++gamePly;
 		history[gamePly] = UndoInfo(history[gamePly - 1]);
 
-		MoveFlags type = move.flags();
-
-		const Color C { static_cast<Color>(side) };
-		const Color sideWhoMoved { static_cast<Color>(side^1) };
+		const MoveFlags type = move.flags();
+		const auto C { static_cast<Color>(side) };
 
 		switch (type) {
 			case QUIET:
 				//The to square is guaranteed to be empty here
-				move_piece_quiet(move.from(), move.to());
+				movePieceQuiet(move.from(), move.to());
 			break;
 
 			case DOUBLE_PUSH:
-				move_piece_quiet(move.from(), move.to());
+				movePieceQuiet(move.from(), move.to());
 
-				if (side == WHITE) {
+				if (C == WHITE) {
 					history[gamePly].enPassSq = move.to() + 8;
 					hashKey ^= randomEnPassantKeys[move.to() + 8];
 
@@ -182,81 +178,81 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 			case OO:
 				if (C == BLACK) {
-					move_piece_quiet(E1, G1);
-					move_piece_quiet(H1, F1);
+					movePieceQuiet(E1, G1);
+					movePieceQuiet(H1, F1);
 				} else {
-					move_piece_quiet(E8, G8);
-					move_piece_quiet(H8, F8);
+					movePieceQuiet(E8, G8);
+					movePieceQuiet(H8, F8);
 				}			
 				break;
 
 			case OOO:
 				if (C == BLACK) {
-					move_piece_quiet(E1, C1);
-					move_piece_quiet(A1, D1);
+					movePieceQuiet(E1, C1);
+					movePieceQuiet(A1, D1);
 				} else {
-					move_piece_quiet(E8, C8);
-					move_piece_quiet(A8, D8);
+					movePieceQuiet(E8, C8);
+					movePieceQuiet(A8, D8);
 				}
 				break;
 
 			case EN_PASSANT:
-				move_piece_quiet(move.from(), move.to());
-				if (side == WHITE) {
-					remove_piece(move.to() + 8);
+				movePieceQuiet(move.from(), move.to());
+				if (C == WHITE) {
+					removePiece(move.to() + 8);
 				} else {
-					remove_piece(move.to() - 8);
+					removePiece(move.to() - 8);
 				}
 			break;
 
 			case PR_KNIGHT:
-				remove_piece(move.from());
-				put_piece(make_piece(~C, KNIGHT), move.to());
+				removePiece(move.from());
+				putPiece(make_piece(~C, KNIGHT), move.to());
 			break;
 			case PR_BISHOP:
-				remove_piece(move.from());
-			put_piece(make_piece(~C, BISHOP), move.to());
+				removePiece(move.from());
+			putPiece(make_piece(~C, BISHOP), move.to());
 			break;
 			case PR_ROOK:
-				remove_piece(move.from());
-			put_piece(make_piece(~C, ROOK), move.to());
+				removePiece(move.from());
+			putPiece(make_piece(~C, ROOK), move.to());
 			break;
 			case PR_QUEEN:
-				remove_piece(move.from());
-			put_piece(make_piece(~C, QUEEN), move.to());
+				removePiece(move.from());
+			putPiece(make_piece(~C, QUEEN), move.to());
 			break;
 			case PC_KNIGHT:
-				remove_piece(move.from());
+				removePiece(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			remove_piece(move.to());
+			removePiece(move.to());
 
-			put_piece(make_piece(~C, KNIGHT), move.to());
+			putPiece(make_piece(~C, KNIGHT), move.to());
 			break;
 			case PC_BISHOP:
-				remove_piece(move.from());
+				removePiece(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			remove_piece(move.to());
+			removePiece(move.to());
 
-			put_piece(make_piece(~C, BISHOP), move.to());
+			putPiece(make_piece(~C, BISHOP), move.to());
 			break;
 			case PC_ROOK:
-				remove_piece(move.from());
+				removePiece(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			remove_piece(move.to());
+			removePiece(move.to());
 
-			put_piece(make_piece(~C, ROOK), move.to());
+			putPiece(make_piece(~C, ROOK), move.to());
 			break;
 			case PC_QUEEN:
-				remove_piece(move.from());
+				removePiece(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			remove_piece(move.to());
+			removePiece(move.to());
 
-			put_piece(make_piece(~C, QUEEN), move.to());
+			putPiece(make_piece(~C, QUEEN), move.to());
 			break;
 
 			case CAPTURE:
 			history[gamePly].captured = mailbox[move.to()];
-			move_piece(move.from(), move.to());
+			movePiece(move.from(), move.to());
 			
 			break;
 		}
@@ -300,7 +296,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	}
 	
 	// used in Quiescent search
-	if ( move.is_capture() ) {
+	if ( move.isCapture() ) {
 		return makeMove(move, 0); // make the move
 		// forgetting this return statement causes issues within the quiescence search
 	}
@@ -309,17 +305,13 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 
 void Board::nullMove() {
-	board.side ^= 1; // make null move
 	hashKey ^= sideKey;
+	if (board.history[board.gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
 
+	board.side ^= 1; // make null move
 	board.gamePly++;
 	board.history[board.gamePly] = UndoInfo(board.history[board.gamePly - 1]);
-
-	if (board.history[board.gamePly].enPassSq != 64) {
-		hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
-	}
 }
-
 
 void Board::undoNullMove() {
 	board.side ^= 1;

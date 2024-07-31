@@ -126,10 +126,34 @@ std::string algebraicNotation(const Move move) {
 }
 
 
+std::string getStringFlags(const MoveFlags flag) {
+    switch(flag) {
+        case QUIET: return "QUIET";
+        case DOUBLE_PUSH: return "DOUBLE PUSH";
+        case OO: return "OO";
+        case OOO: return "OOO";
+
+        case PR_KNIGHT: return "PR_KNIGHT";
+        case PR_BISHOP: return "PR_BISHOP";
+        case PR_ROOK: return "PR_ROOK";
+        case PR_QUEEN: return "PR_QUEEN";
+
+        case EN_PASSANT: return "EN_PASSANT";
+
+        case PC_KNIGHT: return "PC_KNIGHT";
+        case PC_BISHOP: return "PC_BISHOP";
+        case PC_ROOK: return "PC_ROOK";
+        case PC_QUEEN: return "PC_QUEEN";
+
+        case CAPTURE: return "CAPTURE";
+        default: break;
+    }
+    return " ";
+}
+
 // mainly for debugging purposes
 void printMovesList(const MoveList& moveList) {
-    std::cout << "Move  Piece PromPiece Capture DoublePush EnPassant Castling \n";
-
+    std::cout << "Move  BIT-Flags \n";
 
     for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
         const Move move {moveList.moves[moveCount].first};
@@ -137,15 +161,7 @@ void printMovesList(const MoveList& moveList) {
                           chessBoard[move.to()],
                           promotedPieces[move.promotionPiece()] );
 
-        std::cout << std::bitset<8> (move.flags());
-
-      //  std::cout << ( unicodePieces[board.getMovePiece(move)] ) << "      ";
-    //    std::cout << ( ((move.promotionPiece() != 0)) ? unicodePieces[move.promotionPiece()] : "0" )<< "         ";
-    //    std::cout << ((move.is_capture() > 0) ? 1 : 0) << "        ";
-      //  std::cout << ((getMoveDoublePush(move) > 0) ? 1 : 0) << "          ";
-    //    std::cout << ((getMoveEnPassant(move) > 0) ? 1 : 0) << "         ";
-     //  std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
-        std::cout << '\n';
+        std::cout << std::bitset<4> (move.flags()) << "   " << getStringFlags(move.flags()) << '\n';
     }
 
 }

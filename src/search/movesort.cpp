@@ -57,7 +57,7 @@ constexpr int firstKiller{ 9'000 };
 constexpr int secondKiller{ 8'000 };
 
 int scoreMove(const Move move) {
-	if (scorePV && (pvTable[0][ply] == move)) {
+	if (scorePV && (pvTable[0][searchPly] == move)) {
 		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
 		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
 		// note that because of null move and late more pruning this will not print nicely because higher depths plies are
@@ -65,7 +65,7 @@ int scoreMove(const Move move) {
 		return principalVariationBonus;
 	}
 
-	if (move.is_capture()) {
+	if (move.isCapture()) {
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
@@ -74,8 +74,8 @@ int scoreMove(const Move move) {
 	const int promPiece { move.promotionPiece() };
 	if (promPiece != 0) return mvv_lva[PAWN][promPiece] + captureBonus;
 
-	if (killerMoves[0][ply] == move) return firstKiller;
-	if (killerMoves[1][ply] == move) return secondKiller;
+	if (killerMoves[0][searchPly] == move) return firstKiller;
+	if (killerMoves[1][searchPly] == move) return secondKiller;
 
 	return historyScores[ board.mailbox[move.from()] ][ move.to() ];
 }

@@ -27,6 +27,7 @@ include_directories(
         eval
         search
         movegen
+        logger
 )
 
 # Source files
@@ -70,6 +71,7 @@ set(SOURCE_FILES
         benchmark_tests/benchmark_tests.h
         debug_tests/debug_tests.h
         src/search/searchparams.h
+        src/logger/logger.h
 )
 
 # Add executable

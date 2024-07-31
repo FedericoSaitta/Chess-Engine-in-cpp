@@ -12,7 +12,6 @@ namespace Test::Debug {
     void countBishopMoves_noEdges();
     void countRookMoves_noEdges();
 
-    void moveEncodingAndDecoding();
     void moveSorting();
 
     void printMoveOrdering();

@@ -18,7 +18,7 @@ enum NodeType {
 #define MATE_VALUE 49'000
 #define MATE_SCORE 48'000 // this is more like a boundary to the scores
 
-extern int ply;
+extern int searchPly;
 extern U64 repetitionTable[1'000];
 extern int repetitionIndex;
 

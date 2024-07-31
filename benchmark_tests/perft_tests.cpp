@@ -80,15 +80,14 @@ namespace Test::BenchMark {
             RESTORE_HASH();
 
             // Print parent moves for debugging purposes
-            /*
 
             const std::int64_t oldNodes {nodes - cumulativeNodes};
-            printf("     move: %s%s%c  nodes: %ld", chessBoard[moveList.moves[moveCount].first.from()],
+            printf("     move: %s%s%c  nodes: %lld", chessBoard[moveList.moves[moveCount].first.from()],
              chessBoard[(moveList.moves[moveCount].first.to())],
              promotedPieces[moveList.moves[moveCount].first.promotionPiece()],
              oldNodes);
             std::cout << std::endl;
-            */
+
         }
 
         const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;

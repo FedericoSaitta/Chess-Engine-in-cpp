@@ -17,6 +17,8 @@
 #include "benchmark_tests.h"
 #include "debug_tests.h"
 
+#include "logger/logger.h"
+
 
 int gameLengthTime{};
 int whiteClockTime{};
@@ -85,10 +87,8 @@ static void handlePosition(const std::vector<std::string>& tokens) {
             if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move is != 0
                 repetitionIndex++;
                 repetitionTable[repetitionIndex] = hashKey;
-                if (!board.makeMove(move, 0)) {  }
-
-            } else {
-            }
+                if (board.makeMove(move, 0) == 0) { logFile.logError("Move is illegal" + tokens[index] ); };
+            } else { logFile.logError("Move is Null" + tokens[index] ); }
 
         }
     }
@@ -121,6 +121,7 @@ static void handleGo(const std::vector<std::string>& tokens) {
             gameLengthTime = whiteClockTime;
             isNewGame = false;
         }
+        logFile.logInfo("Calling Iterative  Deepening");
         iterativeDeepening(64, true);
     }
     else if (tokens[1] == "movetime") {
@@ -139,9 +140,7 @@ static void handleGo(const std::vector<std::string>& tokens) {
         iterativeDeepening(64, true);
     }
 
-    else { // also look at how your GUI tells you the time
-    //    std::cout << "Input could not be recognised\n";
-    //    logFile << "Unrecognized input " << tokens[1] << '\n';
+    else { logFile.logError("Unrecognized go input" + tokens[1]);
     }
 }
 
@@ -165,6 +164,8 @@ void UCI() {
         std::vector<std::string> tokens = split(line);
         if (tokens.empty()) { continue; }
         const std::string command = tokens[0];
+
+        logFile.logInfo(line);
 
         // UCI COMMANDS
         if ( command == "uci") handleUci();

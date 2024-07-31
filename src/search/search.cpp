@@ -26,11 +26,12 @@
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
 #include "movesort.h"
+#include "../logger/logger.h"
 
 U64 repetitionTable[1'000]{};
 int repetitionIndex{};
 
-int ply{};
+int searchPly{};
 static std::int64_t nodes{};
 
 Move killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
@@ -74,7 +75,10 @@ static void resetSearchStates() {
 	nodes = 0;
 	followPV = 0;
 	scorePV = 0;
-	ply = 0;
+	searchPly = 0;
+
+
+
 
 	stopSearch = 0;
 }
@@ -92,7 +96,7 @@ static void ageHistoryTable() {
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
-        if ( moveList.moves[count].first == pvTable[0][ply] ) {
+        if ( moveList.moves[count].first == pvTable[0][searchPly] ) {
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
         	break; 
@@ -155,7 +159,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 	nodes++;
 
-    if ( ply > (MAX_PLY - 1) ) return evaluate();
+    if ( searchPly > (MAX_PLY - 1) ) return evaluate();
 
     const int standPat{ evaluate() };
 
@@ -180,20 +184,20 @@ static int quiescenceSearch(int alpha, const int beta) {
     	const Move move { pickBestMove(moveList, count ) };
 
     	COPY_HASH()
-        ply++;
+        searchPly++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
         // board.undo Illegal Moves or non-captures
         if( !board.makeMove(move, 1) ) {
-            ply--;
+            searchPly--;
         	repetitionIndex--;
             continue;
         }
 
         const int score = -quiescenceSearch(-beta, -alpha);
 
-        ply--;
+        searchPly--;
     	repetitionIndex--;
     	board.undo(move);
         RESTORE_HASH()
@@ -218,9 +222,9 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 static void updateKillersAndHistory(const Move bestMove, const int depth) {
-//	if (killerMoves[0][ply] != bestMove) { // FROM WEISS CHESS ENGINE
-		killerMoves[1][ply] = killerMoves[0][ply];
-		killerMoves[0][ply] = bestMove; // store killer moves
+	//if (killerMoves[0][searchPly] != bestMove) { // FROM WEISS CHESS ENGINE
+		killerMoves[1][searchPly] = killerMoves[0][searchPly];
+		killerMoves[0][searchPly] = bestMove; // store killer moves
 //	}
 
 	// can do more sophisticated code tho, not giving maluses for now
@@ -230,11 +234,11 @@ static void updateKillersAndHistory(const Move bestMove, const int depth) {
 
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
-	pvLength[ply] = ply;
+	pvLength[searchPly] = searchPly;
 	Move bestMove {};
 	int bestEval {-INF - 1};
 
-	if (ply && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
+	if (searchPly && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
 
 	const bool pvNode = (beta - alpha) > 1; // Trick used to find if current node is pvNode
 
@@ -242,14 +246,13 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	// ply && used to ensure we dont read from the transposition table at the root node
 	int score = probeHash(alpha, beta, &bestMove, depth);
 	const bool ttHit = score != NO_HASH_ENTRY;
-	if (ply && ttHit && !pvNode) return score;
+	if (searchPly && ttHit && !pvNode) return score;
 
 
 	if ((nodes & 4095) == 0) isTimeUp();
-	if (ply > MAX_PLY - 1) return evaluate();
-	if ( depth < 1 ) {
-		return quiescenceSearch(alpha, beta);
-	}
+	if (searchPly > MAX_PLY - 1) return evaluate();
+	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
+
 
 	nodes++;
 
@@ -268,9 +271,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			return staticEval - 120 * depth;
 	}
 
-
-
-	if (!pvNode && !inCheck && ply) {
+	if (!pvNode && !inCheck && searchPly) {
 		 // WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
 		// reverse futility pruning
 		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
@@ -278,8 +279,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		const int eval { ttHit ? score : evaluate() };
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
-
-
 
 		// maybe you can write TT entries here too???
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
@@ -290,17 +289,18 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		if (depth >= 3  && canNull && nonPawnMaterial()) {
 			COPY_HASH()
 
-			ply++;
-			repetitionIndex++;
-			repetitionTable[repetitionIndex] = hashKey;
 			board.nullMove();
 
+			searchPly++;
+			repetitionIndex++;
+			repetitionTable[repetitionIndex] = hashKey;
+
 			// more aggressive reduction
-			const int R = static_cast<int>(3 + depth / 3);
+			const int R = 3 + depth / 3;
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, DONT_NULL);
 
 			board.undoNullMove();
-			ply--;
+			searchPly--;
 			repetitionIndex--;
 			RESTORE_HASH() // un-making the null move
 
@@ -346,7 +346,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		}
 	}
 
-
     MoveList moveList;
     generateMoves(moveList);
 
@@ -366,12 +365,12 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	const Move move { pickBestMove(moveList, count ) };
 
     	// En-passant are captures, so they are non-quiet
-    	const bool isQuiet = ( !move.is_capture() && !move.is_promotion());
+    	const bool isQuiet = ( !move.isCapture() && !move.isPromotion());
 
     	if (isQuiet && skipQuietMoves) continue;
 
     	// ****  LATE MOVE PRUNING (LMP) **** //
-    	if (ply && !inCheck && isQuiet && alpha > -MATE_SCORE) {
+    	if (searchPly && !inCheck && isQuiet && alpha > -MATE_SCORE) {
 
     		// parameters obtained from CARP
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
@@ -381,13 +380,13 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	}
 
         COPY_HASH()
-        ply++;
+        searchPly++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
         // board.undo Illegal Moves
         if( !board.makeMove(move, 0) ) { // meaning its illegal
-            ply--;
+            searchPly--;
         	repetitionIndex--;
             continue;
         }
@@ -422,7 +421,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		}
     	}
 
-        ply--;
+        searchPly--;
     	repetitionIndex--;
     	board.undo(move);
         RESTORE_HASH()
@@ -440,13 +439,13 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         		alpha = score;
         		bestMove = move; // store best move (for TT)
 
-        		pvTable[ply][ply] = move;
+        		pvTable[searchPly][searchPly] = move;
         		// copy move from deeper plies to curernt ply
-        		for (int nextPly = (ply+1); nextPly < pvLength[ply + 1]; nextPly++) {
-        			pvTable[ply][nextPly] = pvTable[ply + 1][nextPly];
+        		for (int nextPly = (searchPly+1); nextPly < pvLength[searchPly + 1]; nextPly++) {
+        			pvTable[searchPly][nextPly] = pvTable[searchPly + 1][nextPly];
         		}
 
-        		pvLength[ply] = pvLength[ply + 1];
+        		pvLength[searchPly] = pvLength[searchPly + 1];
 
 
         		// fail-hard beta cut off
@@ -467,7 +466,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         if (inCheck) {
         	// we need to adjust this before sending it to the transposition table to make it independent of the path
         	// from the root node to the mating node
-            return -MATE_VALUE+ ply; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
+            return -MATE_VALUE+ searchPly; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
         }
         return 0; // we are in stalemate
     }
@@ -493,28 +492,29 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {
+	logFile.logInfo("Resetting The Board States");
 	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint);
 
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
-	assert( (timePerMove > 0) && "Negative Time Per Move");
+
+	if (timePerMove < 0) logFile.logWarning("Negatime Time Per Move");
 
 	int alpha { -INF };
 	int beta { INF };
 
-
 	startSearchTime = std::chrono::high_resolution_clock::now();
+
+	logFile.logInfo("Starting Search");
+	logFile.log( board.gamePly );
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
 
 		if (stopSearch) break;
-		searchDuration = std::chrono::high_resolution_clock::now() - startSearchTime;
+		searchDuration = std::chrono::steady_clock::now() - startSearchTime;
 		if ( (searchDuration.count() * 1'000) > softTimeLimit) {
-		//	std::cout << "stopped by soft limit" << '\n';
-		//	std::cout << softTimeLimit << '\n';
-		//	std::cout << "time per move: " << timePerMove << '\n';
 			break;
 		}
 
@@ -545,6 +545,8 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
 			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
+
+
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
 			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
@@ -552,11 +554,17 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 		}
+
+		logFile.logInfo("In Iterative Deepening");
 		currentDepth++; // we can proceed to the next iteration
 
     }
+
+	logFile.log( board.gamePly );
+
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 
-	// Post searching cleanups that can be done during the opponent's turn
-	ageHistoryTable();
+	logFile.logInfo("bestmove " + algebraicNotation(pvTable[0][0]));
+
+	ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
 }

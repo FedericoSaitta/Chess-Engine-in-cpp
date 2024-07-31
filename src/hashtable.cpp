@@ -89,8 +89,8 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
 
             // extracted stores score fmor transposition table
             int score = hashEntry->score;
-            if (score < -MATE_SCORE) score += ply;
-            if (score > MATE_SCORE) score -= ply;
+            if (score < -MATE_SCORE) score += searchPly;
+            if (score > MATE_SCORE) score -= searchPly;
 
             if (hashEntry->flag == HASH_FLAG_EXACT)
                 return score;
@@ -113,8 +113,8 @@ void recordHash(int score, const Move bestMove, const int flag, const int depth)
     tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
 
     // independent from distance of path taken from root node to current mating position
-    if (score < -MATE_SCORE) score += ply;
-    if (score > MATE_SCORE) score -= ply;
+    if (score < -MATE_SCORE) score += searchPly;
+    if (score > MATE_SCORE) score -= searchPly;
 
     hashEntry->hashKey = hashKey;
     hashEntry->score = score;

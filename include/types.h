@@ -58,29 +58,30 @@ struct UndoInfo {
 };
 
 enum MoveFlags : int {
-    QUIET = 0b0000, DOUBLE_PUSH = 0b0001,
+    QUIET = 0b0000,
+    DOUBLE_PUSH = 0b0001,
     OO = 0b0010, OOO = 0b0011,
 
     PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
 
-    CAPTURE = 0b1000,
+
+    EN_PASSANT = 0b1010,
 
     PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
 
+    CAPTURE = 0b1000,   // All captures (en-passant too) have the fourth bit set
+    PROMOTION = 0b0100, // All promotions have the third bit set
 
-  //  CAPTURES = 0b1111,
-    EN_PASSANT = 0b1010,
     PROMOTIONS = 0b0111,
+    //  CAPTURES = 0b1111,
  //   PROMOTION_CAPTURES = 0b1100,
 
 };
 
 class Move {
 private:
-    //The internal representation of the move
     uint16_t move;
 public:
-    //Defaults to a null move (a1a1)
     inline Move() : move(0) {}
 
     inline Move(uint16_t m) { move = m; }
@@ -98,18 +99,18 @@ public:
     inline int to_from() const { return move & 0xffff; }
     inline MoveFlags flags() const { return MoveFlags((move >> 12) & 0xf); }
 
-    inline bool is_capture() const {
-        return (move >> 12) & CAPTURE;
+    inline bool isCapture() const {
+        return flags() & CAPTURE;
     }
 
     // this is also quite sketchy
-    inline bool is_promotion() const {
-        return (move >> 12) > 3;
+    inline bool isPromotion() const {
+        return flags() & PROMOTION;
     }
 
     // this can be written so much better
     inline PieceType promotionPiece() const {
-        return PieceType( std::max( ( (move >> 12) & PROMOTIONS) - 3, 0) );
+        return PieceType( std::max( ( flags() & PROMOTIONS) - 3, 0) );
     }
 
     bool operator==(Move a) const { return to_from() == a.to_from(); }
@@ -121,7 +122,7 @@ class Board {
 
 public:
     UndoInfo history[256];
-    U64 bitboards[15]; // last 3 represent the occupancies
+    U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
 
     Piece mailbox[64];
 
@@ -136,13 +137,19 @@ public:
 
     inline void resetBoard() {
         memset(bitboards, 0ULL, sizeof(bitboards));
+        memset(history, 0, sizeof(history));
 
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
+
+        gamePly = 0;
 
         side = WHITE;
         history[gamePly].enPassSq = 64;
         history[gamePly].castle = 0;
+        history[gamePly].captured = NO_PIECE;
+
     }
+
     inline void resetOcc() {
         bitboards[WHITE_OCC] = 0ULL;
         bitboards[BLACK_OCC] = 0ULL;
@@ -154,44 +161,18 @@ public:
         resetOcc();
     }
 
-    inline Piece getMovePiece(const Move move) const {
-        return mailbox[move.from()];
-    }
+    inline Piece getMovedPiece(const Move move) const {return mailbox[move.from()];}
+    inline Piece getCapturedPiece(const Move move) const { return mailbox[move.to()]; }
 
-    inline Piece getCapturedPiece(const Move move) const {
-        return mailbox[move.to()];
-    }
+    void movePiece(int from, int to);
+    void movePieceQuiet(int from, int to);
 
+    void putPiece(Piece pc, int s);
+    void removePiece(int s);
 
-    void move_piece(const int from, const int to);
-    void move_piece_quiet(const int from, const int to);
+    void undo(Move move);
+    int makeMove(Move move, int onlyCaptures);
 
-    void put_piece(Piece pc, int s);
-    void remove_piece(const int s);
-
-    void undo(const Move move);
-    int makeMove(const Move move, const int onlyCaptures);
-
-    void nullMove();
-    void undoNullMove();
-
-    /*
-    inline int checkParallel() {
-        int countBitboards{};
-        int countMailBox{};
-
-        for (int i=0; i < 12; i++) countBitboards += std::popcount(bitboards[i]);
-
-        for (int sq=0; sq<64; sq++) {
-            if (mailbox[sq] != NO_PIECE) countMailBox++;
-        }
-
-        if (countBitboards != countMailBox) {
-            std::cerr << "Counts differ" << std::endl;
-            return 1;
-        }
-        return 0;
-
-    }
-    */
+    static void nullMove();
+    static void undoNullMove();
 };

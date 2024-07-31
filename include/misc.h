@@ -22,6 +22,7 @@ extern const char promotedPieces[];
 extern const char* unicodePieces[];
 
 std::string algebraicNotation(Move move);
+std::string getStringFlags(MoveFlags flag);
 
 Move parseMove(std::string_view move);
 void printHistoryInfo();
