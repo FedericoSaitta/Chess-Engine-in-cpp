@@ -52,7 +52,7 @@ void generateMoves(MoveList& moveList) {
 
                         } else {
                             // one square ahead
-                            addMove(moveList, Move(startSquare, targetSquare) );
+                            addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                             // two square ahead
                             if ( (startSquare >= A2) && (startSquare <= H2) && !GET_BIT(board.bitboards[BOTH_OCC], targetSquare + 8)) {
@@ -79,8 +79,8 @@ void generateMoves(MoveList& moveList) {
                     }
 
                     // generate enPassantCaptures
-                    if (board.enPassantSq != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[WHITE][startSquare] & (1ULL << board.enPassantSq);
+                    if (board.history[board.gamePly].enPassSq != 64) {
+                        U64 enPassantAttacks = bitPawnAttacks[WHITE][startSquare] & (1ULL << board.history[board.gamePly].enPassSq);
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
@@ -92,7 +92,7 @@ void generateMoves(MoveList& moveList) {
 
             if (piece == KING) {
                 // king board.side castling
-                if (board.castle & WK) {
+                if (board.history[board.gamePly].castle & WK) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F1) && !GET_BIT(board.bitboards[BOTH_OCC], G1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(F1, BLACK) ) {
@@ -102,7 +102,7 @@ void generateMoves(MoveList& moveList) {
                 }
 
                 //QUEEN board.side castling
-                if (board.castle & WQ) {
+                if (board.history[board.gamePly].castle & WQ) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B1) && !GET_BIT(board.bitboards[BOTH_OCC], C1) && !GET_BIT(board.bitboards[BOTH_OCC], D1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(D1, BLACK) ) {
@@ -133,7 +133,7 @@ void generateMoves(MoveList& moveList) {
 
                         } else {
                             // one square ahead
-                            addMove(moveList, Move(startSquare, targetSquare) );
+                            addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                             // two squares ahead
                             if ( (startSquare >= A7) && (startSquare <= H7) && !GET_BIT(board.bitboards[BOTH_OCC], targetSquare - 8)) {
@@ -159,8 +159,8 @@ void generateMoves(MoveList& moveList) {
                         }
                     }
                     // generate enPassantCaptures
-                    if (board.enPassantSq != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[BLACK][startSquare] & (1ULL << board.enPassantSq);
+                    if (board.history[board.gamePly].enPassSq != 64) {
+                        U64 enPassantAttacks = bitPawnAttacks[BLACK][startSquare] & (1ULL << board.history[board.gamePly].enPassSq);
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
@@ -172,7 +172,7 @@ void generateMoves(MoveList& moveList) {
 
             if (piece == (KING + 6)) {
                 // king board.side castling
-                if (board.castle & BK) {
+                if (board.history[board.gamePly].castle & BK) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F8) && !GET_BIT(board.bitboards[BOTH_OCC], G8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(F8, WHITE) ) {
@@ -182,7 +182,7 @@ void generateMoves(MoveList& moveList) {
                 }
 
                 //QUEEN board.side castling
-                if (board.castle & BQ) {
+                if (board.history[board.gamePly].castle & BQ) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B8) && !GET_BIT(board.bitboards[BOTH_OCC], C8) && !GET_BIT(board.bitboards[BOTH_OCC], D8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(D8, WHITE) ) {
@@ -208,7 +208,7 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, Move(startSquare, targetSquare) );
+                        addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
                         addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
@@ -231,7 +231,7 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, Move(startSquare, targetSquare) );
+                        addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
                         addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
@@ -253,7 +253,7 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, Move(startSquare, targetSquare) );
+                        addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
                         addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
@@ -275,7 +275,7 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, Move(startSquare, targetSquare) );
+                        addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
                         addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );
@@ -297,7 +297,7 @@ void generateMoves(MoveList& moveList) {
 
                     // quiet moves
                     if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
-                        addMove(moveList, Move(startSquare, targetSquare) );
+                        addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
                         addMove(moveList, Move(startSquare, targetSquare, CAPTURE) );

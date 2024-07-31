@@ -7,4 +7,5 @@
 #include "../include/types.h"
 
 int makeMove(Move move, int onlyCaptures);
+void undo(Move move);
 

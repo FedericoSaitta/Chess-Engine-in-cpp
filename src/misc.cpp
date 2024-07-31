@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <stdio.h>
 
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
 // these could go under benchmark_tests but I will put more rigorous testing functions there.
@@ -56,27 +57,6 @@ void printBitBoard(const U64 bb, const bool mirrored) {
 }
 
 
-#include <stdio.h>
-
-static void mirrorRows(int array[64]) {
-    // Iterate over each row
-    for (int row = 0; row < 8; ++row) {
-        int start = row * 8;  // Start index of the current row
-        int end = start + 7;  // End index of the current row
-
-        // Swap elements to reverse the row
-        while (start < end) {
-            // Swap elements at 'start' and 'end'
-            int temp = array[start];
-            array[start] = array[end];
-            array[end] = temp;
-
-            // Move towards the middle
-            ++start;
-            --end;
-        }
-    }
-}
 
 static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
 static constexpr std::string_view playingSides[2] = {"White", "Black"};
@@ -109,13 +89,13 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
 
     std::string castleRightsString{};
     for (int i = 0; i < 4; ++i) {
-        if (board.castle & (1 << i)) { castleRightsString += castlePieces[i]; }
+        if (board.history[board.gamePly].castle & (1 << i)) { castleRightsString += castlePieces[i]; }
     }
 
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
     std::cout << playingSides[board.side] << " to move, Castling: " << castleRightsString
-              << ", En Passant: " << chessBoard[board.enPassantSq] << '\n';
-    std::cout << "HashKey: " << hashKey << '\n';
+              << ", En Passant: " << chessBoard[board.history[board.gamePly].enPassSq] << '\n';
+    std::cout << "HashKey: " << hashKey << std::endl;
 }
 
 void printAttackedSquares(const int side) {
@@ -150,22 +130,60 @@ std::string algebraicNotation(const Move move) {
 void printMovesList(const MoveList& moveList) {
     std::cout << "Move  Piece PromPiece Capture DoublePush EnPassant Castling \n";
 
-    /*
-    for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
-        const int Move {moveList.moves[moveCount].first};
-        std::printf("%s%s%c   ", chessBoard[getMoveStartSQ(move)],
-                          chessBoard[getMoveTargetSQ(move)],
-                          promotedPieces[getMovePromPiece(move)] );
 
-        std::cout << ( unicodePieces[getMovePiece(move)] ) << "      ";
-        std::cout << ( ((getMovePromPiece(move) != 0)) ? unicodePieces[getMovePromPiece(move)] : "0" )<< "         ";
-        std::cout << ((getMoveCapture(move) > 0) ? 1 : 0) << "        ";
-        std::cout << ((getMoveDoublePush(move) > 0) ? 1 : 0) << "          ";
-        std::cout << ((getMoveEnPassant(move) > 0) ? 1 : 0) << "         ";
-        std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
+    for (int moveCount = 0; moveCount < moveList.count; moveCount++) {
+        const Move move {moveList.moves[moveCount].first};
+        std::printf("%s%s%c   ", chessBoard[move.from()],
+                          chessBoard[move.to()],
+                          promotedPieces[move.promotionPiece()] );
+
+        std::cout << std::bitset<8> (move.flags());
+
+      //  std::cout << ( unicodePieces[board.getMovePiece(move)] ) << "      ";
+    //    std::cout << ( ((move.promotionPiece() != 0)) ? unicodePieces[move.promotionPiece()] : "0" )<< "         ";
+    //    std::cout << ((move.is_capture() > 0) ? 1 : 0) << "        ";
+      //  std::cout << ((getMoveDoublePush(move) > 0) ? 1 : 0) << "          ";
+    //    std::cout << ((getMoveEnPassant(move) > 0) ? 1 : 0) << "         ";
+     //  std::cout << ((getMoveCastling(move) > 0) ? 1 : 0);
         std::cout << '\n';
     }
-    */
+
+}
+Move parseMove(const std::string_view move) {
+
+    const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
+    const int endSquare = (move[2] - 'a') + (move[3] - '0') * 8 - 8;
+
+    MoveList moveList;
+    generateMoves(moveList);
+
+    for (int count=0; count< moveList.count; count++) {
+
+        if ( ((moveList.moves[count].first).from() == startSquare) &&  ((moveList.moves[count].first).to() == endSquare) ){
+            const int promotedPiece{ moveList.moves[count].first.promotionPiece() };
+
+            if (promotedPiece) {
+
+                if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count].first;
+                if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count].first;
+
+            } else { return moveList.moves[count].first; }
+        }
+    }
+    return 0; // returns null move
+}
+
+void printHistoryInfo() {
+
+    for (int i=0; i < 10; i++) {
+
+        std::cout << "castle: " << board.history[i].castle
+                  << " captured: " << board.history[i].captured
+                  << " en pass: " << chessBoard[board.history[i].enPassSq] << '\n';
+
+    }
 }
 
 std::vector<std::string> split(const std::string& str) {

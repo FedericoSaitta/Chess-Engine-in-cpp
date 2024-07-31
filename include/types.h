@@ -7,8 +7,16 @@
 #include "macros.h"
 #include <cstring>
 #include <cstdint>
+#include <bit>
+#include <iostream>
+#include "init.h"
 
 enum Color { WHITE = 0, BLACK = 1 };
+
+constexpr Color operator~(Color c) {
+    return Color(c ^ 1);
+}
+
 enum PieceType { PAWN = 0, KNIGHT = 1, BISHOP = 2, ROOK = 3, QUEEN = 4, KING = 5 };
 
 enum Piece {
@@ -32,7 +40,7 @@ inline int color(const Piece pc){ return pc / 6; }
 struct UndoInfo {
     //The bitboard of squares on which pieces have either moved from, or have been moved to. Used for castling
     //legality checks
-    U64 entry;
+    U64 castle;
 
     //The piece that was captured on the last move
     Piece captured;
@@ -41,11 +49,11 @@ struct UndoInfo {
     //double pushed on the previous move
     int enPassSq;
 
-    constexpr UndoInfo() : entry(0), captured(NO_PIECE), enPassSq(64) {}
+    constexpr UndoInfo() : castle(0), captured(NO_PIECE), enPassSq(64) {}
 
     //This preserves the entry bitboard across moves
     UndoInfo(const UndoInfo& prev) :
-        entry(prev.entry), captured(NO_PIECE), enPassSq(64) {}
+        castle(prev.castle), captured(NO_PIECE), enPassSq(64) {}
 };
 
 enum MoveFlags : int {
@@ -53,10 +61,10 @@ enum MoveFlags : int {
     OO = 0b0010, OOO = 0b0011,
     CAPTURE = 0b1000,
 
-    CAPTURES = 0b1111,
+  //  CAPTURES = 0b1111,
     EN_PASSANT = 0b1010,
-    PROMOTIONS = 0b0111,
-    PROMOTION_CAPTURES = 0b1100,
+ //   PROMOTIONS = 0b0111,
+ //   PROMOTION_CAPTURES = 0b1100,
     PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
     PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
 };
@@ -120,14 +128,14 @@ public:
 class Board {
 
 public:
-  //  UndoInfo history[256];
+    UndoInfo history[256];
     U64 bitboards[15]; // last 3 represent the occupancies
 
     Piece mailbox[64];
 
+    int gamePly{};
+
     int side{ WHITE };
-    int enPassantSq{ 64 };
-    int castle { 0 };
 
     inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
     inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
@@ -140,8 +148,8 @@ public:
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
 
         side = WHITE;
-        enPassantSq = 64;
-        castle = 0;
+        history[gamePly].enPassSq = 64;
+        history[gamePly].castle = 0;
     }
     inline void resetOcc() {
         bitboards[WHITE_OCC] = 0ULL;
@@ -152,6 +160,38 @@ public:
     inline void resetAll() {
         resetBoard();
         resetOcc();
+    }
+
+    inline Piece getMovePiece(Move move) {
+        return mailbox[move.from()];
+    }
+
+
+    void move_piece(const int from, const int to);
+    void move_piece_quiet(const int from, const int to);
+
+    void put_piece(Piece pc, int s);
+    void remove_piece(const int s);
+
+    void undo(const Move move);
+    int makeMove(const Move move, const int onlyCaptures);
+
+    inline int checkParallel() {
+        int countBitboards{};
+        int countMailBox{};
+
+        for (int i=0; i < 12; i++) countBitboards += std::popcount(bitboards[i]);
+
+        for (int sq=0; sq<64; sq++) {
+            if (mailbox[sq] != NO_PIECE) countMailBox++;
+        }
+
+        if (countBitboards != countMailBox) {
+            std::cerr << "Counts differ" << std::endl;
+            return 1;
+        }
+        return 0;
+
     }
 
 };

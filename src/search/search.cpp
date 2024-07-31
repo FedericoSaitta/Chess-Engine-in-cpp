@@ -18,6 +18,8 @@
 #include "board.h"
 
 #include "../movegen/update.h"
+
+#include "../movegen/update.h"
 #include "../include/hashtable.h"
 #include "../include/uci.h"
 #include "../include/board.h"
@@ -136,10 +138,11 @@ static U64 nonPawnMaterial() {
 static int givesCheck(const Move move) {
 	// Returns true if the current move puts the opponent in check
 	COPY_BOARD()
-	makeMove(move, 0);
+	board.makeMove(move, 0);
 
 	const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
 
+	board.undo(move);
 	RESTORE_BOARD()
 	return opponentInCheck;
 }
@@ -180,8 +183,8 @@ static int quiescenceSearch(int alpha, const int beta) {
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
-        // Undo Illegal Moves or non-captures
-        if( !makeMove(move, 1) ) {
+        // board.undo Illegal Moves or non-captures
+        if( !board.makeMove(move, 1) ) {
             ply--;
         	repetitionIndex--;
             continue;
@@ -191,6 +194,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
         ply--;
     	repetitionIndex--;
+    	board.undo(move);
         RESTORE_BOARD()
 
  		if (stopSearch) return 0; // If the time is up, we return 0;
@@ -224,10 +228,10 @@ static void updateKillersAndHistory(const Move bestMove, const int depth) {
 
 static void makeNullMove() {
 	hashKey ^= sideKey;
-	if (board.enPassantSq != 64) hashKey ^= randomEnPassantKeys[board.enPassantSq];
+	if (board.history[board.gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
 
 	board.side ^= 1; // make null move
-	board.enPassantSq = 64; // resetting en-passant to null-square
+	board.history[board.gamePly].enPassSq = 64; // resetting en-passant to null-square
 
 	// we change plies so white and black killers remain in sync for negamax search
 	ply++;
@@ -278,8 +282,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			return staticEval - 120 * depth;
 	}
 
+
+	/*
 	if (!pvNode && !inCheck && ply) {
-		/* WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7*/
+		 // WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
 		// reverse futility pruning
 		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
 		const int eval { ttHit ? score : evaluate() };
@@ -299,7 +305,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			// more aggressive reduction
 			const int R = static_cast<int>(3 + depth / 3);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - R, DONT_NULL);
-			undoNullMove();
+			board.undoNullMove();
 
 			RESTORE_BOARD() // un-making the null move
 
@@ -344,6 +350,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			}
 		}
 	}
+	*/
 
     MoveList moveList;
     generateMoves(moveList);
@@ -383,8 +390,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
-        // Undo Illegal Moves
-        if( !makeMove(move, 0) ) { // meaning its illegal
+        // board.undo Illegal Moves
+        if( !board.makeMove(move, 0) ) { // meaning its illegal
             ply--;
         	repetitionIndex--;
             continue;
@@ -422,6 +429,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
         ply--;
     	repetitionIndex--;
+    	board.undo(move);
         RESTORE_BOARD()
 
     	if (stopSearch) return 0;

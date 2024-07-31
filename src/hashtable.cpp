@@ -40,8 +40,8 @@ U64 generateHashKey() { // to uniquely identify a position
         }
     }
 
-    if (board.enPassantSq != 64) key ^= randomEnPassantKeys[board.enPassantSq];
-    key ^= randomCastlingKeys[board.castle];
+    if (board.history[board.gamePly].enPassSq != 64) key ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
+    key ^= randomCastlingKeys[board.history[board.gamePly].castle];
     if (board.side == BLACK) key ^= sideKey; // only done if side to move is black
 
     return key;

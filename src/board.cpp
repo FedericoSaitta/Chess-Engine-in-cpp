@@ -80,20 +80,20 @@ void parseFEN(const std::string& fenString) {
 
     for (const char c : parts[2]) {
         switch (c) {
-            case 'K': board.castle |= WK; break;
-            case 'Q': board.castle |= WQ; break;
-            case 'k': board.castle |= BK; break;
-            case 'q': board.castle |= BQ; break;
+            case 'K': board.history[board.gamePly].castle |= WK; break;
+            case 'Q': board.history[board.gamePly].castle |= WQ; break;
+            case 'k': board.history[board.gamePly].castle |= BK; break;
+            case 'q': board.history[board.gamePly].castle |= BQ; break;
             default: break;
         }
     }
 
     if(parts[3][0] == '-') {
-        board.enPassantSq = 64; // the 64th index represents the 'outside the board' square
+        board.history[board.gamePly].enPassSq = 64; // the 64th index represents the 'outside the board' square
     } else {
         const int col { parts[3][0] - 'a'};
         const int row { 8 - (parts[3][1] - '0') };
-        board.enPassantSq = 56 - 8 * row + col;
+        board.history[board.gamePly].enPassSq = 56 - 8 * row + col;
     }
 
 

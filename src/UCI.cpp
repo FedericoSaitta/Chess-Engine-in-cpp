@@ -48,33 +48,6 @@ void resetGameVariables() {
     repetitionTable[150] = 0;
 }
 
-
-static Move parseMove(const std::string_view move) {
-
-    const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
-    const int endSquare = (move[2] - 'a') + (move[3] - '0') * 8 - 8;
-
-    MoveList moveList;
-    generateMoves(moveList);
-
-    for (int count=0; count< moveList.count; count++) {
-
-        if ( ((moveList.moves[count].first).from() == startSquare) &&  ((moveList.moves[count].first).to() == endSquare) ){
-            const int promotedPiece{ moveList.moves[count].first.promotionPiece() };
-
-            if (promotedPiece) {
-
-                if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count].first;
-                if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count].first;
-                if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count].first;
-                if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count].first;
-
-            } else { return moveList.moves[count].first; }
-        }
-    }
-    return 0; // returns null move
-}
-
 static void handleUci() {
     std::cout << "id name Aramis v1.3.0 \n";
     std::cout << "id author Federico Saitta\n";
@@ -112,7 +85,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
             if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move is != 0
                 repetitionIndex++;
                 repetitionTable[repetitionIndex] = hashKey;
-                if (!makeMove(move, 0)) {  }
+                if (!board.makeMove(move, 0)) {  }
 
             } else {
             }

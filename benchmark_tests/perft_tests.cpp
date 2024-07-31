@@ -46,10 +46,16 @@ namespace Test::BenchMark {
         {
             COPY_BOARD();
 
-            if (!makeMove(moveList.moves[moveCount].first, 0)) continue;
+            if (!board.makeMove(moveList.moves[moveCount].first, 0)) {
+                continue;
+            }
+
+     //       printMove(moveList.moves[moveCount].first);
+     //       board.checkParallel();
 
             perftDriver(depth - 1);
 
+            board.undo(moveList.moves[moveCount].first);
             RESTORE_BOARD();
         }
     }
@@ -65,22 +71,27 @@ namespace Test::BenchMark {
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
             COPY_BOARD();
 
-            if (!makeMove(moveList.moves[moveCount].first, 0)) continue;
+            if (!board.makeMove(moveList.moves[moveCount].first, 0)) continue;
 
             const std::int64_t cumulativeNodes {nodes};
 
             perftDriver(depth - 1);
 
+            board.undo(moveList.moves[moveCount].first);
             RESTORE_BOARD();
 
             // Print parent moves for debugging purposes
             /*
+
             const std::int64_t oldNodes {nodes - cumulativeNodes};
-            printf("     move: %s%s%c  nodes: %ld\n", chessBoard[moveList.moves[moveCount].first.from()],
+            printf("     move: %s%s%c  nodes: %ld", chessBoard[moveList.moves[moveCount].first.from()],
              chessBoard[(moveList.moves[moveCount].first.to())],
              promotedPieces[moveList.moves[moveCount].first.promotionPiece()],
              oldNodes);
-             */
+            std::cout << std::endl;
+            */
+
+
 
         }
 

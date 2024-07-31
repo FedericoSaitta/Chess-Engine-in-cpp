@@ -16,10 +16,8 @@ extern Board board;
 void parseFEN(const std::string& fenString);
 
 #define COPY_BOARD()             \
-Board boardCopy = board;         \
-U64 hashKeyCopy = hashKey;       \
+U64 hashKeyCopy = hashKey;
 
 // restore board state
 #define RESTORE_BOARD()       \
-board = boardCopy;            \
 hashKey = hashKeyCopy;

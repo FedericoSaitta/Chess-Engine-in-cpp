@@ -23,4 +23,7 @@ extern const char* unicodePieces[];
 
 std::string algebraicNotation(Move move);
 
+Move parseMove(std::string_view move);
+void printHistoryInfo();
+
 std::vector<std::string> split(const std::string& str);
