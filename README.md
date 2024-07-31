@@ -1,4 +1,9 @@
 # <div align="center">Aramis</div>
+
+<div align="center">
+  <img src="AramisLogo.png" alt="Logo" />
+</div>
+
 <div align="center">
 
 [![lichess-bullet](https://lichess-shield.vercel.app/api?username=Aramis-Bot&format=bullet)](https://lichess.org/@/Aramis-Bot/perf/bullet)
