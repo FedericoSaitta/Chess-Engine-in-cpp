@@ -62,7 +62,7 @@ namespace Test::BenchMark {
     std::int64_t perft(const int depth, const bool printInfo) {
         nodes = 0;
 
-        const auto start = std::chrono::high_resolution_clock::now();
+        const auto start = std::chrono::steady_clock::now();
 
         MoveList moveList;
         generateMoves(moveList);
@@ -72,7 +72,7 @@ namespace Test::BenchMark {
 
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) continue;
 
-            const std::int64_t cumulativeNodes {nodes};
+         //   const std::int64_t cumulativeNodes {nodes};
 
             perftDriver(depth - 1);
 
@@ -92,7 +92,7 @@ namespace Test::BenchMark {
 
         }
 
-        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+        const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
 
         if (printInfo) {
             // print results
@@ -117,7 +117,7 @@ namespace Test::BenchMark {
 
         uint64_t totalNodes{};
 
-        const auto start = std::chrono::high_resolution_clock::now();
+        const auto start = std::chrono::steady_clock::now();
 
         std::string line{};
         while (std::getline(epdFile, line)) {
@@ -144,7 +144,7 @@ namespace Test::BenchMark {
 
         }
 
-        const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+        const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
         std::cout << "Perft suite took: " << duration.count() << "s, Nodes: " << totalNodes << '\n';
 
         epdFile.close();

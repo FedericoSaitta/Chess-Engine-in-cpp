@@ -55,7 +55,19 @@ struct UndoInfo {
     //This preserves the entry bitboard across moves
     UndoInfo(const UndoInfo& prev) :
         castle(prev.castle), captured(NO_PIECE), enPassSq(64) {}
+
+    // Copy assignment operator
+    UndoInfo& operator=(const UndoInfo& other) {
+        if (this != &other) {
+            castle = other.castle;
+            captured = other.captured; // Reset to default value
+            enPassSq = other.enPassSq;       // Reset to default value
+        }
+        return *this;
+    }
 };
+
+
 
 enum MoveFlags : int {
     QUIET = 0b0000,

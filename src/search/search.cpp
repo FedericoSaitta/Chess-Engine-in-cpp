@@ -504,7 +504,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	int alpha { -INF };
 	int beta { INF };
 
-	startSearchTime = std::chrono::high_resolution_clock::now();
+	startSearchTime = std::chrono::steady_clock::now();
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
@@ -515,11 +515,11 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 			break;
 		}
 
-        const auto startDepthTime = std::chrono::high_resolution_clock::now();
+        const auto startDepthTime = std::chrono::steady_clock::now();
 
         const int score { negamax(alpha, beta, currentDepth, DO_NULL) };
 
-		std::chrono::duration<float> depthDuration { std::chrono::high_resolution_clock::now() - startDepthTime };
+		std::chrono::duration<float> depthDuration { std::chrono::steady_clock::now() - startDepthTime };
 
 		// If the previous search exceeds the hard or soft time limit, we stop searching
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window

@@ -11,7 +11,6 @@
 
 #include <cstring>
 #include <variant>
-#include <__chrono/month.h>
 
 #include "../../include/inline_functions.h"
 #include "../../include/misc.h"

@@ -33,11 +33,11 @@ namespace Test::BenchMark {
             clearTranspositionTable();
             parseFEN(puzzle.FEN);
 
-            const auto start = std::chrono::high_resolution_clock::now();
+            const auto start = std::chrono::steady_clock::now();
             iterativeDeepening(puzzle.depth * 2); // as we are considering half moves
-            const std::chrono::duration<float> duration = std::chrono::high_resolution_clock::now() - start;
+            const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
 
-            std::cout << "Mating Move: " << puzzle.matingMove << " Time taken: " << duration << "s\n\n";
+            std::cout << "Mating Move: " << puzzle.matingMove << " Time taken: " << duration.count() << "s\n\n";
         }
     }
 }
