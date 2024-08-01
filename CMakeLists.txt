@@ -79,6 +79,14 @@ set(SOURCE_FILES
 # Add executable
 add_executable(ChessEngine ${SOURCE_FILES})
 
+# Check build type and add a compile definition
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(NDEBUG)  # Defines the standard NDEBUG macro for release
+    add_compile_definitions(RELEASE_BUILD)
+else()
+    add_compile_definitions(DEBUG_BUILD)
+endif()
+
 # Linker settings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(ChessEngine pthread)

@@ -9,20 +9,22 @@
 // #define LOGGING_LEVEL_WARNING
 // #define LOGGING_LEVEL_INFO
 
-#if defined(LOGGING_LEVEL_INFO)
-    #define LOG_ERROR(x) logFile.logError(x)
-    #define LOG_WARNING(x) logFile.logWarning(x)
-    #define LOG_INFO(x) logFile.logInfo(x)
+#ifdef DEBUG_BUILD
+    #if defined(LOGGING_LEVEL_INFO)
+        #define LOG_ERROR(x) logFile.logError(x)
+        #define LOG_WARNING(x) logFile.logWarning(x)
+        #define LOG_INFO(x) logFile.logInfo(x)
 
-#elif defined(LOGGING_LEVEL_WARNING)
-    #define LOG_ERROR(x) logFile.logError(x)
-    #define LOG_WARNING(x) logFile.logWarning(x)
+    #elif defined(LOGGING_LEVEL_WARNING)
+        #define LOG_ERROR(x) logFile.logError(x)
+        #define LOG_WARNING(x) logFile.logWarning(x)
 
-#elif defined(LOGGING_LEVEL_ERROR)
-    #define LOG_ERROR(x) logFile.logError(x)
+    #elif defined(LOGGING_LEVEL_ERROR)
+        #define LOG_ERROR(x) logFile.logError(x)
 
-#else
-    #define LOG_ERROR(x)
-    #define LOG_WARNING(x)
-    #define LOG_INFO(x)
+    #else
+        #define LOG_ERROR(x)
+        #define LOG_WARNING(x)
+        #define LOG_INFO(x)
+    #endif
 #endif
