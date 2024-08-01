@@ -12,6 +12,7 @@
 #include "search/search.h"
 
 
+
 // ARRAYS NEEDED FOR MAGIC U64 APPROACH //
 constexpr int bishopRelevantBits[64]{
     6, 5, 5, 5, 5, 5, 5, 6,

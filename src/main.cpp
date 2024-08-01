@@ -29,7 +29,6 @@
 #include "logger/logger.h"
 
 int main() {
-
     initAll(256); // Done at compile time :), using 256 MB size hash
     UCI();
 

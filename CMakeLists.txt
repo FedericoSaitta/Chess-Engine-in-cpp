@@ -73,6 +73,7 @@ set(SOURCE_FILES
         src/search/searchparams.h
         src/logger/logger.h
         include/config.h
+        src/logger/logger.cpp
 )
 
 # Add executable
