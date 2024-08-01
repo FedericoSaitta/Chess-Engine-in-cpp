@@ -21,10 +21,12 @@
 
     #elif defined(LOGGING_LEVEL_ERROR)
         #define LOG_ERROR(x) logFile.logError(x)
-
-    #else
-        #define LOG_ERROR(x)
-        #define LOG_WARNING(x)
-        #define LOG_INFO(x)
     #endif
+
+#else
+
+    #define LOG_ERROR(x)
+    #define LOG_WARNING(x)
+    #define LOG_INFO(x)
+
 #endif
