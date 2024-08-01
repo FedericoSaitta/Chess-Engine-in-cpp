@@ -11,7 +11,7 @@
 #include <vector>
 #include <sstream>
 #include <stdio.h>
-
+#include <bitset>
 // File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
 // these could go under benchmark_tests but I will put more rigorous testing functions there.
 

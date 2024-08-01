@@ -80,9 +80,6 @@ static void resetSearchStates() {
 	scorePV = 0;
 	searchPly = 0;
 
-
-
-
 	stopSearch = 0;
 }
 
