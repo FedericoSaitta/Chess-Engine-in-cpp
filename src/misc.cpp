@@ -60,6 +60,7 @@ void printBitBoard(const U64 bb, const bool mirrored) {
 
 static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
 static constexpr std::string_view playingSides[2] = {"White", "Black"};
+
 void printBoardFancy() { // this will always be the right way around, doesnt work on windows
     Piece mirrorredMailBox[64] {};
 
@@ -112,9 +113,10 @@ void printAttackedSquares(const int side) {
 
 // for UCI protocol
 void printMove(const Move move) {
-    std::printf("%s%s%c", chessBoard[move.from()],
+    std::printf("%s%s%c ", chessBoard[move.from()],
                           chessBoard[move.to()],
                           promotedPieces[move.promotionPiece()] );
+    std::cout << std::bitset<4> (move.flags()) << "   " << getStringFlags(move.flags());
 }
 
 std::string algebraicNotation(const Move move) {
@@ -127,26 +129,25 @@ std::string algebraicNotation(const Move move) {
 
 
 std::string getStringFlags(const MoveFlags flag) {
-    switch(flag) {
-        case QUIET: return "QUIET";
+    switch (flag) {
+        case QUIET: return "QUIET      ";
         case DOUBLE_PUSH: return "DOUBLE PUSH";
-        case OO: return "OO";
-        case OOO: return "OOO";
+        case OO: return "OO         ";
+        case OOO: return "OOO        ";
 
-        case PR_KNIGHT: return "PR_KNIGHT";
-        case PR_BISHOP: return "PR_BISHOP";
-        case PR_ROOK: return "PR_ROOK";
-        case PR_QUEEN: return "PR_QUEEN";
+        case PR_KNIGHT: return "PR_KNIGHT  ";
+        case PR_BISHOP: return "PR_BISHOP  ";
+        case PR_ROOK: return "PR_ROOK    ";
+        case PR_QUEEN: return "PR_QUEEN   ";
 
-        case EN_PASSANT: return "EN_PASSANT";
+        case EN_PASSANT: return "EN_PASSANT ";
 
-        case PC_KNIGHT: return "PC_KNIGHT";
-        case PC_BISHOP: return "PC_BISHOP";
-        case PC_ROOK: return "PC_ROOK";
-        case PC_QUEEN: return "PC_QUEEN";
+        case PC_KNIGHT: return "PC_KNIGHT  ";
+        case PC_BISHOP: return "PC_BISHOP  ";
+        case PC_ROOK: return "PC_ROOK    ";
+        case PC_QUEEN: return "PC_QUEEN   ";
 
-        case CAPTURE: return "CAPTURE";
-        default: break;
+        case CAPTURE: return "CAPTURE    ";
     }
     return " ";
 }

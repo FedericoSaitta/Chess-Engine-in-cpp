@@ -72,6 +72,7 @@ set(SOURCE_FILES
         debug_tests/debug_tests.h
         src/search/searchparams.h
         src/logger/logger.h
+        include/config.h
 )
 
 # Add executable

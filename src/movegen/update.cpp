@@ -11,6 +11,7 @@
 
 #include <cstring>
 #include <variant>
+#include <__chrono/month.h>
 
 #include "../../include/inline_functions.h"
 #include "../../include/misc.h"
@@ -28,10 +29,13 @@ static const int castlingRightsConstant[64] = {
 
 
 //Moves a piece to an empty square. Note that it is an error if the <to> square contains a piece
+template <bool UpdateHash>
 void Board::movePieceQuiet(const int from, const int to) {
     const Piece piece { mailbox[from] };
 
-    hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
+	if constexpr (UpdateHash) {
+		hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
+	}
 
     bitboards[piece] ^= ( (1ULL << from) | (1ULL << to) );
 
@@ -40,12 +44,15 @@ void Board::movePieceQuiet(const int from, const int to) {
 
 }
 
+template <bool UpdateHash>
 void Board::movePiece(const int from, const int to) {
-	
+
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
 
-	hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
+	if constexpr (UpdateHash) {
+		hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
+	}
 
 	const U64 mask = (1ULL << from) | (1ULL << to);
 
@@ -56,18 +63,23 @@ void Board::movePiece(const int from, const int to) {
 	mailbox[from] = NO_PIECE;
 }
 
+template <bool UpdateHash>
 void Board::putPiece(const Piece pc, const int s) {
 	mailbox[s] = pc;
 	bitboards[pc] |= (1ULL << s);
-	hashKey ^= randomPieceKeys[pc][s];
+	if constexpr (UpdateHash) {
+		hashKey ^= randomPieceKeys[pc][s];
+	}
 }
 
+template <bool UpdateHash>
 void Board::removePiece(const int s) {
 	// for now just checking
-	hashKey ^= randomPieceKeys[mailbox[s]][s];
+	if constexpr (UpdateHash) {
+		hashKey ^= randomPieceKeys[mailbox[s]][s];
+	}
 	bitboards[mailbox[s]] &= ~(1ULL << s);
 	mailbox[s] = NO_PIECE;
-
 }
 
 //Undos a move in the current position, rolling it back to the previous position
@@ -77,53 +89,53 @@ void Board::undo(const Move move) {
 
 	switch (type) {
 		case QUIET:
-			movePieceQuiet(move.to(), move.from());
+			movePieceQuiet<false>(move.to(), move.from());
 		break;
 		case DOUBLE_PUSH:
-			movePieceQuiet(move.to(), move.from());
+			movePieceQuiet<false>(move.to(), move.from());
 		break;
 		case OO:
 			if (C == BLACK) {
-				movePieceQuiet(G1, E1);
-				movePieceQuiet(F1, H1);
+				movePieceQuiet<false>(G1, E1);
+				movePieceQuiet<false>(F1, H1);
 			} else {
-				movePieceQuiet(G8, E8);
-				movePieceQuiet(F8, H8);
+				movePieceQuiet<false>(G8, E8);
+				movePieceQuiet<false>(F8, H8);
 			}
 		break;
 		case OOO:
 			if (C == BLACK) {
-				movePieceQuiet(C1, E1);
-				movePieceQuiet(D1, A1);
+				movePieceQuiet<false>(C1, E1);
+				movePieceQuiet<false>(D1, A1);
 			} else {
-				movePieceQuiet(C8, E8);
-				movePieceQuiet(D8, A8);
+				movePieceQuiet<false>(C8, E8);
+				movePieceQuiet<false>(D8, A8);
 			}
 		break;
 		case EN_PASSANT:
-			movePieceQuiet(move.to(), move.from());
-			putPiece(make_piece(C, PAWN), move.to() + ((C == WHITE) ? 8 : -8));
+			movePieceQuiet<false>(move.to(), move.from());
+			putPiece<false>(make_piece(C, PAWN), move.to() + ((C == WHITE) ? 8 : -8));
 
 		break;
 		case PR_KNIGHT:
 		case PR_BISHOP:
 		case PR_ROOK:
 		case PR_QUEEN:
-			removePiece(move.to());
-		    putPiece(make_piece(~C, PAWN), move.from());
+			removePiece<false>(move.to());
+		    putPiece<false>(make_piece(~C, PAWN), move.from());
 
 		break;
 		case PC_KNIGHT:
 		case PC_BISHOP:
 		case PC_ROOK:
 		case PC_QUEEN:
-			removePiece(move.to());
-			putPiece(make_piece(~C, PAWN), move.from());
-			putPiece(history[gamePly].captured, move.to());
+			removePiece<false>(move.to());
+			putPiece<false>(make_piece(~C, PAWN), move.from());
+			putPiece<false>(history[gamePly].captured, move.to());
 		break;
 		case CAPTURE:
-			movePieceQuiet(move.to(), move.from());
-			putPiece(history[gamePly].captured, move.to());
+			movePieceQuiet<false>(move.to(), move.from());
+			putPiece<false>(history[gamePly].captured, move.to());
 		break;
 	}
 
@@ -158,11 +170,11 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 		switch (type) {
 			case QUIET:
 				//The to square is guaranteed to be empty here
-				movePieceQuiet(move.from(), move.to());
+				movePieceQuiet<true>(move.from(), move.to());
 			break;
 
 			case DOUBLE_PUSH:
-				movePieceQuiet(move.from(), move.to());
+				movePieceQuiet<true>(move.from(), move.to());
 
 				if (C == WHITE) {
 					history[gamePly].enPassSq = move.to() + 8;
@@ -178,81 +190,81 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 			case OO:
 				if (C == BLACK) {
-					movePieceQuiet(E1, G1);
-					movePieceQuiet(H1, F1);
+					movePieceQuiet<true>(E1, G1);
+					movePieceQuiet<true>(H1, F1);
 				} else {
-					movePieceQuiet(E8, G8);
-					movePieceQuiet(H8, F8);
+					movePieceQuiet<true>(E8, G8);
+					movePieceQuiet<true>(H8, F8);
 				}			
 				break;
 
 			case OOO:
 				if (C == BLACK) {
-					movePieceQuiet(E1, C1);
-					movePieceQuiet(A1, D1);
+					movePieceQuiet<true>(E1, C1);
+					movePieceQuiet<true>(A1, D1);
 				} else {
-					movePieceQuiet(E8, C8);
-					movePieceQuiet(A8, D8);
+					movePieceQuiet<true>(E8, C8);
+					movePieceQuiet<true>(A8, D8);
 				}
 				break;
 
 			case EN_PASSANT:
-				movePieceQuiet(move.from(), move.to());
+				movePieceQuiet<true>(move.from(), move.to());
 				if (C == WHITE) {
-					removePiece(move.to() + 8);
+					removePiece<true>(move.to() + 8);
 				} else {
-					removePiece(move.to() - 8);
+					removePiece<true>(move.to() - 8);
 				}
 			break;
 
 			case PR_KNIGHT:
-				removePiece(move.from());
-				putPiece(make_piece(~C, KNIGHT), move.to());
+				removePiece<true>(move.from());
+				putPiece<true>(make_piece(~C, KNIGHT), move.to());
 			break;
 			case PR_BISHOP:
-				removePiece(move.from());
-			putPiece(make_piece(~C, BISHOP), move.to());
+				removePiece<true>(move.from());
+			putPiece<true>(make_piece(~C, BISHOP), move.to());
 			break;
 			case PR_ROOK:
-				removePiece(move.from());
-			putPiece(make_piece(~C, ROOK), move.to());
+				removePiece<true>(move.from());
+			putPiece<true>(make_piece(~C, ROOK), move.to());
 			break;
 			case PR_QUEEN:
-				removePiece(move.from());
-			putPiece(make_piece(~C, QUEEN), move.to());
+				removePiece<true>(move.from());
+			putPiece<true>(make_piece(~C, QUEEN), move.to());
 			break;
 			case PC_KNIGHT:
-				removePiece(move.from());
+				removePiece<true>(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			removePiece(move.to());
+			removePiece<true>(move.to());
 
-			putPiece(make_piece(~C, KNIGHT), move.to());
+			putPiece<true>(make_piece(~C, KNIGHT), move.to());
 			break;
 			case PC_BISHOP:
-				removePiece(move.from());
+				removePiece<true>(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			removePiece(move.to());
+			removePiece<true>(move.to());
 
-			putPiece(make_piece(~C, BISHOP), move.to());
+			putPiece<true>(make_piece(~C, BISHOP), move.to());
 			break;
 			case PC_ROOK:
-				removePiece(move.from());
+				removePiece<true>(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			removePiece(move.to());
+			removePiece<true>(move.to());
 
-			putPiece(make_piece(~C, ROOK), move.to());
+			putPiece<true>(make_piece(~C, ROOK), move.to());
 			break;
 			case PC_QUEEN:
-				removePiece(move.from());
+				removePiece<true>(move.from());
 			history[gamePly].captured = mailbox[move.to()];
-			removePiece(move.to());
+			removePiece<true>(move.to());
 
-			putPiece(make_piece(~C, QUEEN), move.to());
+			putPiece<true>(make_piece(~C, QUEEN), move.to());
 			break;
 
 			case CAPTURE:
 			history[gamePly].captured = mailbox[move.to()];
-			movePiece(move.from(), move.to());
+			movePiece<true>(move.from(), move.to());
 			
 			break;
 		}
@@ -282,7 +294,8 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 			return 0;
 		}
 
-		/* FOR ZOBRIST DEBUGGING PURPOSES from Marksim Kozh
+		/*
+		FOR ZOBRIST DEBUGGING PURPOSES from Marksim Kozh
 		U64 new_hasKey = generateHashKey();
 		// if this doesnt match we output an error
 		if (new_hasKey != hashKey) {
@@ -291,6 +304,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 			std::cout << "This does not match, true hash is: " << new_hasKey << '\n';
 		}
 		*/
+
 
 		return 1; // this is a legal move so we return true
 	}

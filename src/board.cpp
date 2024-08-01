@@ -45,8 +45,7 @@ static Piece charToPiece(const char c) {
 void parseFEN(const std::string& fenString) {
 
     // re-setting the board state each time a new FEN is parsed
-    board.resetAll();
-  //  board.resetBoard();
+    board.resetBoard();
 
     repetitionIndex = 0;
     memset(repetitionTable, 0, sizeof(repetitionTable));

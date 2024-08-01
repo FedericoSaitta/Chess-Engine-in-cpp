@@ -30,7 +30,6 @@ U64 generateHashKey() { // to uniquely identify a position
     U64 key{};
     U64 tempPieceBitboard{};
 
-
     for (int piece=0; piece<12; piece++) {
         tempPieceBitboard = board.bitboards[piece];
 
@@ -41,6 +40,7 @@ U64 generateHashKey() { // to uniquely identify a position
     }
 
     if (board.history[board.gamePly].enPassSq != 64) key ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
+
     key ^= randomCastlingKeys[board.history[board.gamePly].castle];
     if (board.side == BLACK) key ^= sideKey; // only done if side to move is black
 

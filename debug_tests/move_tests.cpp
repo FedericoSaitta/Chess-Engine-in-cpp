@@ -51,6 +51,15 @@ namespace Test::Debug{
         }
     }
 
+    static int givesCheck(){
+        // Returns true if the current move puts the opponent in check
+        COPY_HASH()
+        const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
+
+        RESTORE_HASH()
+
+        return opponentInCheck;
+    }
 
     void printMoveOrdering() {
         MoveList moveList{};
@@ -63,10 +72,16 @@ namespace Test::Debug{
             const Move move{ pickBestMove(moveList, count) };
             const int score { moveList.moves[count].second };
 
+            board.makeMove(move, 0);
             printMove( move );
             std::cout << ": " << unicodePieces[board.mailbox[move.from()]] << " score: " << score
-                      << " flag: " << getStringFlags(move.flags()) << '\n';
+                      << " is capture: " << move.isCapture() << " is promotion: " << move.isPromotion()
+                      << " promotion piece: " << promotedPieces[move.promotionPiece()]
+                      << " gives check: " << givesCheck() << '\n';
+
+            board.undo(move);
         }
+
     }
 
     void historyScores() {

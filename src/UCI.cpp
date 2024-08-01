@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "uci.h"
+#include "config.h"
 
 #include "movegen/update.h"
 #include "hashtable.h"
@@ -87,8 +88,8 @@ static void handlePosition(const std::vector<std::string>& tokens) {
             if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move is != 0
                 repetitionIndex++;
                 repetitionTable[repetitionIndex] = hashKey;
-                if (board.makeMove(move, 0) == 0) { logFile.logError("Move is illegal" + tokens[index] ); };
-            } else { logFile.logError("Move is Null" + tokens[index] ); }
+                if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move is illegal " + tokens[index] ); };
+            } else { LOG_ERROR("Move is Null " + tokens[index] ); }
 
         }
     }
@@ -121,7 +122,6 @@ static void handleGo(const std::vector<std::string>& tokens) {
             gameLengthTime = whiteClockTime;
             isNewGame = false;
         }
-        logFile.logInfo("Calling Iterative  Deepening");
         iterativeDeepening(64, true);
     }
     else if (tokens[1] == "movetime") {
@@ -140,7 +140,7 @@ static void handleGo(const std::vector<std::string>& tokens) {
         iterativeDeepening(64, true);
     }
 
-    else { logFile.logError("Unrecognized go input" + tokens[1]);
+    else { LOG_ERROR("Unrecognized go input " + tokens[1]);
     }
 }
 
@@ -165,7 +165,7 @@ void UCI() {
         if (tokens.empty()) { continue; }
         const std::string command = tokens[0];
 
-        logFile.logInfo(line);
+        LOG_INFO(line);
 
         // UCI COMMANDS
         if ( command == "uci") handleUci();

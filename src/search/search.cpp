@@ -5,9 +5,12 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <cstdlib>
 
 #include "../include/macros.h"
 #include "../include/inline_functions.h"
+
+#include "config.h"
 
 #include "search.h"
 #include "searchparams.h"
@@ -139,16 +142,14 @@ static U64 nonPawnMaterial() {
 	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
-static int givesCheck(const Move move, Board position) {
-
+static int givesCheck(){
 	// Returns true if the current move puts the opponent in check
 	COPY_HASH()
-	position.makeMove(move, 0);
 
-	const int opponentInCheck { isSqAttacked( bsf(position.bitboards[KING + 6 * position.side]) , position.side^1 ) };
+	const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
 
-	position.undo(move);
 	RESTORE_HASH()
+
 	return opponentInCheck;
 }
 
@@ -404,7 +405,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
     			&& isQuiet			// will reduce quiet moves
     			&& !inCheck         // will not reduce in case we are in check
-    			&& !givesCheck(move, board)) { // maybe you should use this....
+    			&& !givesCheck()) { // maybe you should use this....
 
     			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 
@@ -492,22 +493,18 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 
 void iterativeDeepening(const int depth, const bool timeConstraint) {
-	logFile.logInfo("Resetting The Board States");
 	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint);
 
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
-	if (timePerMove < 0) logFile.logWarning("Negatime Time Per Move");
+	if (timePerMove < 0) LOG_WARNING("Negatime Time Per Move");
 
 	int alpha { -INF };
 	int beta { INF };
 
 	startSearchTime = std::chrono::high_resolution_clock::now();
-
-	logFile.logInfo("Starting Search");
-	logFile.log( board.gamePly );
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
@@ -555,16 +552,12 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 		}
 
-		logFile.logInfo("In Iterative Deepening");
 		currentDepth++; // we can proceed to the next iteration
 
     }
 
-	logFile.log( board.gamePly );
-
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
-
-	logFile.logInfo("bestmove " + algebraicNotation(pvTable[0][0]));
+	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
 
 	ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
 }

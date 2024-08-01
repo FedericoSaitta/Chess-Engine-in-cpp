@@ -30,8 +30,6 @@
 
 int main() {
 
-    logFile.setLoggingLevel(NONE);
-
     initAll(256); // Done at compile time :), using 256 MB size hash
     UCI();
 

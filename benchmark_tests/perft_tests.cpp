@@ -81,12 +81,14 @@ namespace Test::BenchMark {
 
             // Print parent moves for debugging purposes
 
+            /*
             const std::int64_t oldNodes {nodes - cumulativeNodes};
             printf("     move: %s%s%c  nodes: %lld", chessBoard[moveList.moves[moveCount].first.from()],
              chessBoard[(moveList.moves[moveCount].first.to())],
              promotedPieces[moveList.moves[moveCount].first.promotionPiece()],
              oldNodes);
             std::cout << std::endl;
+            */
 
         }
 

@@ -9,19 +9,13 @@
 #include <ctime>
 #include <sstream>
 
-#include "types.h"
-#include "misc.h"
-
 // Include filesystem if you're using C++17 or later
 #include <filesystem>
 
-// info is the highest level of logging
-enum LogLevel { NONE = 0, ERROR, WARNING, INFO };
 
 class Logger {
-public:
+private:
     std::string logFileName;
-    int loggingLevel;
 
     // Function to get the current timestamp
     std::string getCurrentTime() {
@@ -47,8 +41,7 @@ public:
     }
 
 public:
-    Logger(const std::string& filename, const int logLevel = NONE)
-        : logFileName(filename), loggingLevel(logLevel) {
+    Logger(const std::string& filename) : logFileName(filename) {
 
         // Ensure the directory exists (using C++17 std::filesystem)
         std::filesystem::path logPath(logFileName);
@@ -75,51 +68,38 @@ public:
 
     // Function to log a message
     void log(const std::string& message) {
-        if (loggingLevel > 0) {
-            std::ofstream ofs(logFileName, std::ofstream::out | std::ofstream::app);
-            if (ofs.is_open()) {
-                ofs << "[" << getCurrentTime() << "] " << message << std::endl;
-            } else {
-                std::cerr << "Error opening log file: " << logFileName << std::endl;
-            }
+        std::ofstream ofs(logFileName, std::ofstream::out | std::ofstream::app);
+        if (ofs.is_open()) {
+            ofs << "[" << getCurrentTime() << "] " << message << std::endl;
+        } else {
+            std::cerr << "Error opening log file: " << logFileName << std::endl;
         }
     }
 
     // Overloaded log function to accept different message types
     template <typename T>
     void log(const T& message) {
-        if (loggingLevel > 0) {
-            std::ostringstream oss;
-            oss << message;
-            log(oss.str());
-        }
+        std::ostringstream oss;
+        oss << message;
+        log(oss.str());
     }
 
     // Log an error message
     void logError(const std::string& error) {
-        if (loggingLevel > 0) {
-            log("ERROR: " + error);
-        }
+        log("ERROR: " + error);
     }
 
     // Log a warning message
     void logWarning(const std::string& warning) {
-        if (loggingLevel > 1) {
-            log("WARNING: " + warning);
-        }
+        log("WARNING: " + warning);
+
     }
 
     // Log an info message
     void logInfo(const std::string& info) {
-        if (loggingLevel > 2) {
-            log("INFO: " + info);
-        }
-    }
-
-    void setLoggingLevel(const LogLevel lvl) {
-        loggingLevel = lvl;
+        log("INFO: " + info);
     }
 };
 
 // Create a logger object with a default log file path
-inline extern Logger logFile("/Users/federicosaitta/CLionProjects/ChessEngine/src/logger/logFile.txt", INFO);
+inline extern Logger logFile("/Users/federicosaitta/CLionProjects/ChessEngine/src/logger/logFile.txt");

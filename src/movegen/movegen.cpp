@@ -21,6 +21,8 @@ void generateMoves(MoveList& moveList) {
     int startSquare{};
     int targetSquare{};
 
+    const Color C { static_cast<Color>(board.side) };
+
     // make copies of board.bitboards because as we loop through them we remove the leftmost bits.
     U64 b1{};
     U64 attacks{};
@@ -31,7 +33,7 @@ void generateMoves(MoveList& moveList) {
 
         // these are the special cases that dont have
         // generate WHITE pawn moves and WHITE king castling moves
-        if (board.side == WHITE) {
+        if (C == WHITE) {
             if (piece == PAWN) {
                 // loop over WHITE pawn b1
 
@@ -91,7 +93,7 @@ void generateMoves(MoveList& moveList) {
             }// this works
 
             if (piece == KING) {
-                // king board.side castling
+                // king C castling
                 if (board.history[board.gamePly].castle & WK) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F1) && !GET_BIT(board.bitboards[BOTH_OCC], G1)) {
@@ -101,7 +103,7 @@ void generateMoves(MoveList& moveList) {
                     }
                 }
 
-                //QUEEN board.side castling
+                //QUEEN C castling
                 if (board.history[board.gamePly].castle & WQ) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B1) && !GET_BIT(board.bitboards[BOTH_OCC], C1) && !GET_BIT(board.bitboards[BOTH_OCC], D1)) {
@@ -171,7 +173,7 @@ void generateMoves(MoveList& moveList) {
             } // this works
 
             if (piece == (KING + 6)) {
-                // king board.side castling
+                // king C castling
                 if (board.history[board.gamePly].castle & BK) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], F8) && !GET_BIT(board.bitboards[BOTH_OCC], G8)) {
@@ -181,7 +183,7 @@ void generateMoves(MoveList& moveList) {
                     }
                 }
 
-                //QUEEN board.side castling
+                //QUEEN C castling
                 if (board.history[board.gamePly].castle & BQ) {
                     // checking that the space is empty
                     if( !GET_BIT(board.bitboards[BOTH_OCC], B8) && !GET_BIT(board.bitboards[BOTH_OCC], C8) && !GET_BIT(board.bitboards[BOTH_OCC], D8)) {
@@ -195,19 +197,19 @@ void generateMoves(MoveList& moveList) {
         }
 
         // generate KNIGHT moves
-        if ( (board.side == WHITE)? piece == KNIGHT : piece == (KNIGHT + 6) ) {
+        if ( (C == WHITE)? piece == KNIGHT : piece == (KNIGHT + 6) ) {
             while (b1) {
                 startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = bitKnightAttacks[startSquare] & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
+                attacks = bitKnightAttacks[startSquare] & ((C == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
 
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
+                    if ( !GET_BIT( ((C == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
                         addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
@@ -218,19 +220,19 @@ void generateMoves(MoveList& moveList) {
         }
 
         // generate BISHOP moves
-        if ( (board.side == WHITE)? piece == BISHOP : piece == (BISHOP + 6) ) {
+        if ( (C == WHITE)? piece == BISHOP : piece == (BISHOP + 6) ) {
             while (b1) {
                 startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getBishopAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
+                attacks = getBishopAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((C == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
 
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
+                    if ( !GET_BIT( ((C == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
                         addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
@@ -241,18 +243,18 @@ void generateMoves(MoveList& moveList) {
         }
 
         // generate ROOK moves
-        if ( (board.side == WHITE)? piece == ROOK : piece == (ROOK + 6) ) {
+        if ( (C == WHITE)? piece == ROOK : piece == (ROOK + 6) ) {
             while (b1) {
                 startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getRookAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
+                attacks = getRookAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((C == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
+                    if ( !GET_BIT( ((C == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
                         addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
@@ -263,18 +265,18 @@ void generateMoves(MoveList& moveList) {
         }
 
         // generate QUEEN moves
-        if ( (board.side == WHITE)? piece == QUEEN : piece == (QUEEN + 6) ) {
+        if ( (C == WHITE)? piece == QUEEN : piece == (QUEEN + 6) ) {
             while (b1) {
                 startSquare = pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = getQueenAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
+                attacks = getQueenAttacks(startSquare, board.bitboards[BOTH_OCC]) & ((C == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
+                    if ( !GET_BIT( ((C == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
                         addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
@@ -285,18 +287,18 @@ void generateMoves(MoveList& moveList) {
         }
 
         // generate king moves
-        if ( (board.side == WHITE)? piece == KING : piece == (KING + 6) ) {
+        if ( (C == WHITE)? piece == KING : piece == (KING + 6) ) {
             while (b1) {
                 startSquare =pop_lsb(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
-                attacks = bitKingAttacks[startSquare] & ((board.side == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
+                attacks = bitKingAttacks[startSquare] & ((C == WHITE) ? ~board.bitboards[WHITE_OCC] : ~board.bitboards[BLACK_OCC]);
 
                 while (attacks) {
                     targetSquare = pop_lsb(&attacks);
 
                     // quiet moves
-                    if ( !GET_BIT( ((board.side == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
+                    if ( !GET_BIT( ((C == WHITE) ? board.bitboards[BLACK_OCC] : board.bitboards[WHITE_OCC]), targetSquare ) ){
                         addMove(moveList, Move(startSquare, targetSquare, QUIET) );
 
                     } else {  // capture moves
