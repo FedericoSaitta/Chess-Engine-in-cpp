@@ -7,7 +7,7 @@
 
 // #define LOGGING_LEVEL_ERROR
 // #define LOGGING_LEVEL_WARNING
-// #define LOGGING_LEVEL_INFO
+ #define LOGGING_LEVEL_INFO
 
 #ifdef DEBUG_BUILD
     #if defined(LOGGING_LEVEL_INFO)

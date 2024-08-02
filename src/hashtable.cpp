@@ -64,6 +64,8 @@ void initTranspositionTable(const int megaBytes) {
         // if the allocation has succeded
         clearTranspositionTable();
     }
+
+
 }
 
 void clearTranspositionTable() {

@@ -5,8 +5,8 @@
 #pragma once
 
 // SEARCH PARAMETERS //
-constexpr int fullDepthMoves { 4 }; // searching the first 4 moves at the full depth
-constexpr int reductionLimit { 3 };
+constexpr int LMR_MIN_MOVES { 4 }; // searching the first 4 moves at the full depth
+constexpr int LMR_MIN_DEPTH { 3 };
 
 constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 

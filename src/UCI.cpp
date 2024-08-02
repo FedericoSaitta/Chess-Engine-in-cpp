@@ -156,6 +156,10 @@ static void handleOption(const std::vector<std::string>& tokens) {
     }
 }
 
+static void cleanUp() {
+    if (transpositionTable != nullptr) free(transpositionTable);
+}
+
 
 void UCI() {
     std::string line{};
@@ -174,8 +178,10 @@ void UCI() {
         else if ( command == "go") handleGo(tokens);
 
         else if (command == "setoption") handleOption(tokens);
-        else if ( command == "quit") break;
         else if ( command == "ucinewgame") resetGameVariables();
+        else if ( command == "quit") { // we clean up allocated memory and exit the program
+            cleanUp(); break;
+        }
 
         // NON-UCI COMMANDS
         else if (command == "bench")  Test::BenchMark::staticSearch();

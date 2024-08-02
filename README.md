@@ -185,3 +185,4 @@ bonus and texel tuning (+70)
 - Gediminas Masaitis for his Texel tuner without which the evaluation would be much weaker.
 - Sebastian Lague for his chess videos and small-chessbot tournament which sparked my interest in chess programming.
 - The Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 
+- [tissatussa](https://github.com/tissatussa) for helping me debug and test Xubuntu builds of the engine.

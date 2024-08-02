@@ -12,6 +12,7 @@
 #include <cstring>
 #include <variant>
 
+#include "config.h"
 #include "../../include/inline_functions.h"
 #include "../../include/misc.h"
 
@@ -30,11 +31,13 @@ static const int castlingRightsConstant[64] = {
 //Moves a piece to an empty square. Note that it is an error if the <to> square contains a piece
 template <bool UpdateHash>
 void Board::movePieceQuiet(const int from, const int to) {
+
+	LOG_WARNING((mailbox[from] == NO_PIECE) ? "MovePieceQuiet: start square is empty" : "");
+	LOG_WARNING((mailbox[to] != NO_PIECE) ? "MovePieceQuiet: end square is not empty" : "");
+
     const Piece piece { mailbox[from] };
 
-	if constexpr (UpdateHash) {
-		hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
-	}
+	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
 
     bitboards[piece] ^= ( (1ULL << from) | (1ULL << to) );
 
@@ -46,12 +49,12 @@ void Board::movePieceQuiet(const int from, const int to) {
 template <bool UpdateHash>
 void Board::movePiece(const int from, const int to) {
 
+	LOG_WARNING((mailbox[from] == NO_PIECE) ? "movePiece: start square is empty" : "");
+
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
 
-	if constexpr (UpdateHash) {
-		hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
-	}
+	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
 
 	const U64 mask = (1ULL << from) | (1ULL << to);
 
@@ -64,25 +67,31 @@ void Board::movePiece(const int from, const int to) {
 
 template <bool UpdateHash>
 void Board::putPiece(const Piece pc, const int s) {
+
+	LOG_WARNING((pc == NO_PIECE) ? "putPiece: piece is NO_PIECE" : "");
+
 	mailbox[s] = pc;
 	bitboards[pc] |= (1ULL << s);
-	if constexpr (UpdateHash) {
-		hashKey ^= randomPieceKeys[pc][s];
-	}
+	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[pc][s];
+
 }
 
 template <bool UpdateHash>
 void Board::removePiece(const int s) {
-	// for now just checking
-	if constexpr (UpdateHash) {
-		hashKey ^= randomPieceKeys[mailbox[s]][s];
-	}
+
+	LOG_WARNING((mailbox[s] == NO_PIECE) ? "removePiece: piece is NO_PIECE" : "");
+
+	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[mailbox[s]][s];
+
 	bitboards[mailbox[s]] &= ~(1ULL << s);
 	mailbox[s] = NO_PIECE;
 }
 
 //Undos a move in the current position, rolling it back to the previous position
 void Board::undo(const Move move) {
+
+	LOG_WARNING((move == Move(0, 0)) ? "undo: undoing a NULL MOVE" : "");
+
 	MoveFlags type = move.flags();
 	const Color C { static_cast<Color>(side) };
 
@@ -151,7 +160,11 @@ void Board::undo(const Move move) {
 
 int Board::makeMove(const Move move, const int onlyCaptures) {
 
+	LOG_WARNING((move == Move(0, 0)) ? "makeMove: making a NULL MOVE" : "");
+
 	if(!onlyCaptures) {
+
+		LOG_WARNING((gamePly > 511) ? "makeMove: gamePly is too large" : "");
 
 		COPY_HASH();
 
@@ -293,18 +306,9 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 			return 0;
 		}
 
-		/*
-		FOR ZOBRIST DEBUGGING PURPOSES from Marksim Kozh
-		U64 new_hasKey = generateHashKey();
-		// if this doesnt match we output an error
-		if (new_hasKey != hashKey) {
-			printMove(move);
-			printBoardFancy();
-			std::cout << "This does not match, true hash is: " << new_hasKey << '\n';
-		}
-		*/
-
-
+		// Zobrist Debug test from Maksim Korzh
+		LOG_WARNING((generateHashKey() != hashKey) ? "makeMove: hashKey is wrong" : "");
+		
 		return 1; // this is a legal move so we return true
 	}
 	
@@ -318,12 +322,16 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 
 void Board::nullMove() {
+	LOG_WARNING((board.gamePly > 511) ? "nullMove: gamePly is too large" : "");
+	
 	hashKey ^= sideKey;
 	if (board.history[board.gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
-
+	
 	board.side ^= 1; // make null move
 	board.gamePly++;
 	board.history[board.gamePly] = UndoInfo(board.history[board.gamePly - 1]);
+	
+	LOG_WARNING((generateHashKey() != hashKey) ? "nullMove: hashKey is wrong" : "");
 }
 
 void Board::undoNullMove() {

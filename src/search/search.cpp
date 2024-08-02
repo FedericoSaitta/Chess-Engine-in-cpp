@@ -6,6 +6,7 @@
 #include <string>
 #include <chrono>
 #include <cstdlib>
+#include <algorithm>
 
 #include "../include/macros.h"
 #include "../include/inline_functions.h"
@@ -220,10 +221,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 static void updateKillersAndHistory(const Move bestMove, const int depth) {
-	//if (killerMoves[0][searchPly] != bestMove) { // FROM WEISS CHESS ENGINE
-		killerMoves[1][searchPly] = killerMoves[0][searchPly];
-		killerMoves[0][searchPly] = bestMove; // store killer moves
-//	}
+	killerMoves[1][searchPly] = killerMoves[0][searchPly];
+	killerMoves[0][searchPly] = bestMove; // store killer moves
 
 	// can do more sophisticated code tho, not giving maluses for now
 	historyScores[board.mailbox[bestMove.from()]][bestMove.to()] += (depth * depth);
@@ -399,7 +398,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     	}
     	else {
-    		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit) && isQuiet ) {
+    		if( (movesSearched >= LMR_MIN_MOVES) && (depth >= LMR_MIN_DEPTH) && isQuiet ) {
 
     			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 

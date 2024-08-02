@@ -55,6 +55,7 @@ public:
 
         // Create the log file if it doesn't exist
         createLogFileIfNotExists();
+        clearLogFile();
     }
 
     // Function to clear the log file
@@ -92,12 +93,21 @@ public:
     }
 
     // Log an error message
-    void logError(const std::string& error) { log("ERROR: " + error); }
+    void logError(const std::string& error) {
+        if (error != "") log("ERROR: " + error);
+    }
 
     // Log a warning message
-    void logWarning(const std::string& warning) { log("WARNING: " + warning); }
+    void logWarning(const std::string& warning) {
+        if (warning != "") {
+            std::cout << warning << '\n';
+            log("WARNING: " + warning);
+        }
+    }
 
-    void logInfo(const std::string& info) { log("INFO: " + info); }
+    void logInfo(const std::string& info) {
+        if (info != "") log("INFO: " + info);
+    }
 };
 
 // Declare the global logger object

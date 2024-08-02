@@ -31,24 +31,25 @@
 		King   100    200    300    400    500    600
 */
 
-// To implement En-Passant captures neatly we duplicate the values
-// such that each side can capture their own pieces, this of course
-// will not be allowed by the movegenerator
-// eg. mvv_lva[1][1]: means white pawn captures white pawn
-static int mvv_lva[12][12] = {
-	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
+// The table contains combinations of pieces will never capture each other
+// though this is kept for perfomance. Notably the last entry of each row
+// is of value 105 and this is to avoid checking whether the move is
+// an en-passant move. En-passant moves appear to 'capture' empty squares
+// hence index 12 (NO_PIECE = 12) is reserved for en-passants
+static int mvv_lva[12][13] = {
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605, 105},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604, 105},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603, 105},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602, 105},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601, 105},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600, 105},
 
-	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605, 105},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604, 105},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603, 105},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602, 105},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601, 105},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600, 105},
 };
 constexpr int hashTableBonus{ 30'000 };
 constexpr int principalVariationBonus{ 20'000 }; // so PV is always above captures
@@ -57,6 +58,7 @@ constexpr int firstKiller{ 9'000 };
 constexpr int secondKiller{ 8'000 };
 
 int scoreMove(const Move move) {
+
 	if (scorePV && (pvTable[0][searchPly] == move)) {
 		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
 		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
@@ -66,9 +68,7 @@ int scoreMove(const Move move) {
 	}
 
 	if (move.isCapture()) {
-
-		if (move.isEnPassant()) return 105 + captureBonus;
-		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
+		// score moves by MVV-LVA, it doesnt know if pieces are protected
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
 
@@ -87,9 +87,10 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
 		const Move move{ moveList.moves[count].first };
 
-		// assigning the scores
-		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
-		else moveList.moves[count].second = scoreMove(move);
+		if (bestMove != move)
+			moveList.moves[count].second = scoreMove(move);
+		else
+			moveList.moves[count].second = hashTableBonus;
 	}
 }
 
