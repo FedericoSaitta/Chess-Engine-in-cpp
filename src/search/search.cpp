@@ -399,15 +399,21 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     		score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     	}
     	else {
-    		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit)
-    			&& isQuiet			// will reduce quiet moves
-    			&& !inCheck         // will not reduce in case we are in check
-    			&& !givesCheck()) { // maybe you should use this....
+    		if( (movesSearched >= fullDepthMoves) && (depth >= reductionLimit) && isQuiet ) {
 
-    			const int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
+    			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
+
+    			reduction += DO_NULL; // reduce more for nodes where we can do null moves
+
+    			reduction -= inCheck;
+    			reduction -= givesCheck();
+
+    			// with the current methods some overshoots do happen
+    			reduction = std::clamp(reduction, 1, depth - 1);
 
     			score = -negamax(-alpha-1, -alpha, depth-1-reduction, DO_NULL); // Search this move with reduced depth:
     		}
+
     		else score = alpha+1;  // Hack to ensure that full-depth search for non-reduced moves
 
     		// principal variation search (PVS)

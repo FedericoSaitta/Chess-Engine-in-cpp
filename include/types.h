@@ -120,6 +120,10 @@ public:
         return flags() & PROMOTION;
     }
 
+    inline bool isEnPassant() const {
+        return flags() == EN_PASSANT;
+    }
+
     // this can be written so much better
     inline PieceType promotionPiece() const {
         return PieceType( std::max( ( flags() & PROMOTIONS) - 3, 0) );

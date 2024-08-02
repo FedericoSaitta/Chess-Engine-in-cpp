@@ -66,6 +66,8 @@ int scoreMove(const Move move) {
 	}
 
 	if (move.isCapture()) {
+
+		if (move.isEnPassant()) return 105 + captureBonus;
 		// score moves by MVV-LVA, it doesnt know if pieces are protected (SEE does though)
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
