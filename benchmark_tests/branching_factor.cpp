@@ -93,21 +93,21 @@ namespace Test::BenchMark {
             resetGameVariables();
             parseFEN(FEN);
 
-            /*
+
             std::streambuf* originalCoutBuffer = std::cout.rdbuf();
             std::ostringstream output;
             std::cout.rdbuf(output.rdbuf());
-            */
+
 
             iterativeDeepening(depth);
 
-            /*
+
             std::cout.rdbuf(originalCoutBuffer);
             std::istringstream outputStream(output.str());
             std::string line;
-            */
 
-            /*
+
+
             while (std::getline(outputStream, line)) {
                 std::vector<std::string> tokens = split(line);
 
@@ -124,7 +124,7 @@ namespace Test::BenchMark {
                     }
                 }
             }
-            */
+
         }
 
         const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;

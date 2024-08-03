@@ -69,22 +69,26 @@ namespace Test::Debug{
         giveScores(moveList, 0);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
+
             const Move move{ pickBestMove(moveList, count) };
             const int score { moveList.moves[count].second };
 
+            COPY_HASH()
             if( !board.makeMove(move, 0) ) { // meaning its illegal
                 searchPly--;
                 repetitionIndex--;
+                RESTORE_HASH()
                 continue;
             }
 
             printMove( move );
-            std::cout << ": " << unicodePieces[board.mailbox[move.from()]] << " score: " << score
+            std::cout << ": " << unicodePieces[board.mailbox[move.to()]] << " score: " << score
                       << " is capture: " << move.isCapture() << " is promotion: " << move.isPromotion()
                       << " promotion piece: " << promotedPieces[move.promotionPiece()]
                       << " gives check: " << givesCheck() << '\n';
 
             board.undo(move);
+            RESTORE_HASH()
         }
 
     }

@@ -395,6 +395,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         if( !board.makeMove(move, 0) ) { // meaning its illegal
             searchPly--;
         	repetitionIndex--;
+        	RESTORE_HASH()
             continue;
         }
 
