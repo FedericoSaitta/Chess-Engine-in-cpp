@@ -7,9 +7,16 @@
 
 // #define LOGGING_LEVEL_ERROR
 // #define LOGGING_LEVEL_WARNING
- #define LOGGING_LEVEL_INFO
+// #define LOGGING_LEVEL_INFO
 
+// In debug mode logging file is always created
 #ifdef DEBUG_BUILD
+
+        #define LOG_ERROR(x) logFile.logError(x)
+        #define LOG_WARNING(x) logFile.logWarning(x)
+        #define LOG_INFO(x) logFile.logInfo(x)
+#else
+
     #if defined(LOGGING_LEVEL_INFO)
         #define LOG_ERROR(x) logFile.logError(x)
         #define LOG_WARNING(x) logFile.logWarning(x)
@@ -29,10 +36,5 @@
 
     #endif
 
-#else
-
-    #define LOG_ERROR(x)
-    #define LOG_WARNING(x)
-    #define LOG_INFO(x)
 
 #endif

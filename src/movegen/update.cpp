@@ -37,6 +37,8 @@ void Board::movePieceQuiet(const int from, const int to) {
 
     const Piece piece { mailbox[from] };
 
+	LOG_WARNING((piece == 12) ? "MovePieceQuiet: out of bounds hashkey indexing" : "");
+
 	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
 
     bitboards[piece] ^= ( (1ULL << from) | (1ULL << to) );
@@ -53,6 +55,9 @@ void Board::movePiece(const int from, const int to) {
 
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
+
+	LOG_WARNING((piece == 12) ? "movePiece: out of bounds hashkey indexing" : "");
+	LOG_WARNING((capturedPiece == 12) ? "movePiece: out of bounds capture hashkey indexing" : "");
 
 	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
 

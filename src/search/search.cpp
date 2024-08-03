@@ -39,7 +39,7 @@ int searchPly{};
 static std::int64_t nodes{};
 
 Move killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
-int historyScores[12][64]{}; // zero initialization to ensure no random bonuses to moves
+int historyScores[64][64]{}; // zero initialization to ensure no random bonuses to moves
 
 Move pvTable[64][64]{};
 static int pvLength[64]{};
@@ -76,6 +76,8 @@ static void resetSearchStates() {
 	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
 
+	memset(historyScores, 0, sizeof(historyScores));
+
 	nodes = 0;
 	followPV = 0;
 	scorePV = 0;
@@ -84,15 +86,6 @@ static void resetSearchStates() {
 	stopSearch = 0;
 }
 
-
-static void ageHistoryTable() {
-	for (int a=0; a < 12; a++) {
-		for (int b=0; b<64; b++) {
-			// make sure we dont go over the limit
-			historyScores[a][b] = std::min(maxHistoryScore, static_cast<int>(historyScores[a][b] * historyAgeRatio) );
-		}
-	}
-}
 
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
@@ -220,12 +213,26 @@ static int quiescenceSearch(int alpha, const int beta) {
     return bestEval; // node that fails low
 }
 
-static void updateKillersAndHistory(const Move bestMove, const int depth) {
+static void updateKillersAndHistory(const Move bestMove, const int depth, Move quiets[32], int quietMoveCount) {
+	const int bonus = depth * depth;
+	const int malus = -depth * depth;
+
 	killerMoves[1][searchPly] = killerMoves[0][searchPly];
 	killerMoves[0][searchPly] = bestMove; // store killer moves
 
-	// can do more sophisticated code tho, not giving maluses for now
-	historyScores[board.mailbox[bestMove.from()]][bestMove.to()] += (depth * depth);
+	// Bonus to the move that caused the beta cutoff
+	if (depth > 2){
+		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / 1'600;
+		}
+
+
+	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
+	if (!bestMove.isNoisy()) {
+		for (int i = 0; i < quietMoveCount; ++i) {
+			Move m { quiets[i] };
+			historyScores[m.from()][m.to()] += malus - historyScores[m.from()][m.to()] * std::abs(malus) / 1'600;
+		}
+	}
 }
 
 
@@ -352,17 +359,20 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	const int originalAlpha {alpha};
 	int legalMoves{};
 	int movesSearched{};
-	int quietMoveCount{};
+
 	bool skipQuietMoves{ false };
 
 	// score the moves before picking the best one
 	giveScores(moveList, bestMove);
 
+	Move quiets[32];
+	int quietMoveCount{};
+
     for (int count=0; count < totalMoves; count++) {
     	const Move move { pickBestMove(moveList, count ) };
 
     	// En-passant are captures, so they are non-quiet
-    	const bool isQuiet = ( !move.isCapture() && !move.isPromotion());
+    	const bool isQuiet = ( !move.isNoisy() );
 
     	if (isQuiet && skipQuietMoves) continue;
 
@@ -404,6 +414,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
     			reduction += DO_NULL; // reduce more for nodes where we can do null moves
 
+    			// here you could decrease or increase reductions based on what kind of noisy move it is
     			reduction -= inCheck;
     			reduction -= givesCheck();
 
@@ -456,12 +467,15 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         			// helps with better move ordering in branches at the same depth
 
         			if (isQuiet) {
-        				updateKillersAndHistory(bestMove, depth);
+        				updateKillersAndHistory(bestMove, depth, quiets, quietMoveCount);
         			}
         			break;
         		}
         	}
         }
+    	// Remember attempted moves to adjust their history scores
+    	if (isQuiet && quietMoveCount < 32)
+    		quiets[quietMoveCount++] = move;
     }
 
 	// After we have looped over the possible moves, check for stalemate or checkmate
@@ -545,7 +559,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
 
-
 		} else if( score > MATE_SCORE && score < MATE_VALUE) {
 			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(nodes / depthDuration.count())
 			<< " time " << static_cast<int>(depthDuration.count() * 1'000) << " pv " << pvString << std::endl;
@@ -555,11 +568,10 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 		}
 
 		currentDepth++; // we can proceed to the next iteration
-
     }
 
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
 
-	ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
+	//ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
 }

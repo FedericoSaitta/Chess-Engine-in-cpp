@@ -40,7 +40,7 @@ public:
 
     inline void resetBoard() {
         memset(bitboards, 0ULL, sizeof(bitboards));
-        memset(history, 0, sizeof(history));
+        history->resetUndoInfo();
 
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
 
@@ -48,7 +48,7 @@ public:
 
         side = WHITE;
         history[gamePly].enPassSq = 64;
-        history[gamePly].castle = 0;
+        history[gamePly].castle = 0ULL;
         history[gamePly].captured = NO_PIECE;
 
     }

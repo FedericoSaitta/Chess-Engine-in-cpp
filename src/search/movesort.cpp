@@ -3,6 +3,7 @@
 #include "search.h"
 #include "../include/board.h"
 #include "../include/inline_functions.h"
+#include "config.h"
 
 #include <algorithm>
 #include <utility>
@@ -67,19 +68,18 @@ int scoreMove(const Move move) {
 		return principalVariationBonus;
 	}
 
-	if (move.isCapture()) {
+	if (move.isNoisy() ) {
+		// queen promotions get maximum bonus
+		if (move.isPromotion()) return 605 + captureBonus;
+
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
 
-	// scoring promotions, should check this....
-	const int promPiece { move.promotionPiece() };
-	if (promPiece != 0) return mvv_lva[PAWN][promPiece] + captureBonus;
-
 	if (killerMoves[0][searchPly] == move) return firstKiller;
 	if (killerMoves[1][searchPly] == move) return secondKiller;
 
-	return historyScores[ board.mailbox[move.from()] ][ move.to() ];
+	return (historyScores[move.from()][move.to() ]);
 }
 
 

@@ -72,7 +72,12 @@ namespace Test::Debug{
             const Move move{ pickBestMove(moveList, count) };
             const int score { moveList.moves[count].second };
 
-            board.makeMove(move, 0);
+            if( !board.makeMove(move, 0) ) { // meaning its illegal
+                searchPly--;
+                repetitionIndex--;
+                continue;
+            }
+
             printMove( move );
             std::cout << ": " << unicodePieces[board.mailbox[move.from()]] << " score: " << score
                       << " is capture: " << move.isCapture() << " is promotion: " << move.isPromotion()

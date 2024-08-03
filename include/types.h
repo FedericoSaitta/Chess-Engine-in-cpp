@@ -39,18 +39,12 @@ inline int color(const Piece pc){ return pc / 6; }
 
 
 struct UndoInfo {
-    //The bitboard of squares on which pieces have either moved from, or have been moved to. Used for castling
-    //legality checks
+
     U64 castle;
-
-    //The piece that was captured on the last move
     Piece captured;
-
-    //The en passant square. This is the square which pawns can move to in order to en passant capture an enemy pawn that has
-    //double pushed on the previous move
     int enPassSq;
 
-    constexpr UndoInfo() : castle(0), captured(NO_PIECE), enPassSq(64) {}
+    constexpr UndoInfo() : castle(0ULL), captured(NO_PIECE), enPassSq(64) {}
 
     //This preserves the entry bitboard across moves
     UndoInfo(const UndoInfo& prev) :
@@ -60,11 +54,21 @@ struct UndoInfo {
     UndoInfo& operator=(const UndoInfo& other) {
         if (this != &other) {
             castle = other.castle;
-            captured = other.captured; // Reset to default value
-            enPassSq = other.enPassSq;       // Reset to default value
+            captured = other.captured;
+            enPassSq = other.enPassSq;
         }
         return *this;
     }
+
+
+    void resetUndoInfo() {
+        for (int i=0; i < 512; i++) {
+            castle = 0ULL;
+            captured = NO_PIECE;
+            enPassSq = 64;
+        }
+    }
+
 };
 
 
@@ -75,7 +79,6 @@ enum MoveFlags : int {
     OO = 0b0010, OOO = 0b0011,
 
     PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
-
 
     EN_PASSANT = 0b1010,
 
@@ -122,6 +125,18 @@ public:
 
     inline bool isEnPassant() const {
         return flags() == EN_PASSANT;
+    }
+
+    // Noisy moves are: captures, en-passant and queen promotions
+    // Non-Noisy moves are: undepromtions( even capture promotions ) and quiet moves (castling etc)
+    inline bool isNoisy() const {
+        switch(flags()) {
+            case (CAPTURE): return true;
+            case (EN_PASSANT): return true;
+            case (PC_QUEEN): return true;
+            case (PR_QUEEN): return true;
+            default: return false;
+        }
     }
 
     // this can be written so much better
