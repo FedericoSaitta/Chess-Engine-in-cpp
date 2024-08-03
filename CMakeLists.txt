@@ -59,7 +59,6 @@ set(SOURCE_FILES
         debug_tests/move_tests.cpp
         debug_tests/bitmask_tests.cpp
 
-        # Include header files for better IDE support
         src/movegen/movegen.h
         src/search/search.h
         src/movegen/update.h

@@ -21,11 +21,13 @@ be soon sent to CCRL to test its performance against other engines, I estimate i
 
 ## Table of Contents
 
+- [Running the Engine](#Running-the-Engine)
 - [Build Guide](#build-guide)
   - [Prerequisites](#prerequisites)
   - [Cloning the Repository](#cloning-the-repository)
   - [Building the Project](#building-the-project)
   - [Running the Executable](#running-the-executable)
+- [User Details](#User-Details)
 - [UCI Commands](#uci-commands)
 - [Extra-UCI Commands](#extra-uci-commands)
 - [Technical Details](#technical-details)
@@ -38,10 +40,13 @@ be soon sent to CCRL to test its performance against other engines, I estimate i
 - [Patches](#patches)
 - [Credits](#credits)
 
-## Build Guide:
-This project uses **CMake** for build configuration.
+## Running the Engine:
+If you are on windows-x64 or macos-x64 head to the 'Releases' section and download the executable.
+If you want to build this project, follow the build guide below.
 
+## Build Guide
 ### Prerequisites
+This project uses **CMake** for build configuration.
 Before you start, make sure you have the following software installed:
 - **CMake**: Version 3.15 or higher. [Download CMake](https://cmake.org/download/)
 - **Compiler**: Ensure you have a C++ compiler installed (GCC, Clang, or MSVC).
@@ -49,23 +54,26 @@ Before you start, make sure you have the following software installed:
 
 ### Cloning the Repository
 To get started, clone the repository using the following command:
-```bash
+```
 git clone https://github.com/FedericoSaitta/Chess-Engine-in-cpp
 cd ChessEngine
 ```
 ### Building the project
 Head to the directory where the repository is located and run:
-```bash
+```
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
+If you want to build the project in debug mode, use `-DCMAKE_BUILD_TYPE=Debug ..` instead. Note that in Debug mode
+a log-file is generated in the working directory and many run-time tests and sanity checks are performed causing the
+engine to slow significantly, Debug mode should not be used for play against humans or other engines.
 ### Running the executable
-```bash
-./ChessEngine
-```
+For macOS and Linux: `./ChessEngine`
+For windows:`ChessEngine.exe`
 
+## User Details:
 ### UCI commands:
 `position`:
 - `startpos`
@@ -94,12 +102,11 @@ more than 15 seconds on most machines.
 to represent the pieces.
 
 ## Technical Details:
-
 #### Move Generation:
 - [X] Plain Magic Bitboards for all sliding and leaping pieces.
 - [X] Pawn pushes, En-Passant and Castling move generation is done on the fly.
 - [X] Copy-Restore approach is used to play and undo moves on the board
-- [ ] Make-UnMake move and full Position class implementation
+- [X] Make-UnMake move and full Position class implementation
 - [ ] Legal move generation
 - [ ] Staged move generation
 
@@ -130,6 +137,7 @@ to represent the pieces.
 - [X] Delta Pruning
 - [X] Razoring
 - [X] Late Move Pruning
+- [ ] Transposition table in quiesce
 - [ ] Tuning of Late Move Pruning
 - [ ] Futility pruning
 - [ ] Improving heuristic 
@@ -167,7 +175,7 @@ testing suites.
 | 1.1.0   | -------- | 1550          |
 
 
-#### Patches:
+### Patches:
 - v1.1.0: iterative deepening, negamax search with PVS and quiesce for captures and promotions, MVV-LVA, killer and history move ordering. Simple piece square table evaluation.
 - v1.2.0: Zobrist hashing for three-fold check and TT-table, null move pruning and basic LMR.
 - v1.2.1: Additions of Pesto Tables and tapered evaluation, aspiration windows.
@@ -180,9 +188,9 @@ testing suites.
 - v1.3.0: Few performance improvements in evaluation (+20), switch to fail-soft negamax (+20), bishop pair
 bonus and texel tuning (+70)
 
-#### Credits:
+### Credits:
 - Maksim Korzh for his incredible chess programming in c series which was invaluable while implementing bitboard move-generation and transposition table.
 - Gediminas Masaitis for his Texel tuner without which the evaluation would be much weaker.
 - Sebastian Lague for his chess videos and small-chessbot tournament which sparked my interest in chess programming.
 - The Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 
-- [tissatussa](https://github.com/tissatussa) for helping me debug and test Xubuntu builds of the engine.
+- [tissatussa](https://github.com/tissatussa) for testing compiles for Linux, using Xubuntu.
