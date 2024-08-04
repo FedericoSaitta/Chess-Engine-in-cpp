@@ -68,7 +68,7 @@ int scoreMove(const Move move) {
 		return principalVariationBonus;
 	}
 
-	if (move.isNoisy() ) {
+	if (move.isNoisy()) {
 		// queen promotions get maximum bonus
 		if (move.isPromotion()) return 605 + captureBonus;
 
@@ -79,7 +79,7 @@ int scoreMove(const Move move) {
 	if (killerMoves[0][searchPly] == move) return firstKiller;
 	if (killerMoves[1][searchPly] == move) return secondKiller;
 
-	return (historyScores[move.from()][move.to() ]);
+	return (historyScores[move.from()][move.to()]);
 }
 
 
@@ -87,10 +87,13 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
 		const Move move{ moveList.moves[count].first };
 
-		if (bestMove != move)
-			moveList.moves[count].second = scoreMove(move);
-		else
+		if (bestMove == move) {
 			moveList.moves[count].second = hashTableBonus;
+		}
+		else {
+			moveList.moves[count].second = scoreMove(move);
+		}
+
 	}
 }
 
