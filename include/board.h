@@ -25,13 +25,9 @@ class Board {
 public:
     UndoInfo history[512];
     U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
-
     Piece mailbox[64];
-
     int gamePly{};
-
     int side{ WHITE };
-
 
     inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
     inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
@@ -39,18 +35,13 @@ public:
     inline U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
 
     inline void resetBoard() {
-        memset(bitboards, 0ULL, sizeof(bitboards));
-        history->resetUndoInfo();
+        for (int i=0; i<512; i++) history[i].resetUndoInfo();
 
+        memset(bitboards, 0ULL, sizeof(bitboards));
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
 
         gamePly = 0;
-
         side = WHITE;
-        history[gamePly].enPassSq = 64;
-        history[gamePly].castle = 0ULL;
-        history[gamePly].captured = NO_PIECE;
-
     }
 
     inline void resetOcc() {
@@ -59,7 +50,6 @@ public:
         bitboards[BLACK_OCC] = 0ULL;
         bitboards[BOTH_OCC] = 0ULL;
     }
-
 
     inline Piece getMovedPiece(const Move move) const {return mailbox[move.from()];}
     inline Piece getCapturedPiece(const Move move) const { return mailbox[move.to()]; }
@@ -73,8 +63,8 @@ public:
     void undo(Move move);
     int makeMove(Move move, int onlyCaptures);
 
-    static void nullMove();
-    static void undoNullMove();
+    void nullMove();
+    void undoNullMove();
 };
 
 extern Board board;

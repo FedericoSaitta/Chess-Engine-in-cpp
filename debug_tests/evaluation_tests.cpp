@@ -65,9 +65,9 @@ namespace Test::Debug {
             std::string FEN{ tokens[0] + ' ' + tokens[1] + ' ' + tokens[2] + ' ' + tokens[3] };
 
             parseFEN(FEN);
-            int whiteEval { evaluate() };
+            int whiteEval { evaluate(board) };
             board.side ^= 1;
-            int blackEval { evaluate() };
+            int blackEval { evaluate(board) };
             board.side ^= 1;
 
             // White and black should return a zero-sum eval, if they dont we are overcounting white or black pieces
@@ -79,9 +79,9 @@ namespace Test::Debug {
             swapColours();
             //  printBoardFancy();
 
-            int mirroredWhiteEval { evaluate() };
+            int mirroredWhiteEval { evaluate(board) };
             board.side ^= 1;
-            int mirroredBlackEval { evaluate() };
+            int mirroredBlackEval { evaluate(board) };
             board.side ^= 1;
 
             // std::cout << whiteEval << ' ' << blackEval << '\n';
@@ -112,7 +112,7 @@ namespace Test::Debug {
 
             parseFEN(FEN);
 
-            int originalEval { evaluate() };
+            int originalEval { evaluate(board) };
             int tunerEval{ static_cast<int>(myEval::myEvaluation::get_fen_eval_result(FEN).score) };
 
             if (originalEval != tunerEval) {

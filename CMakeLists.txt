@@ -17,11 +17,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # GCC/Clang specific flags
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fsanitize=undefined")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -DDEBUG")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined,thread,leak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic ${SANITIZER_FLAGS} -fno-omit-frame-pointer -g -O0")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
 
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -DDEBUG -fsanitize=address,undefined -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 endif()
 
 # Include directories
@@ -94,21 +94,4 @@ endif()
 # Linker settings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(ChessEngine pthread)
-endif()
-
-# Additional ASan/UBSan flags for GCC/Clang
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Check if we're in a debug build
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        # Enable ASan and UBSan
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
-    endif()
-endif()
-
-# MSVC Address Sanitizer
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(ChessEngine PRIVATE /fsanitize=address)
-    endif()
-
 endif()

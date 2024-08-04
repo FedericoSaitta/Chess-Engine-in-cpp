@@ -60,13 +60,10 @@ struct UndoInfo {
         return *this;
     }
 
-
     void resetUndoInfo() {
-        for (int i=0; i < 512; i++) {
-            castle = 0ULL;
-            captured = NO_PIECE;
-            enPassSq = 64;
-        }
+        castle = 0ULL;
+        captured = NO_PIECE;
+        enPassSq = 64;
     }
 
 };

@@ -107,11 +107,11 @@ namespace Test::BenchMark {
             std::string line;
 
 
-
             while (std::getline(outputStream, line)) {
+
                 std::vector<std::string> tokens = split(line);
 
-                if ( tokens[6] == "nodes" ) {
+                if (tokens.size() > 6 && tokens[6] == "nodes") {
                     if ( std::stoi(tokens[5]) == depth ) { // only count the nodes at the very end
                         // the formula is pow(nodes at depth N, 1 / N)
                         double dummyNodes { std::stod(tokens[7]) };

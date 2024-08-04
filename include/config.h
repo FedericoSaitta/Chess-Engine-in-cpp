@@ -33,5 +33,4 @@
         #define LOG_ERROR(x)
         #define LOG_WARNING(x)
         #define LOG_INFO(x)
-
 #endif

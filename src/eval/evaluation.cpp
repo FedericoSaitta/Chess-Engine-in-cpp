@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include "../../include/macros.h"
+#include "../../include/types.h"
 #include "../../include/inline_functions.h"
 #include "../../include/board.h"
  #include "evalparams.h"
@@ -29,7 +30,7 @@ void init_tables()
 }
 
 
-int evaluate() {
+int evaluate(const Board& pos) {
     int score[2]{};
 
     int gamePhase{};
@@ -37,7 +38,7 @@ int evaluate() {
     U64 bitboardCopy{}; // we need to ofc make a copy as we dont want to alter the bitboard
 
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
-        bitboardCopy = board.bitboards[bbPiece];
+        bitboardCopy = pos.bitboards[bbPiece];
 
         // defo could improve the conditional branching in here
         while (bitboardCopy) {
@@ -51,80 +52,80 @@ int evaluate() {
             switch(bbPiece) {
                 case (PAWN):
                     // you could try and avoid conditional branching here
-                    if ( countBits(board.bitboards[PAWN] & fileMasks[square]) > 1) score[WHITE] += doublePawnPenalty * countBits(board.bitboards[PAWN] & fileMasks[square]);
+                    if ( countBits(pos.bitboards[PAWN] & fileMasks[square]) > 1) score[WHITE] += doublePawnPenalty * countBits(pos.bitboards[PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (board.bitboards[PAWN] & isolatedPawnMasks[square] ) == 0) score[WHITE] += isolatedPawnPenalty;
+                    if ( (pos.bitboards[PAWN] & isolatedPawnMasks[square] ) == 0) score[WHITE] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (board.bitboards[BLACK_PAWN] & white_passedPawnMasks[square] ) == 0) score[WHITE] += passedPawnBonus[getRankFromSquare[square]];
+                    if ( (pos.bitboards[BLACK_PAWN] & white_passedPawnMasks[square] ) == 0) score[WHITE] += passedPawnBonus[getRankFromSquare[square]];
                     break;
 
                 case (BLACK_PAWN):
                     // you could try and avoid conditional branching here
-                    if ( countBits(board.bitboards[BLACK_PAWN] & fileMasks[square]) > 1) score[BLACK] += doublePawnPenalty * countBits(board.bitboards[BLACK_PAWN] & fileMasks[square]);
+                    if ( countBits(pos.bitboards[BLACK_PAWN] & fileMasks[square]) > 1) score[BLACK] += doublePawnPenalty * countBits(pos.bitboards[BLACK_PAWN] & fileMasks[square]);
 
                     // adding penalties to isolated pawns
-                    if ( (board.bitboards[BLACK_PAWN] & isolatedPawnMasks[square] ) == 0) score[BLACK] += isolatedPawnPenalty;
+                    if ( (pos.bitboards[BLACK_PAWN] & isolatedPawnMasks[square] ) == 0) score[BLACK] += isolatedPawnPenalty;
 
                     // adding bonuses to passed pawns
-                    if ( (board.bitboards[PAWN] & black_passedPawnMasks[square] ) == 0) score[BLACK] += passedPawnBonus[7 - getRankFromSquare[square]];
+                    if ( (pos.bitboards[PAWN] & black_passedPawnMasks[square] ) == 0) score[BLACK] += passedPawnBonus[7 - getRankFromSquare[square]];
                     break;
 
                 case (ROOK):
-                    if ( (board.bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += semiOpenFileScore;
-                    if ( ( (board.bitboards[PAWN] | board.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += openFileScore;
+                    if ( (pos.bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += semiOpenFileScore;
+                    if ( ( (pos.bitboards[PAWN] | pos.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += openFileScore;
 
-                    score[WHITE] += RookMobility * countBits( getRookAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[WHITE] += RookMobility * countBits( getRookAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 case (BLACK_ROOK):
-                    if ( (board.bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += semiOpenFileScore;
-                    if ( ( (board.bitboards[PAWN] | board.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += openFileScore;
+                    if ( (pos.bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += semiOpenFileScore;
+                    if ( ( (pos.bitboards[PAWN] | pos.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += openFileScore;
 
-                    score[BLACK] += RookMobility * countBits( getRookAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[BLACK] += RookMobility * countBits( getRookAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 // if the kings are on semi-open or open files they will be given penalties
                 case (KING):
-                    if ( (board.bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += kingSemiOpenFileScore;
-                    if ( ( (board.bitboards[PAWN] | board.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += kingOpenFileScore;
+                    if ( (pos.bitboards[PAWN] & fileMasks[square]) == 0) score[WHITE] += kingSemiOpenFileScore;
+                    if ( ( (pos.bitboards[PAWN] | pos.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[WHITE] += kingOpenFileScore;
 
-                    score[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & board.bitboards[WHITE_OCC] );
+                    score[WHITE] += kingShieldBonus * countBits( bitKingAttacks[square] & pos.bitboards[WHITE_OCC] );
                     break;
 
                 case (BLACK_KING):
-                    if ( (board.bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += kingSemiOpenFileScore;
-                    if ( ( (board.bitboards[PAWN] | board.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += kingOpenFileScore;
+                    if ( (pos.bitboards[BLACK_PAWN] & fileMasks[square]) == 0) score[BLACK] += kingSemiOpenFileScore;
+                    if ( ( (pos.bitboards[PAWN] | pos.bitboards[BLACK_PAWN]) & fileMasks[square]) == 0) score[BLACK] += kingOpenFileScore;
 
-                    score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & board.bitboards[BLACK_OCC] );
+                    score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & pos.bitboards[BLACK_OCC] );
                     break;
 
 
                 // mobility scores for sliding pieces except rooks, please test these and stop adding new features
                 // these are very basic implementations, like the ones in fruit
                 case (BISHOP):
-                    score[WHITE] += BishopMobility * countBits( getBishopAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[WHITE] += BishopMobility * countBits( getBishopAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 case (BLACK_BISHOP):
-                    score[BLACK] += BishopMobility * countBits( getBishopAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[BLACK] += BishopMobility * countBits( getBishopAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 case (KNIGHT):
-                    score[WHITE] += KnightMobility * countBits( bitKnightAttacks[square] & board.bitboards[BOTH_OCC] );
+                    score[WHITE] += KnightMobility * countBits( bitKnightAttacks[square] & pos.bitboards[BOTH_OCC] );
                     break;
 
                 case (BLACK_KNIGHT):
-                    score[BLACK] += KnightMobility * countBits( bitKnightAttacks[square] & board.bitboards[BOTH_OCC] );
+                    score[BLACK] += KnightMobility * countBits( bitKnightAttacks[square] & pos.bitboards[BOTH_OCC] );
                     break;
 
                 case (QUEEN):
-                    score[WHITE] += QueenMobility * countBits( getQueenAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[WHITE] += QueenMobility * countBits( getQueenAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 case (BLACK_QUEEN):
-                    score[BLACK] += QueenMobility * countBits( getQueenAttacks(square, board.bitboards[BOTH_OCC]) );
+                    score[BLACK] += QueenMobility * countBits( getQueenAttacks(square, pos.bitboards[BOTH_OCC]) );
                     break;
 
                 default:
@@ -134,11 +135,11 @@ int evaluate() {
     }
 
     // applying bishop pair bonus:
-    if (countBits(board.bitboards[WHITE_BISHOP]) > 1) score[WHITE] += bishopPairBonus;
-    if (countBits(board.bitboards[BLACK_BISHOP]) > 1) score[BLACK] += bishopPairBonus;
+    if (countBits(pos.bitboards[WHITE_BISHOP]) > 1) score[WHITE] += bishopPairBonus;
+    if (countBits(pos.bitboards[BLACK_BISHOP]) > 1) score[BLACK] += bishopPairBonus;
 
-    const int mgScore = MgScore(score[board.side]) - MgScore(score[board.side^1]);
-    const int egScore = EgScore(score[board.side]) - EgScore(score[board.side^1]);
+    const int mgScore = MgScore(score[pos.side]) - MgScore(score[pos.side^1]);
+    const int egScore = EgScore(score[pos.side]) - EgScore(score[pos.side^1]);
 
     int mgPhase = gamePhase;
     if (mgPhase > 24) mgPhase = 24;  // in case of early promotion

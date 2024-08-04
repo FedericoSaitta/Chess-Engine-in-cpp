@@ -7,8 +7,8 @@
 #include "benchmark_tests.h"
 #include "debug_tests.h"
 
-// #define DEBUG
-// #define BENCHMARK
+// #define DEBUG_TEST
+// #define BENCHMARK_TEST
 
 #include <fstream>
 #include <iostream>
@@ -32,17 +32,22 @@ int main() {
     initAll(256); // Done at compile time :), using 256 MB size hash
     UCI();
 
+   // Test::BenchMark::staticSearch();
+  //  parseFEN("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -");
+   // iterativeDeepening(5);
+
     // killer position 1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -
    // Test::BenchMark::standardPerft();
 
-#ifdef BENCHMARK
+/*
+#ifdef BENCHMARK_TEST
     Test::BenchMark::staticSearch();
     Test::BenchMark::matingPuzzles();
     Test::BenchMark::standardPerft();
 #endif
 
 
-#ifdef DEBUG
+#ifdef DEBUG_TEST
     Test::Debug::countPawnAttacks();
     Test::Debug::countKnightMoves();
     Test::Debug::countKingMoves();
@@ -50,10 +55,10 @@ int main() {
     Test::Debug::countBishopMoves_noEdges();
     Test::Debug::countRookMoves_noEdges();
 
-    Test::Debug::moveEncodingAndDecoding();
  //   Test::Debug::moveSorting();
 
     Test::Debug::mirrorEval();
    // Test::Debug::historyScores();
 #endif
+*/
 }

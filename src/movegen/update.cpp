@@ -1,16 +1,12 @@
-//
-// Created by Federico Saitta on 28/06/2024.
-// deals with uupdating the board after a move is made, also has undo move function
 #include "update.h"
+
+#include <assert.h>
+#include <cstring>
+#include <variant>
 
 #include "../../include/macros.h"
 #include "types.h"
-#include <assert.h>
 #include "../../include/hashtable.h"
-
-
-#include <cstring>
-#include <variant>
 
 #include "config.h"
 #include "../../include/inline_functions.h"
@@ -32,12 +28,10 @@ static const int castlingRightsConstant[64] = {
 template <bool UpdateHash>
 void Board::movePieceQuiet(const int from, const int to) {
 
-	LOG_WARNING((mailbox[from] == NO_PIECE) ? "MovePieceQuiet: start square is empty" : "");
-	LOG_WARNING((mailbox[to] != NO_PIECE) ? "MovePieceQuiet: end square is not empty" : "");
+	assert((mailbox[from] != NO_PIECE) && "movePieceQuiet: start square is empty");
+	assert((mailbox[to] == NO_PIECE) && "movePieceQuiet: out of bounds capture hashkey indexing");
 
     const Piece piece { mailbox[from] };
-
-	LOG_WARNING((piece == 12) ? "MovePieceQuiet: out of bounds hashkey indexing" : "");
 
 	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
 
@@ -51,13 +45,11 @@ void Board::movePieceQuiet(const int from, const int to) {
 template <bool UpdateHash>
 void Board::movePiece(const int from, const int to) {
 
-	LOG_WARNING((mailbox[from] == NO_PIECE) ? "movePiece: start square is empty" : "");
+	assert((mailbox[from] != NO_PIECE) && "movePiece: start square is empty");
+	assert((mailbox[to] != NO_PIECE) && "movePiece: out of bounds capture hashkey indexing");
 
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
-
-	LOG_WARNING((piece == 12) ? "movePiece: out of bounds hashkey indexing" : "");
-	LOG_WARNING((capturedPiece == 12) ? "movePiece: out of bounds capture hashkey indexing" : "");
 
 	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
 
@@ -73,7 +65,7 @@ void Board::movePiece(const int from, const int to) {
 template <bool UpdateHash>
 void Board::putPiece(const Piece pc, const int s) {
 
-	LOG_WARNING((pc == NO_PIECE) ? "putPiece: piece is NO_PIECE" : "");
+	assert((pc != NO_PIECE) && "putPiece: piece is NO_PIECE");
 
 	mailbox[s] = pc;
 	bitboards[pc] |= (1ULL << s);
@@ -84,7 +76,7 @@ void Board::putPiece(const Piece pc, const int s) {
 template <bool UpdateHash>
 void Board::removePiece(const int s) {
 
-	LOG_WARNING((mailbox[s] == NO_PIECE) ? "removePiece: piece is NO_PIECE" : "");
+	assert((mailbox[s] != NO_PIECE) && "removePiece: piece is NO_PIECE");
 
 	if constexpr (UpdateHash) hashKey ^= randomPieceKeys[mailbox[s]][s];
 
@@ -165,12 +157,10 @@ void Board::undo(const Move move) {
 
 int Board::makeMove(const Move move, const int onlyCaptures) {
 
-	LOG_WARNING((move == Move(0, 0)) ? "makeMove: making a NULL MOVE" : "");
+	assert((move != Move(0, 0)) && "makeMove: making a NULL MOVE");
+	assert((board.gamePly < 512) && "makeMove: gamePly is too large");
 
 	if(!onlyCaptures) {
-
-		LOG_WARNING((gamePly > 511) ? "makeMove: gamePly is too large" : "");
-
 		COPY_HASH();
 
 		if (history[gamePly].enPassSq != 64) { hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq]; }
@@ -302,6 +292,9 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 			bitboards[BOTH_OCC] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
 		}
 
+		// Zobrist Debug test from Maksim Korzh
+		assert((generateHashKey() == hashKey) && "makeMove: hashKey is wrong");
+
 		// make sure that the king has not been exposed into check
 		if ( isSqAttacked(bsf( bitboards[KING + 6 * (side^1)] ), side)) {
 			// square is illegal so we take it back
@@ -310,9 +303,6 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 			return 0;
 		}
-
-		// Zobrist Debug test from Maksim Korzh
-		LOG_WARNING((generateHashKey() != hashKey) ? "makeMove: hashKey is wrong" : "");
 		
 		return 1; // this is a legal move so we return true
 	}
@@ -327,20 +317,21 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 
 void Board::nullMove() {
-	LOG_WARNING((board.gamePly > 511) ? "nullMove: gamePly is too large" : "");
-	
 	hashKey ^= sideKey;
-	if (board.history[board.gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
+	if (history[gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq];
 	
-	board.side ^= 1; // make null move
-	board.gamePly++;
-	board.history[board.gamePly] = UndoInfo(board.history[board.gamePly - 1]);
-	
-	LOG_WARNING((generateHashKey() != hashKey) ? "nullMove: hashKey is wrong" : "");
+	side ^= 1; // make null move
+	gamePly++;
+	history[gamePly] = UndoInfo(history[gamePly - 1]);
+
+	assert((board.gamePly < 512) && "nullMove: gamePly is too large");
+	assert((generateHashKey() == hashKey) && "nullMove: hashKey is wrong");
 }
 
 void Board::undoNullMove() {
-	board.side ^= 1;
-	board.gamePly--;
+	side ^= 1;
+	gamePly--;
+
+	assert((gamePly >= 0) && "undoNullMove: gameply is negative");
 }
 

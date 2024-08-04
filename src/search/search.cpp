@@ -19,6 +19,8 @@
 #include <assert.h>
 #include <cstdint>
 #include <cmath>
+#include <mach-o/dyld.h>
+
 #include "board.h"
 
 #include "../movegen/update.h"
@@ -114,6 +116,7 @@ static int getMoveTime(const bool timeConstraint) {
 		moveTime = timeAlloted / movesToGo;
 	}
 
+	assert((moveTime > 0) && "getMoveTime: movetime is zero/negative");
 	return moveTime;
 }
 static void isTimeUp() {
@@ -133,27 +136,15 @@ static U64 nonPawnMaterial() {
 	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
-static int givesCheck(){
-	// Returns true if the current move puts the opponent in check
-	COPY_HASH()
-
-	const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
-
-	RESTORE_HASH()
-
-	return opponentInCheck;
-}
-
-
 static int quiescenceSearch(int alpha, const int beta) {
 
 	if ((nodes & 4095) == 0) isTimeUp();
 
 	nodes++;
 
-    if ( searchPly > (MAX_PLY - 1) ) return evaluate();
+    if ( searchPly > (MAX_PLY - 1) ) return evaluate(board);
 
-    const int standPat{ evaluate() };
+    const int standPat{ evaluate(board) };
 
 	// delta pruning
 	if (standPat < (alpha - 975) ) return alpha;
@@ -228,13 +219,16 @@ static void updateKillersAndHistory(const Move bestMove, const int depth, Move q
 
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
 	if (!bestMove.isNoisy()) {
-		for (int i = 0; i < quietMoveCount; ++i) {
+		for (int i = 0; i < std::min(32, quietMoveCount); i++) { // to avoid overflow
 			Move m { quiets[i] };
 			historyScores[m.from()][m.to()] += malus - historyScores[m.from()][m.to()] * std::abs(malus) / 1'600;
 		}
 	}
 }
 
+static inline bool currentlyInCheck() {
+	return isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]), board.side^1);
+}
 
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 
@@ -254,13 +248,13 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 
 	if ((nodes & 4095) == 0) isTimeUp();
-	if (searchPly > MAX_PLY - 1) return evaluate();
+	if (searchPly > MAX_PLY - 1) return evaluate(board);
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
 
 	nodes++;
 
-	const int inCheck{ isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]), board.side^1) };
+	const int inCheck{ currentlyInCheck() };
 
 	if (inCheck) depth++; // Search extension if board.side is in check
 
@@ -268,7 +262,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	if (depth < 3 && (!pvNode) && (!inCheck) &&  (std::abs(beta - 1) > (-INF + 100) ) )
 	{
 		// new addition avoid having to re-evaluate if we already have a tt eval
-		const int staticEval{ (ttHit) ? score : evaluate() };
+		const int staticEval{ (ttHit) ? score : evaluate(board) };
 		// evaluation margin substracted from static evaluation score fails high
 		if (staticEval - (120 * depth) >= beta)
 			// evaluation margin substracted from static evaluation score
@@ -278,9 +272,9 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	if (!pvNode && !inCheck && searchPly) {
 		 // WHATEVER THIS IS IM REMOVING IT FOR NOW, DO THIS AS V8 AND TEST VS V7
 		// reverse futility pruning
-		// gains Elo: -35.91 +/- 14.86, nElo: -52.43 +/- 21.53
+		// gains Elo: 35.91 +/- 14.86, nElo: 52.43 +/- 21.53
 
-		const int eval { ttHit ? score : evaluate() };
+		const int eval { ttHit ? score : evaluate(board) };
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
 
@@ -315,7 +309,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		// razoring
 		if (depth <= 3 && canNull){
 			// get static eval and add first bonus
-			score = evaluate() + 125;
+			score = evaluate(board) + 125;
 
 			int newScore; // define new score
 
@@ -395,7 +389,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         if( !board.makeMove(move, 0) ) { // meaning its illegal
             searchPly--;
         	repetitionIndex--;
-        	RESTORE_HASH()
+
+        	assert((searchPly >= 0) && "negamax: searchPly too small");
+        	assert((repetitionIndex >= 0) && "negamax: repetition index too small");
+        	assert((generateHashKey() == hashKey) && "negamax: hashKey is wrong illegal move");
             continue;
         }
 
@@ -417,7 +414,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
     			// here you could decrease or increase reductions based on what kind of noisy move it is
     			reduction -= inCheck;
-    			reduction -= givesCheck();
+    			reduction -= currentlyInCheck(); // bad syntax, this is for the opponent
 
     			// with the current methods some overshoots do happen
     			reduction = std::clamp(reduction, 1, depth - 1);
@@ -440,6 +437,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	repetitionIndex--;
     	board.undo(move);
         RESTORE_HASH()
+
+    	assert((searchPly >= 0) && "negamax: searchPly too small");
+    	assert((repetitionIndex >= 0) && "negamax: repetition index too small");
+    	assert((generateHashKey() == hashKey) && "negamax: hashKey is wrong illegal move, outside loop");
 
     	if (stopSearch) return 0;
 
@@ -516,6 +517,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
+
 	if (timePerMove < 0) LOG_WARNING("Negatime Time Per Move");
 
 	int alpha { -INF };
@@ -570,9 +572,11 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 		currentDepth++; // we can proceed to the next iteration
     }
-
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
+
+	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
+	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
 
 	//ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
 }
