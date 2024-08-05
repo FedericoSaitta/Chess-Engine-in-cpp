@@ -68,9 +68,9 @@ int scoreMove(const Move move) {
 		return principalVariationBonus;
 	}
 
-	if (move.isNoisy()) {
-		// queen promotions get maximum bonus
-		if (move.isPromotion()) return 605 + captureBonus;
+	//if (move.isNoisy()) {
+	if (move.isCapture()) {
+		if (move.isPromotion()) return mvv_lva[ PAWN ][ board.mailbox[move.to()] ] + captureBonus;
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;

@@ -127,6 +127,8 @@ public:
     // Noisy moves are: captures, en-passant and queen promotions
     // Non-Noisy moves are: undepromtions( even capture promotions ) and quiet moves (castling etc)
     inline bool isNoisy() const {
+        return isCapture() || isPromotion();
+        /*
         switch(flags()) {
             case (CAPTURE): return true;
             case (EN_PASSANT): return true;
@@ -134,6 +136,7 @@ public:
             case (PR_QUEEN): return true;
             default: return false;
         }
+        */
     }
 
     // this can be written so much better

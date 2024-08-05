@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <fstream>
+#include <iostream>
 
 
 // All are in milliseconds
@@ -16,5 +16,5 @@ extern int blackIncrementTime;
 extern int movesToGo;
 
 void resetGameVariables();
-void UCI();
-
+void UCI(std::string_view fileName="");
+void sendCommand(std::string_view fileName);

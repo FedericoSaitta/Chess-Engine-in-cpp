@@ -19,13 +19,13 @@ enum NodeType {
 #define MATE_SCORE 48'000 // this is more like a boundary to the scores
 
 extern int searchPly;
-extern U64 repetitionTable[1'000];
+extern U64 repetitionTable[512];
 extern int repetitionIndex;
 
 extern int scorePV;
-extern Move pvTable[64][64];
+extern Move pvTable[MAX_PLY][MAX_PLY];
 
-extern Move killerMoves[2][128];
+extern Move killerMoves[2][MAX_PLY];
 extern int historyScores[64][64];
 
 void initSearchTables();

@@ -1,0 +1,7 @@
+uci
+isready
+position startpos
+moveOrdering
+go depth 10
+moveOrdering
+quit

@@ -2,6 +2,7 @@
 // Created by Federico Saitta on 03/07/2024.
 //
 #include "../benchmark_tests/benchmark_tests.h"
+#include "../debug_tests/debug_tests.h"
 
 #include <iostream>
 #include <random>
@@ -44,9 +45,9 @@ namespace Test::Debug{
     }
 
 
-    static void printHistoryTable(const int piece) {
+    static void printHistoryTable(const int sq) {
         for (int square=0; square < 64; square++) {
-            std::cout << historyScores[piece][square] << ' ';
+            std::cout << historyScores[sq][square] << ' ';
             if ( (square + 1) % 8 == 0) std::cout << '\n';
         }
     }
@@ -101,9 +102,9 @@ namespace Test::Debug{
         iterativeDeepening(3, false);
 
         std::cout << "AGED HISTORY TABLE:\n";
-        for (int piece=0; piece < 12; piece++) {
-            std::cout << "History Table: " << unicodePieces[piece] << '\n';
-            printHistoryTable(piece);
+        for (int square=0; square < 64; square++) {
+            std::cout << "History Table: " << unicodePieces[square] << '\n';
+            printHistoryTable(square);
         }
 
         // now we check how the move scores have changed and display move ordering

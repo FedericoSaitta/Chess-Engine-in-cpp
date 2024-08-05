@@ -30,7 +30,9 @@
 
 int main() {
     initAll(256); // Done at compile time :), using 256 MB size hash
-    UCI();
+    //UCI();
+
+    Test::Debug::gameScenario();
 
    // Test::BenchMark::staticSearch();
   //  parseFEN("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -");

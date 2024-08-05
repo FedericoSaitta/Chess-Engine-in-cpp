@@ -34,17 +34,17 @@
 #include "movesort.h"
 #include "../logger/logger.h"
 
-U64 repetitionTable[1'000]{};
+U64 repetitionTable[512]{};
 int repetitionIndex{};
 
 int searchPly{};
 static std::int64_t nodes{};
 
-Move killerMoves[2][128]{}; // zero initialization to ensure no random bonuses to moves
+Move killerMoves[2][MAX_PLY]{}; // zero initialization to ensure no random bonuses to moves
 int historyScores[64][64]{}; // zero initialization to ensure no random bonuses to moves
 
-Move pvTable[64][64]{};
-static int pvLength[64]{};
+Move pvTable[MAX_PLY][MAX_PLY]{};
+static int pvLength[MAX_PLY]{};
 
 int scorePV{};
 static int followPV{}; // if it is true then we follow the principal variation
@@ -143,18 +143,17 @@ static U64 nonPawnMaterial() {
 	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
 }
 
-static void updateKillersAndHistory(const Move bestMove, const int depth, Move* quiets, int quietMoveCount) {
-	const int bonus = depth * depth;
-
+static void updateKillers(const Move bestMove, const int depth) {
 	killerMoves[1][searchPly] = killerMoves[0][searchPly];
 	killerMoves[0][searchPly] = bestMove; // store killer moves
+}
 
-	// Bonus to the move that caused the beta cutoff
+static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
+	const int bonus = depth * depth;
+// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
 		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / 1'600;
 	}
-
-
 
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
 	if (!bestMove.isNoisy()) {
@@ -163,7 +162,6 @@ static void updateKillersAndHistory(const Move bestMove, const int depth, Move* 
 			historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / 1'600;
 		}
 	}
-
 }
 
 static int quiescenceSearch(int alpha, const int beta) {
@@ -313,8 +311,9 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
     			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 
+                // this is wrong, need to test it though
     			reduction += DO_NULL; // reduce more for nodes where we can do null moves
-    			reduction += !pvNode;
+    			//reduction += !pvNode;
 
     			// here you could decrease or increase reductions based on what kind of noisy move it is
     			reduction -= inCheck;
@@ -371,7 +370,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         			// helps with better move ordering in branches at the same depth
 
         			if (isQuiet) {
-        				updateKillersAndHistory(bestMove, depth, quiets, quietMoveCount);
+        				updateKillers(bestMove, depth);
+        				updateHistory(bestMove, depth, quiets, quietMoveCount);
         			}
         			break;
         		}
@@ -417,7 +417,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	timePerMove = getMoveTime(timeConstraint);
 
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
-
 
 	if (timePerMove < 0) LOG_WARNING("Negatime Time Per Move");
 
@@ -478,6 +477,4 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
 	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
-
-	//ageHistoryTable(); 	// Post searching cleanups that can be done during the opponent's turn
 }

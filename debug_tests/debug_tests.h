@@ -15,10 +15,12 @@ namespace Test::Debug {
     void moveSorting();
 
     void printMoveOrdering();
-    void historyScores();
+
 
     void mirrorEval();
     void equalEvalTuner();
+
+    void gameScenario();
 }
 
 #endif //DEBUG_TESTS_H

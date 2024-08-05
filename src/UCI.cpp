@@ -48,7 +48,7 @@ void resetGameVariables() {
     memset(historyScores, 0, sizeof(historyScores));
 
     repetitionIndex = 0;
-    repetitionTable[150] = 0;
+    memset(repetitionTable, 0, sizeof(repetitionTable));
 }
 
 static void handleUci() {
@@ -161,10 +161,24 @@ static void cleanUp() {
 }
 
 
-void UCI() {
+void UCI(const std::string_view fileName) {
     std::string line{};
+    std::ifstream file{};
+    std::istream* input = &std::cin;
 
-    while (std::getline(std::cin, line)) {
+    if (fileName != "") {
+        file.open(fileName.data());
+
+        if (file.is_open()) {
+            input = &file; // Use file as input stream
+            LOG_INFO(("Reading from file " + static_cast<std::string>(fileName)));
+        } else {
+            std::cerr << "Error: Could not open file " << fileName << std::endl;
+            return; // Exit if the file cannot be opened
+        }
+    } LOG_INFO(("Reading from standard input (std::cin):"));
+
+    while (std::getline(*input, line)) {
         std::vector<std::string> tokens = split(line);
         if (tokens.empty()) { continue; }
         const std::string command = tokens[0];
@@ -180,7 +194,8 @@ void UCI() {
         else if (command == "setoption") handleOption(tokens);
         else if ( command == "ucinewgame") resetGameVariables();
         else if ( command == "quit") { // we clean up allocated memory and exit the program
-            cleanUp(); break;
+            cleanUp();
+            break;
         }
 
         // NON-UCI COMMANDS
@@ -189,6 +204,11 @@ void UCI() {
         else if (command == "moveOrdering") Test::Debug::printMoveOrdering();
         else if (command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
+}
+
+void sendCommand(const std::string_view line) {
+    std::cout << line;
+    UCI();
 }
 
 

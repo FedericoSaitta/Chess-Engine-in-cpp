@@ -79,6 +79,7 @@ set(SOURCE_FILES
         include/config.h
         src/logger/logger.cpp
         src/search/old_search.cpp
+        debug_tests/game_scenario.cpp
 )
 
 # Add executable
