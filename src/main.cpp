@@ -30,9 +30,10 @@
 
 int main() {
     initAll(256); // Done at compile time :), using 256 MB size hash
-    //UCI();
+    UCI();
 
-    Test::Debug::gameScenario();
+    // some sigsevfault is happening if we run uci before this
+   // Test::Debug::gameScenario();
 
    // Test::BenchMark::staticSearch();
   //  parseFEN("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -");
@@ -61,6 +62,9 @@ int main() {
 
     Test::Debug::mirrorEval();
    // Test::Debug::historyScores();
+
+    Test::Debug::boardInCheck();
+    Test::Debug::boardNonPawnMat();
 #endif
 */
 }

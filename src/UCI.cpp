@@ -77,7 +77,7 @@ static void handlePosition(const std::vector<std::string>& tokens) {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     } else {  }
 
-    parseFEN(FEN);
+    board.parseFEN(FEN);
 
     if ( (tokens.size() - shiftIndex) > 3) {
 

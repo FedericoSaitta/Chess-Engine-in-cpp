@@ -91,16 +91,13 @@ namespace Test::BenchMark {
 
         for (std::string FEN: testFEN) {
             resetGameVariables();
-            parseFEN(FEN);
-
+            board.parseFEN(FEN);
 
             std::streambuf* originalCoutBuffer = std::cout.rdbuf();
             std::ostringstream output;
             std::cout.rdbuf(output.rdbuf());
 
-
             iterativeDeepening(depth);
-
 
             std::cout.rdbuf(originalCoutBuffer);
             std::istringstream outputStream(output.str());

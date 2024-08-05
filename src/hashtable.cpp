@@ -47,7 +47,7 @@ U64 generateHashKey() { // to uniquely identify a position
     return key;
 }
 
-
+// https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
 void initTranspositionTable(const int megaBytes) {
     const U64 hashSize = 0x100000 * megaBytes;
     transpotitionTableEntries = hashSize / sizeof(tt);
@@ -85,11 +85,11 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
     // creates a pointer to the hash entry
     const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
 
-    // make sure we have the correct hashKey
+    // make sure we have the correct hashKey, not sure about the depth line
     if (hashEntry->hashKey == hashKey) {
         if (hashEntry->depth >= depth) { // only look at same or higher depths evaluations
 
-            // extracted stores score fmor transposition table
+            // extracted stores score from transposition table
             int score = hashEntry->score;
             if (score < -MATE_SCORE) score += searchPly;
             if (score > MATE_SCORE) score -= searchPly;
@@ -97,6 +97,7 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
             if (hashEntry->flag == HASH_FLAG_EXACT)
                 return score;
 
+            // you could change this to be fail soft
             // do some reading on why we are returning alpha and beta
             if ((hashEntry->flag == HASH_FLAG_ALPHA) && (score <= alpha))
                 return alpha;

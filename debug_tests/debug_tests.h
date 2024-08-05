@@ -21,6 +21,8 @@ namespace Test::Debug {
     void equalEvalTuner();
 
     void gameScenario();
+    void boardInCheck();
+    void boardNonPawnMat();
 }
 
 #endif //DEBUG_TESTS_H

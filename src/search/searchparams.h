@@ -13,5 +13,4 @@ constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 static int stopSearch { 0 };
 static int timePerMove { 0 };
 
-constexpr double historyAgeRatio = 0.125;
-constexpr int maxHistoryScore{ 1'600 };
+constexpr int maxHistoryScore{ 16'384 };

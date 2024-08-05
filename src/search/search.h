@@ -5,6 +5,7 @@
 
 #include "../../include/hashtable.h"
 #include "../include/types.h"
+#include "board.h"
 
 enum NodeType {
     DONT_NULL=0,
@@ -32,3 +33,11 @@ void initSearchTables();
 void clearHistoryTable();
 void iterativeDeepening(int depth, bool timeConstraint=false);
 
+
+class Search {
+private:
+
+public:
+    //Board pos{};
+
+};

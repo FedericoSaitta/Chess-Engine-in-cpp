@@ -134,39 +134,37 @@ static int isRepetition() {
 	return 0; // no repetition
 }
 
-static inline bool currentlyInCheck() {
-	return isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]), board.side^1);
-}
-
-
-static U64 nonPawnMaterial() {
-	return ( board.bitboards[QUEEN + 6 * board.side] | board.bitboards[ROOK + 6 * board.side] | board.bitboards[BISHOP + 6 * board.side] | board.bitboards[KNIGHT + 6 * board.side]);
-}
-
 static void updateKillers(const Move bestMove, const int depth) {
 	killerMoves[1][searchPly] = killerMoves[0][searchPly];
 	killerMoves[0][searchPly] = bestMove; // store killer moves
 }
 
 static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
-	const int bonus = depth * depth;
-// Bonus to the move that caused the beta cutoff
+	const int bonus = std::min(2100, 300 * depth - 300);
+
+	// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
-		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / 1'600;
+		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / maxHistoryScore;
 	}
 
+
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
-	if (!bestMove.isNoisy()) {
-		for (int i = 0; i < std::min(32, quietMoveCount); i++) { // to avoid overflow
-			Move m = quiets[i]; // Access element using pointer syntax
-			historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / 1'600;
-		}
+	assert((quietMoveCount <= 32) && "updateHistory: quietMoveCount is too large");
+	for (int i = 0; i < quietMoveCount; i++) {
+		Move m = quiets[i];
+		assert(m != Move(0, 0));
+
+		// Could i avoid this if check with double the bonus?
+		// We do not want to cancel the bonus we just handed to the bestMove
+		if (m != bestMove) historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / maxHistoryScore;
 	}
+
 }
 
 static int quiescenceSearch(int alpha, const int beta) {
 
 	if ((nodes & 4095) == 0) isTimeUp();
+	if (stopSearch) return 0; // If the time is up, we return 0;
 
 	nodes++;
 
@@ -186,12 +184,11 @@ static int quiescenceSearch(int alpha, const int beta) {
 	MoveList moveList;
 	generateMoves(moveList);
 
-	const int totalMoves { moveList.count };
 	giveScores(moveList, 0); // as there is no bestmove
 
 	int bestEval { standPat };
 
-	for (int count=0; count < totalMoves; count++) {
+	for (int count=0; count < moveList.count; count++) {
 		const Move move { pickBestMove(moveList, count ) };
 
 		COPY_HASH()
@@ -213,8 +210,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 		board.undo(move);
 		RESTORE_HASH()
 
-		 if (stopSearch) return 0; // If the time is up, we return 0;
-
 		// found a better move
 		if (score > bestEval) { // Known as PV node (principal variation)
 			bestEval = score;
@@ -233,9 +228,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 }
 
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
-
 	pvLength[searchPly] = searchPly;
-	Move bestMove {};
+	Move bestMove {}; // for now as tt is turned off this is just a null move
 	int bestEval {-INF - 1};
 
 	if (searchPly && isRepetition()) return 0; // we return draw score if we detect a three-fold repetition
@@ -254,7 +248,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
 	nodes++;
 
-	const int inCheck{ currentlyInCheck() };
+	const int inCheck{ board.currentlyInCheck() };
 	if (inCheck) depth++; // Search extension if board.side is in check
 
     MoveList moveList;
@@ -262,12 +256,9 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 
     if (followPV) enablePVscoring(moveList); // check if we are in a principal-variation node
 
-	const int totalMoves { moveList.count };
 	const int originalAlpha {alpha};
 	int legalMoves{};
 	int movesSearched{};
-
-	bool skipQuietMoves{ false };
 
 	// score the moves before picking the best one
 	giveScores(moveList, bestMove);
@@ -275,10 +266,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	Move quiets[32];
 	int quietMoveCount{};
 
-    for (int count=0; count < totalMoves; count++) {
+    for (int count=0; count < moveList.count; count++) {
     	const Move move { pickBestMove(moveList, count ) };
 
-    	// En-passant are captures, so they are non-quiet
+    	// En-passant, captures and promotions are noisy
     	const bool isQuiet = ( !move.isNoisy() );
 
         COPY_HASH()
@@ -286,8 +277,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
-        // board.undo Illegal Moves
-        if( !board.makeMove(move, 0) ) { // meaning its illegal
+        // Illegal Moves
+        if( !board.makeMove(move, 0) ) {
             searchPly--;
         	repetitionIndex--;
 
@@ -298,7 +289,12 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
         }
 
         legalMoves++;
-    	if (isQuiet) quietMoveCount++; // we only add to counter if the quiet move is actually legal
+
+    	if (isQuiet && (quietMoveCount < 31) ) {
+    	    quiets[quietMoveCount] = move;
+    	    quietMoveCount++;
+    	}
+
 
     	// ****  LATE MOVE REDUCTION (LMR) **** //
     	if(movesSearched == 0) {
@@ -309,18 +305,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	else {
     		if( (movesSearched >= LMR_MIN_MOVES) && (depth >= LMR_MIN_DEPTH) && isQuiet ) {
 
-    			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
-
-                // this is wrong, need to test it though
-    			reduction += DO_NULL; // reduce more for nodes where we can do null moves
-    			//reduction += !pvNode;
-
-    			// here you could decrease or increase reductions based on what kind of noisy move it is
-    			reduction -= inCheck;
-    			reduction -= currentlyInCheck(); // bad syntax, this is for the opponent
-
-    			// make sure we dont end up in quiesce search
-    			reduction = std::min(depth - 1, std::max(1, reduction));
+    			int reduction = 1;
 
     			score = -negamax(-alpha-1, -alpha, depth-1-reduction, DO_NULL); // Search this move with reduced depth:
     		}
@@ -335,78 +320,64 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     				score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     		}
     	}
+
         searchPly--;
     	repetitionIndex--;
     	board.undo(move);
         RESTORE_HASH()
 
-    	assert((searchPly >= 0) && "negamax: searchPly too small");
-    	assert((repetitionIndex >= 0) && "negamax: repetition index too small");
-    	assert((generateHashKey() == hashKey) && "negamax: hashKey is wrong illegal move, outside loop");
-
     	if (stopSearch) return 0;
 
     	movesSearched++;
 
-        // fail soft framework
-        if (score > bestEval) {
-	        // Known as PV node (principal variation)
-        	bestEval = score;
+    	// fail soft framework
+    	if (score > bestEval) {
+    		// Known as PV node (principal variation)
+    		bestEval = score;
 
-        	if (score > alpha){
-        		alpha = score;
-        		bestMove = move; // store best move (for TT)
+    		if (score > alpha){
+    			alpha = score;
+    			bestMove = move; // store best move (for TT)
 
-        		pvTable[searchPly][searchPly] = move;
-        		// copy move from deeper plies to curernt ply
-        		for (int nextPly = (searchPly+1); nextPly < pvLength[searchPly + 1]; nextPly++) {
-        			pvTable[searchPly][nextPly] = pvTable[searchPly + 1][nextPly];
-        		}
+    			pvTable[searchPly][searchPly] = move;
+    			// copy move from deeper plies to curernt ply
+    			for (int nextPly = (searchPly+1); nextPly < pvLength[searchPly + 1]; nextPly++) {
+    				pvTable[searchPly][nextPly] = pvTable[searchPly + 1][nextPly];
+    			}
 
-        		pvLength[searchPly] = pvLength[searchPly + 1];
+    			pvLength[searchPly] = pvLength[searchPly + 1];
 
-        		// fail-hard beta cut off
-        		if (alpha >= beta) {
-        			// helps with better move ordering in branches at the same depth
-
-        			if (isQuiet) {
-        				updateKillers(bestMove, depth);
-        				updateHistory(bestMove, depth, quiets, quietMoveCount);
-        			}
-        			break;
-        		}
-        	}
-        }
-    	// Remember attempted moves to adjust their history scores
-    	if (isQuiet && quietMoveCount < 32) quiets[quietMoveCount++] = move;
+    			// fail-hard beta cut off
+    			if (score >= beta) {
+    				// helps with better move ordering in branches at the same depth
+    				if (isQuiet) {
+    					updateKillers(bestMove, depth);
+    					updateHistory(bestMove, depth, quiets, quietMoveCount);
+    				}
+    				break;
+    			}
+    		}
+    	}
     }
 
 	// After we have looped over the possible moves, check for stalemate or checkmate
-    if (!legalMoves) { // we dont have any legal moves to make in this position
-        if (inCheck) {
-        	// we need to adjust this before sending it to the transposition table to make it independent of the path
-        	// from the root node to the mating node
-            return -MATE_VALUE+ searchPly; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
-        }
-        return 0; // we are in stalemate
-    }
+	if (!legalMoves) { // we dont have any legal moves to make in this position
+		if (inCheck) {
+			// we need to adjust this before sending it to the transposition table to make it independent of the path
+			// from the root node to the mating node
+			return -MATE_VALUE+ searchPly; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
+		}
+		return 0; // we are in stalemate
+	}
 
 	int hashFlag = HASH_FLAG_EXACT;
 
-	if (alpha >= beta)
-	{
-		// beta cutoff, fail high
-		hashFlag = HASH_FLAG_BETA;
-	}
-	else if (alpha <= originalAlpha)
-	{
-		// failed to raise alpha, fail low
-		hashFlag = HASH_FLAG_ALPHA;
-	}
+	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
+	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
 	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth);
 
-    return bestEval; // known as fail-low node
+	return bestEval; // known as fail-low node
 }
 
 
@@ -427,6 +398,8 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	for (int currentDepth = 1; currentDepth <= depth; ){
         followPV = 1;
+
+		assert(searchPly == 0 && "iterativeDeepening: search ply not zero");
 
 		if (stopSearch) break;
 		searchDuration = std::chrono::steady_clock::now() - startSearchTime;

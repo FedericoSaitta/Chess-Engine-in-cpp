@@ -126,7 +126,7 @@ namespace Test::BenchMark {
 
             if (tokens.empty()) continue;
 
-            parseFEN(tokens[0]);
+            board.parseFEN(tokens[0]);
 
             const int startDepth { std::stoi( &tokens[1][1] ) };
             const int maxDepth = static_cast<int>(tokens.size()) - 1 + startDepth - 1;

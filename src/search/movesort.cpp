@@ -3,9 +3,11 @@
 #include "search.h"
 #include "../include/board.h"
 #include "../include/inline_functions.h"
+#include "searchparams.h"
 #include "config.h"
 
 #include <algorithm>
+#include <assert.h>
 #include <utility>
 
 /*  MOVE SORTING ORDER
@@ -52,27 +54,28 @@ static int mvv_lva[12][13] = {
 	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601, 105},
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600, 105},
 };
-constexpr int hashTableBonus{ 30'000 };
-constexpr int principalVariationBonus{ 20'000 }; // so PV is always above captures
-constexpr int captureBonus{ 10'000 }; // so captures are always above killers
-constexpr int firstKiller{ 9'000 };
-constexpr int secondKiller{ 8'000 };
+constexpr int hashTableBonus{ 3'000'000 };
+constexpr int principalVariationBonus{ 2'000'000 }; // so PV is always above captures
+constexpr int captureBonus{ 1'000'000 }; // so captures are always above killers
+constexpr int firstKiller{ 900'000 };
+constexpr int secondKiller{ 800'000 };
 
 int scoreMove(const Move move) {
 
 	if (scorePV && (pvTable[0][searchPly] == move)) {
-		scorePV = 0; // as there is only one principal move in a moveList, so we disable further scoring
-		// std::cout << "Current PV " << algebraicNotation(move) << " at ply" << ply << '\n';
-		// note that because of null move and late more pruning this will not print nicely because higher depths plies are
-		// not considered because of the early pruning, PV is still followed  though.
+		scorePV = 0;
 		return principalVariationBonus;
 	}
 
-	//if (move.isNoisy()) {
 	if (move.isCapture()) {
-		if (move.isPromotion()) return mvv_lva[ PAWN ][ board.mailbox[move.to()] ] + captureBonus;
+		// promotion captures
+		if (move.isPromotion()) return mvv_lva[ PAWN ][ move.promotionPiece() ] + captureBonus;
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
+		assert( (move.isEnPassant() ? board.mailbox[move.to()] == NO_PIECE : board.mailbox[move.to()] != NO_PIECE)
+				&& "scoreMove: enpassant or capture move are capturing wrong piece type");
+		assert((board.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
+
 		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
 	}
 
@@ -87,19 +90,20 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 	for (int count = 0; count < moveList.count; ++count) {
 		const Move move{ moveList.moves[count].first };
 
+		assert(!move.isNone() && "givesScores: move is None");
+		assert((scoreMove(move) <= principalVariationBonus) && "giveScores: score is too large");
+		assert((scoreMove(move) >= -maxHistoryScore) && "giveScores: score is too small");
+
 		if (bestMove == move) {
 			moveList.moves[count].second = hashTableBonus;
 		}
 		else {
 			moveList.moves[count].second = scoreMove(move);
 		}
-
 	}
 }
 
-
 Move pickBestMove(MoveList& moveList, const int start) {
-
     int bestMoveScore{ moveList.moves[start].second };
     int bestMoveIndex{ start };
 
@@ -109,7 +113,11 @@ Move pickBestMove(MoveList& moveList, const int start) {
 			bestMoveIndex = index;
 		}
 	}
-    std::swap(moveList.moves[start], moveList.moves[bestMoveIndex]);
+
+	// swap position of the current index with the best move
+	const std::pair<Move, int> tempMove = moveList.moves[start];
+	moveList.moves[start] = moveList.moves[bestMoveIndex];
+	moveList.moves[bestMoveIndex] = tempMove;
 
 	return moveList.moves[start].first;
 }

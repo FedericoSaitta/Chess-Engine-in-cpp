@@ -75,24 +75,22 @@ enum MoveFlags : int {
     DOUBLE_PUSH = 0b0001,
     OO = 0b0010, OOO = 0b0011,
 
-    PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
-
-    EN_PASSANT = 0b1010,
-
-    PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
-
-    CAPTURE = 0b1000,   // All captures (en-passant too) have the fourth bit set
     PROMOTION = 0b0100, // All promotions have the third bit set
 
-    PROMOTIONS = 0b0111,
-    //  CAPTURES = 0b1111,
- //   PROMOTION_CAPTURES = 0b1100,
+    PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
 
+    CAPTURE = 0b1000,   // All captures (en-passant too) have the fourth bit set
+
+    EN_PASSANT = 0b1010,
+    PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
+
+    PROMOTIONS = 0b0111,
 };
 
 class Move {
 private:
     uint16_t move;
+
 public:
     inline Move() : move(0) {}
 
@@ -144,7 +142,8 @@ public:
         return PieceType( std::max( ( flags() & PROMOTIONS) - 3, 0) );
     }
 
-    bool operator==(Move a) const { return to_from() == a.to_from(); }
-    bool operator!=(Move a) const { return to_from() != a.to_from(); }
+    inline bool isNone() const { return (to_from() == 0); }
+    bool operator==(const Move a) const { return to_from() == a.to_from(); }
+    bool operator!=(const Move a) const { return to_from() != a.to_from(); }
 };
 

@@ -29,6 +29,12 @@ public:
     int gamePly{};
     int side{ WHITE };
 
+    // constructors
+    Board() { resetBoard(); }
+    explicit Board(const std::string& fenString) { parseFEN(fenString); }
+
+    void parseFEN(const std::string& fenString);
+
     inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
     inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
 
@@ -65,6 +71,9 @@ public:
 
     void nullMove();
     void undoNullMove();
+
+    bool currentlyInCheck() const; // true if the side to move is in check
+    bool nonPawnMaterial() const; // true if the side to move has pieces other than pawns and a king
 };
 
 extern Board board;

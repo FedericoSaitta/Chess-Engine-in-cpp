@@ -64,7 +64,7 @@ namespace Test::Debug {
 
             std::string FEN{ tokens[0] + ' ' + tokens[1] + ' ' + tokens[2] + ' ' + tokens[3] };
 
-            parseFEN(FEN);
+            board.parseFEN(FEN);
             int whiteEval { evaluate(board) };
             board.side ^= 1;
             int blackEval { evaluate(board) };

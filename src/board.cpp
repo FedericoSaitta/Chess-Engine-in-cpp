@@ -9,8 +9,10 @@
 #include "hashtable.h"
 #include "search/search.h"
 #include "../include/types.h"
+#include "inline_functions.h"
 
 Board board{};
+
 const char* chessBoard[65] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -42,10 +44,10 @@ static Piece charToPiece(const char c) {
 }
 
 // think about using string view as you only need to read from the FEN string i think??
-void parseFEN(const std::string& fenString) {
+void Board::parseFEN(const std::string& fenString) {
 
     // re-setting the board state each time a new FEN is parsed
-    board.resetBoard();
+    resetBoard();
 
     repetitionIndex = 0;
     memset(repetitionTable, 0, sizeof(repetitionTable));
@@ -69,42 +71,53 @@ void parseFEN(const std::string& fenString) {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
             const Piece piece { charToPiece(static_cast<unsigned char>(c)) };
-            SET_BIT(board.bitboards[piece], rank * 8 + file);
-            board.mailbox[rank * 8 + file] = piece;
+            SET_BIT(bitboards[piece], rank * 8 + file);
+            mailbox[rank * 8 + file] = piece;
             file++;
         }
     }
 
-    board.side = (parts[1][0] == 'w') ? WHITE : BLACK;
+    side = (parts[1][0] == 'w') ? WHITE : BLACK;
 
     for (const char c : parts[2]) {
         switch (c) {
-            case 'K': board.history[board.gamePly].castle |= WK; break;
-            case 'Q': board.history[board.gamePly].castle |= WQ; break;
-            case 'k': board.history[board.gamePly].castle |= BK; break;
-            case 'q': board.history[board.gamePly].castle |= BQ; break;
+            case 'K': history[gamePly].castle |= WK; break;
+            case 'Q': history[gamePly].castle |= WQ; break;
+            case 'k': history[gamePly].castle |= BK; break;
+            case 'q': board.history[gamePly].castle |= BQ; break;
             default: break;
         }
     }
 
     if(parts[3][0] == '-') {
-        board.history[board.gamePly].enPassSq = 64; // the 64th index represents the 'outside the board' square
+        history[gamePly].enPassSq = 64; // the 64th index represents the 'outside the board' square
     } else {
         const int col { parts[3][0] - 'a'};
         const int row { 8 - (parts[3][1] - '0') };
-        board.history[board.gamePly].enPassSq = 56 - 8 * row + col;
+        history[gamePly].enPassSq = 56 - 8 * row + col;
     }
 
 
     // Lastly populate the white and black occupancy bitboards
     for (int bbPiece=0; bbPiece < 6; bbPiece++) {
-        board.bitboards[WHITE_OCC] |= board.bitboards[bbPiece]; // for white
-        board.bitboards[BLACK_OCC] |= board.bitboards[bbPiece + 6]; // for black
-        board.bitboards[BOTH_OCC] |= (board.bitboards[bbPiece] | board.bitboards[bbPiece + 6]); // for both
+        bitboards[WHITE_OCC] |= bitboards[bbPiece]; // for white
+        bitboards[BLACK_OCC] |= bitboards[bbPiece + 6]; // for black
+        bitboards[BOTH_OCC] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
     }
 
     // Now we initialize the zobrist hash key
     hashKey = generateHashKey();
 }
+
+
+bool Board::currentlyInCheck() const {
+    return isSqAttacked( bsf(bitboards[KING + 6 * side]), side^1);
+}
+
+bool Board::nonPawnMaterial() const {
+    return ( bitboards[QUEEN + 6 * side] | bitboards[ROOK + 6 * side] | bitboards[BISHOP + 6 * side] | bitboards[KNIGHT + 6 * side]);
+}
+
+
 
 

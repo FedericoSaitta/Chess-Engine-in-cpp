@@ -20,7 +20,7 @@ namespace Test::Debug{
 
     void moveSorting() {
 
-        parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        board.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         MoveList moveList{};
         generateMoves(moveList);
 
@@ -52,16 +52,6 @@ namespace Test::Debug{
         }
     }
 
-    static int givesCheck(){
-        // Returns true if the current move puts the opponent in check
-        COPY_HASH()
-        const int opponentInCheck { isSqAttacked( bsf(board.bitboards[KING + 6 * board.side]) , board.side^1 ) };
-
-        RESTORE_HASH()
-
-        return opponentInCheck;
-    }
-
     void printMoveOrdering() {
         MoveList moveList{};
         generateMoves(moveList);
@@ -75,18 +65,13 @@ namespace Test::Debug{
             const int score { moveList.moves[count].second };
 
             COPY_HASH()
-            if( !board.makeMove(move, 0) ) { // meaning its illegal
-                searchPly--;
-                repetitionIndex--;
-                RESTORE_HASH()
-                continue;
-            }
+            if( !board.makeMove(move, 0) ) continue;
 
             printMove( move );
             std::cout << ": " << unicodePieces[board.mailbox[move.to()]] << " score: " << score
                       << " is capture: " << move.isCapture() << " is promotion: " << move.isPromotion()
                       << " promotion piece: " << promotedPieces[move.promotionPiece()]
-                      << " gives check: " << givesCheck() << '\n';
+                      << " gives check: " << board.currentlyInCheck() << '\n';
 
             board.undo(move);
             RESTORE_HASH()
@@ -96,7 +81,7 @@ namespace Test::Debug{
 
     void historyScores() {
         //resetGameVariables();
-        parseFEN("rnbqkb1r/pppppppp/5n2/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 3");
+        board.parseFEN("rnbqkb1r/pppppppp/5n2/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 3");
 
         printMoveOrdering();
         iterativeDeepening(3, false);
