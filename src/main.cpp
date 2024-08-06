@@ -28,6 +28,9 @@
 #include "eval/evaluation.h"
 #include "logger/logger.h"
 
+//#define TUNE_ARAMIS
+
+
 int main() {
     initAll(256); // Done at compile time :), using 256 MB size hash
     UCI();
@@ -42,7 +45,14 @@ int main() {
     // killer position 1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -
    // Test::BenchMark::standardPerft();
 
-/*
+
+#ifdef TUNE_ARAMIS
+    // to avoid including unwanted macros etc.
+    #include "init_tuner.h"
+    tune();
+#endif
+
+
 #ifdef BENCHMARK_TEST
     Test::BenchMark::staticSearch();
     Test::BenchMark::matingPuzzles();
@@ -66,5 +76,5 @@ int main() {
     Test::Debug::boardInCheck();
     Test::Debug::boardNonPawnMat();
 #endif
-*/
+
 }

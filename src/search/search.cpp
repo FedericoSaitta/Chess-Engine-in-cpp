@@ -80,7 +80,7 @@ static void resetSearchStates() {
 	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
 
-	memset(historyScores, 0, sizeof(historyScores));
+	//memset(historyScores, 0, sizeof(historyScores));
 
 	nodes = 0;
 	followPV = 0;
@@ -134,9 +134,15 @@ static int isRepetition() {
 	return 0; // no repetition
 }
 
-static void updateKillers(const Move bestMove, const int depth) {
-	killerMoves[1][searchPly] = killerMoves[0][searchPly];
-	killerMoves[0][searchPly] = bestMove; // store killer moves
+static void updateKillers(const Move bestMove) {
+
+	// update killer moves if we found a new unique bestMove
+	//if (killerMoves[0][searchPly] != bestMove) {
+		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
+
+		killerMoves[1][searchPly] = killerMoves[0][searchPly];
+		killerMoves[0][searchPly] = bestMove; // store killer moves
+	//}
 }
 
 static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
@@ -227,6 +233,15 @@ static int quiescenceSearch(int alpha, const int beta) {
 	return bestEval; // node that fails low
 }
 
+static void ageHistory() {
+	for (int a=0; a<64; a++) {
+		for (int b=0; b<64; b++) {
+			historyScores[a][b] /= 2;
+		}
+	}
+}
+
+
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
@@ -295,7 +310,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	    quietMoveCount++;
     	}
 
-
     	// ****  LATE MOVE REDUCTION (LMR) **** //
     	if(movesSearched == 0) {
     		// https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
@@ -320,7 +334,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     				score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     		}
     	}
-
         searchPly--;
     	repetitionIndex--;
     	board.undo(move);
@@ -351,7 +364,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     			if (score >= beta) {
     				// helps with better move ordering in branches at the same depth
     				if (isQuiet) {
-    					updateKillers(bestMove, depth);
+    					updateKillers(bestMove);
     					updateHistory(bestMove, depth, quiets, quietMoveCount);
     				}
     				break;
@@ -447,6 +460,8 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
     }
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
+
+	ageHistory();
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
 	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");

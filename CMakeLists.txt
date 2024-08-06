@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Threads REQUIRED)
+
+
 # Compiler-specific flags
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # MSVC specific flags
@@ -33,6 +36,8 @@ include_directories(
         search
         movegen
         logger
+        texel-tuner
+        texel-tuner/engine
 )
 
 # Source files
@@ -80,6 +85,14 @@ set(SOURCE_FILES
         src/logger/logger.cpp
         src/search/old_search.cpp
         debug_tests/game_scenario.cpp
+        texel-tuner/init_tuner.h
+        texel-tuner/threadpool.cpp
+        texel-tuner/tuner.cpp
+        texel-tuner/base.h
+        texel-tuner/config.h
+        texel-tuner/init_tuner.h
+        texel-tuner/engine/myeval.cpp
+        texel-tuner/init_tuner.cpp
 )
 
 # Add executable
@@ -97,3 +110,5 @@ endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(ChessEngine pthread)
 endif()
+
+target_link_libraries(ChessEngine PRIVATE Threads::Threads)
