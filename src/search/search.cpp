@@ -80,8 +80,6 @@ static void resetSearchStates() {
 	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
 
-	//memset(historyScores, 0, sizeof(historyScores));
-
 	nodes = 0;
 	followPV = 0;
 	scorePV = 0;
@@ -104,6 +102,7 @@ static void enablePVscoring(const MoveList& moveList) {
 
 static int getMoveTime(const bool timeConstraint) {
 
+	std::cout << whiteClockTime << ' ' << blackClockTime << ' ' << whiteIncrementTime << ' ' << blackIncrementTime << ' ' << movesToGo << '\n';
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// We give 100 millisecond lag compensation
@@ -137,12 +136,22 @@ static int isRepetition() {
 static void updateKillers(const Move bestMove) {
 
 	// update killer moves if we found a new unique bestMove
-	//if (killerMoves[0][searchPly] != bestMove) {
+	if (killerMoves[0][searchPly] != bestMove) {
 		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
 
 		killerMoves[1][searchPly] = killerMoves[0][searchPly];
 		killerMoves[0][searchPly] = bestMove; // store killer moves
-	//}
+	}
+}
+
+void printKillerTable() {
+	for(int i=0; i<MAX_PLY; i++) {
+		std::cout << "\n KILLER 1: ";
+		printMove(killerMoves[0][i]);
+
+		std::cout << "  KILLER 2: ";
+		printMove(killerMoves[1][i]);
+	}
 }
 
 static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
@@ -150,9 +159,8 @@ static void updateHistory(const Move bestMove, const int depth, const Move* quie
 
 	// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
-		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / maxHistoryScore;
+		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
 	}
-
 
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
 	assert((quietMoveCount <= 32) && "updateHistory: quietMoveCount is too large");
@@ -162,7 +170,7 @@ static void updateHistory(const Move bestMove, const int depth, const Move* quie
 
 		// Could i avoid this if check with double the bonus?
 		// We do not want to cancel the bonus we just handed to the bestMove
-		if (m != bestMove) historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / maxHistoryScore;
+		if (m != bestMove) historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
 	}
 
 }
@@ -190,7 +198,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 	MoveList moveList;
 	generateMoves(moveList);
 
-	giveScores(moveList, 0); // as there is no bestmove
+	giveScores(moveList, Move(0, 0)); // as there is no bestmove
 
 	int bestEval { standPat };
 
@@ -384,7 +392,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	}
 
 	int hashFlag = HASH_FLAG_EXACT;
-
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
@@ -402,7 +409,6 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
-	if (timePerMove < 0) LOG_WARNING("Negatime Time Per Move");
 
 	int alpha { -INF };
 	int beta { INF };

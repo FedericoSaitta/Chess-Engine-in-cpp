@@ -60,97 +60,93 @@ static void handleIsReady() {
     std::cout << "readyok\n";
 }
 
-static void handlePosition(const std::vector<std::string>& tokens) {
+static void handlePosition(std::istringstream& inputStream) {
+    std::string token;
+    inputStream >> std::skipws >> token;
 
-    // Two valid and equivalent inputs that could be received
-    // position startpos moves e2e4 e7e5
-    // position rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5
-    int shiftIndex{};
     std::string FEN{};
 
-    if ( tokens[1] == "fen" ) {
-        shiftIndex = 6;
-        // Horrible line of code, do not know how to make it better though
-        FEN = tokens[2] + ' ' + tokens[3] + ' ' + tokens[4] + ' ' + tokens[5] + ' ' + tokens[6] + ' ' + tokens[7];
+    if ( token == "fen" ) {
+        while (inputStream >> token) {
+            if (token != "moves") FEN += token + ' ';
 
-    } else if (tokens[1] == "startpos") {
+            else {
+                board.parseFEN(FEN);
+                std::string moveString;
+
+                while(inputStream >> moveString){
+                    const Move move = parseMove(moveString);
+
+                    if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move inputStream != 0
+                        repetitionIndex++;
+                        repetitionTable[repetitionIndex] = hashKey;
+                        if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move inputStream illegal " + tokens[index] ); };
+                    } else { LOG_ERROR("Move inputStream Null " + tokens[index] ); }
+                }
+                goto no_re_parsing;
+                // once we are done making the moves, we dont want to re-parse the board as that would nullify the moves
+            }
+        }
+
+    } else if (token == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    } else {  }
-
+    }
     board.parseFEN(FEN);
 
-    if ( (tokens.size() - shiftIndex) > 3) {
-
-        for (int index=(3 + shiftIndex); index < static_cast<int>(tokens.size()); index++) {
-
-            const Move move = parseMove(tokens[index]);
-
-            if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move is != 0
-                repetitionIndex++;
-                repetitionTable[repetitionIndex] = hashKey;
-                if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move is illegal " + tokens[index] ); };
-            } else { LOG_ERROR("Move is Null " + tokens[index] ); }
-
-        }
-    }
+    no_re_parsing:
 }
 
 
-static void handleGo(const std::vector<std::string>& tokens) {
 
-    if (tokens[1] == "perft") {
-        Test::BenchMark::perft(std::stoi(tokens[2]));
-        std::cout << '\n';
-    }
-    else if (tokens[1] == "depth") iterativeDeepening(std::stoi(tokens[2]), false);
+static void handleGo(std::istringstream& inputStream) {
+    std::string token;
+    movesToGo = 0; // need to reset to zero to ensure that if uci switches behaviour we dont use previous time controls
+    while (inputStream >> token) {
+        std::cout << token << std::endl;
+        if (token == "perft") {
+            if (inputStream >> token) Test::BenchMark::perft(std::stoi(token));
+            std::cout << '\n';
+            goto end_of_function;
+        }
+        if (token == "depth") {
+            if (inputStream >> token) iterativeDeepening(std::stoi(token), false);
+            goto end_of_function;
+        }
 
-    else if ( ((tokens[1] == "wtime") && (tokens[3] == "btime")) ) {
-        whiteClockTime = std::stoi(tokens[2]);
-        blackClockTime = std::stoi(tokens[4]);
-        if (tokens.size() > 5) {
-            if ((tokens[5] == "winc") && (tokens[7] == "binc")) {
-                whiteIncrementTime = std::stoi(tokens[6]);
-                blackIncrementTime = std::stoi(tokens[8]);
+        if (token == "wtime") { if (inputStream >> token) whiteClockTime = std::stoi(token); }
+        else if (token == "btime") { if (inputStream >> token) blackClockTime = std::stoi(token); }
+
+        else if (token == "winc") { if (inputStream >> token) whiteIncrementTime = std::stoi(token); }
+        else if (token == "binc") { if (inputStream >> token) blackIncrementTime = std::stoi(token); }
+
+        else if (token == "movestogo") { if (inputStream >> token) movesToGo = std::stoi(token); }
+        else if (token == "movetime") {
+            movesToGo = 1; // as we will only need to make a singular move
+            if (inputStream >> token) {
+                if (board.side == WHITE) whiteClockTime = std::stoi(token);
+                else blackClockTime = std::stoi(token);
             }
-
-            else if ( tokens[5] == "movestogo" ) {
-                movesToGo = std::stoi(tokens[6]);
-            }
         }
-
-        if (isNewGame) {
-            gameLengthTime = whiteClockTime;
-            isNewGame = false;
-        }
-        iterativeDeepening(64, true);
-    }
-    else if (tokens[1] == "movetime") {
-
-        if (board.side == WHITE) whiteClockTime = std::stoi(tokens[2]);
-        else blackClockTime = std::stoi(tokens[2]);
-
-        if (isNewGame) {
-            gameLengthTime = (board.side == WHITE) ? whiteClockTime : blackClockTime;
-            isNewGame = false;
-        }
-
-        // you should write about this once you have got the time and version 1 is already on the way
-        movesToGo = 1;
-
-        iterativeDeepening(64, true);
+        else LOG_ERROR("Unrecognized go input " + token);
     }
 
-    else { LOG_ERROR("Unrecognized go input " + tokens[1]);
+    if (isNewGame) {
+        gameLengthTime = whiteClockTime;
+        isNewGame = false;
     }
+    iterativeDeepening(MAX_PLY, true);
+
+    end_of_function:
 }
 
-// for now we only handle hash size changes
-static void handleOption(const std::vector<std::string>& tokens) {
-
-    if (tokens[1] == "name") {
-        if (tokens[2] == "Hash") {
-            if ( (tokens [3] == "value") && (tokens.size() > 4) ){
-                initTranspositionTable( std::stoi(tokens[4]) );
+static void handleOption(std::istringstream& inputStream) {
+    // again this is not the best, could use a while loop or some other way
+    std::string token;
+    inputStream >> std::skipws >> token;
+    if (token == "name") {
+        if ((inputStream >> token) && (token == "Hash")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) initTranspositionTable( std::stoi(token) );
             }
         }
     }
@@ -159,7 +155,6 @@ static void handleOption(const std::vector<std::string>& tokens) {
 static void cleanUp() {
     if (transpositionTable != nullptr) free(transpositionTable);
 }
-
 
 void UCI(const std::string_view fileName) {
     std::string line{};
@@ -176,33 +171,39 @@ void UCI(const std::string_view fileName) {
             std::cerr << "Error: Could not open file " << fileName << std::endl;
             return; // Exit if the file cannot be opened
         }
-    } LOG_INFO(("Reading from standard input (std::cin):"));
+    } else LOG_INFO(("Reading from standard input (std::cin):"));
 
-    while (std::getline(*input, line)) {
-        std::vector<std::string> tokens = split(line);
-        if (tokens.empty()) { continue; }
-        const std::string command = tokens[0];
+    std::string command;
+    std::string token;
+    
+    while (std::getline(*input, command)) {
+        std::istringstream inputStream(command);
+        token.clear();
+
+        inputStream >> std::skipws >> token;
 
         LOG_INFO(line);
 
         // UCI COMMANDS
-        if ( command == "uci") handleUci();
-        else if ( command == "isready") handleIsReady();
-        else if ( command == "position") handlePosition(tokens); // though this seems expensive because of al lthe checks, 80 move game in 235 microsec
-        else if ( command == "go") handleGo(tokens);
+        if (token == "uci") handleUci();
+        else if (token == "isready") handleIsReady();
+        else if (token == "position") handlePosition(inputStream); // though this seems expensive because of al lthe checks,80 move game in 235 microsec
 
-        else if (command == "setoption") handleOption(tokens);
-        else if ( command == "ucinewgame") resetGameVariables();
-        else if ( command == "quit") { // we clean up allocated memory and exit the program
+
+        else if (token == "go") handleGo(inputStream);
+
+        else if (token == "setoption") handleOption(inputStream);
+        else if (token == "ucinewgame") resetGameVariables();
+        else if (token == "quit") { // we clean up allocated memory and exit the program
             cleanUp();
             break;
         }
 
         // NON-UCI COMMANDS
-        else if (command == "bench")  Test::BenchMark::staticSearch();
-        else if (command == "display" ) printBoardFancy();
-        else if (command == "moveOrdering") Test::Debug::printMoveOrdering();
-        else if (command == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
+        else if (token == "bench")  Test::BenchMark::staticSearch();
+        else if (token == "display" ) printBoardFancy();
+        else if (token == "moveOrdering") Test::Debug::printMoveOrdering();
+        else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
 }
 

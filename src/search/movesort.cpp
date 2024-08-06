@@ -92,14 +92,10 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 
 		assert(!move.isNone() && "givesScores: move is None");
 		assert((scoreMove(move) <= principalVariationBonus) && "giveScores: score is too large");
-		assert((scoreMove(move) >= -maxHistoryScore) && "giveScores: score is too small");
+		assert((scoreMove(move) >= -MAX_HISTORY_SCORE) && "giveScores: score is too small");
 
-		if (bestMove == move) {
-			moveList.moves[count].second = hashTableBonus;
-		}
-		else {
-			moveList.moves[count].second = scoreMove(move);
-		}
+		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
+		else moveList.moves[count].second = scoreMove(move);
 	}
 }
 
