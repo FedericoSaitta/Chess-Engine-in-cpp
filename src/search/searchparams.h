@@ -5,6 +5,9 @@
 #pragma once
 
 // SEARCH PARAMETERS //
+constexpr double LMR_BASE = 0.75;
+constexpr double LMR_DIVISION = 3.0;
+
 constexpr int LMR_MIN_MOVES { 4 }; // searching the first 4 moves at the full depth
 constexpr int LMR_MIN_DEPTH { 3 };
 

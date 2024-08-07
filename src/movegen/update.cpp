@@ -1,5 +1,4 @@
 #include "update.h"
-
 #include <assert.h>
 #include <cstring>
 #include <variant>
@@ -11,6 +10,7 @@
 #include "config.h"
 #include "../../include/inline_functions.h"
 #include "../../include/misc.h"
+#include "game_statistics.h"
 
 // this is for little endian board
 static const int castlingRightsConstant[64] = {
@@ -161,6 +161,8 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	assert((board.gamePly < 512) && "makeMove: gamePly is too large");
 
 	if(!onlyCaptures) {
+
+		nodes++;
 		COPY_HASH();
 
 		if (history[gamePly].enPassSq != 64) { hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq]; }

@@ -93,6 +93,9 @@ set(SOURCE_FILES
         texel-tuner/init_tuner.h
         texel-tuner/engine/myeval.cpp
         texel-tuner/init_tuner.cpp
+        include/timer.h
+        include/timer.h
+        include/game_statistics.h
 )
 
 # Add executable

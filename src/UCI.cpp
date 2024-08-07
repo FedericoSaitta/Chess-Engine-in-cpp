@@ -80,8 +80,8 @@ static void handlePosition(std::istringstream& inputStream) {
                     if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move inputStream != 0
                         repetitionIndex++;
                         repetitionTable[repetitionIndex] = hashKey;
-                        if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move inputStream illegal " + tokens[index] ); };
-                    } else { LOG_ERROR("Move inputStream Null " + tokens[index] ); }
+                        if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move inputStream illegal " + token ); };
+                    } else { LOG_ERROR("Move inputStream Null " + token ); }
                 }
                 goto no_re_parsing;
                 // once we are done making the moves, we dont want to re-parse the board as that would nullify the moves
@@ -102,7 +102,6 @@ static void handleGo(std::istringstream& inputStream) {
     std::string token;
     movesToGo = 0; // need to reset to zero to ensure that if uci switches behaviour we dont use previous time controls
     while (inputStream >> token) {
-        std::cout << token << std::endl;
         if (token == "perft") {
             if (inputStream >> token) Test::BenchMark::perft(std::stoi(token));
             std::cout << '\n';
