@@ -18,6 +18,9 @@
 #include "../src/search/search.h"
 #include "misc.h"
 #include "uci.h"
+#include "../src/eval/evaluation.h"
+
+#include "timer.h"
 
 namespace Test::BenchMark {
 
@@ -77,8 +80,6 @@ namespace Test::BenchMark {
         "7k/8/7P/5B2/5K2/8/8/8 b - - 0 175"
     };
 
-
-
     void staticSearch(int depth) {
 
         // Note that this test will tell use about pruning etc. but the result will not depend on ttHits and
@@ -129,4 +130,32 @@ namespace Test::BenchMark {
         std::cout << "AVG Branching Ratio: " << averageBranchingRatio << '\n';
         std::cout << "Time taken: " << duration.count() << "s\n";
     }
+
+    void staticEval() {
+        constexpr int numEntries { sizeof(testFEN) / sizeof(std::string) };
+        constexpr int repeatLoop{ 1'000'000 };
+        std::int64_t totalEval{};
+        double timeElapsed{};
+
+        for (std::string FEN: testFEN) {
+            resetGameVariables();
+            Board b{ FEN };
+
+            Timer timer{};
+
+            int score{};
+
+            // we call repeat to avoid the fen parsing and resetting game variables to affect the results
+            // ask the loop to perform a dummy operation so the compiler doesnt poke its nose into our affairs
+            for (int i=0; i < repeatLoop; i++) score = evaluate(b);
+
+            totalEval += score;
+            timeElapsed += timer.elapsed();
+        }
+
+        std::cout << "Total Eval: " << totalEval << '\n';
+        std::cout << "Time taken: " << timeElapsed / 1'000 << " s\n";
+        std::cout << "Speed: " << numEntries * repeatLoop / (timeElapsed * 1'000) << " MPos/s" << std::endl;
+    }
+
 }

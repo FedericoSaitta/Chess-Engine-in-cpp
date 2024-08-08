@@ -179,7 +179,7 @@ static void updateHistory(const Move bestMove, const int depth, const Move* quie
 }
 
 static int quiescenceSearch(int alpha, const int beta) {
-
+	Move bestMove;
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (stopSearch) return 0; // If the time is up, we return 0;
 
@@ -196,11 +196,19 @@ static int quiescenceSearch(int alpha, const int beta) {
 		alpha = standPat; // Known as PV node (principal variation)
 	}
 
+	bool pvNode = (beta - alpha) > 1;
+
+	int value = probeHash(alpha, beta, &bestMove, 0);
+	const bool ttHit = value != NO_HASH_ENTRY;
+	if (searchPly && ttHit && !pvNode) return value;
+
+
 	MoveList moveList;
 	generateMoves(moveList);
 
 	giveScores(moveList, Move(0, 0)); // as there is no bestmove
 
+	const int originalAlpha {alpha};
 	int bestEval { standPat };
 
 	for (int count=0; count < moveList.count; count++) {
@@ -211,6 +219,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 		repetitionIndex++;
 		repetitionTable[repetitionIndex] = hashKey;
 
+		// maybe switch to only looking at quiet moves instead of captures
 		// board.undo Illegal Moves or non-captures
 		if( !board.makeMove(move, 1) ) {
 			searchPly--;
@@ -228,6 +237,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 		// found a better move
 		if (score > bestEval) { // Known as PV node (principal variation)
 			bestEval = score;
+			bestMove = move;
 
 			if (score > alpha) {
 				alpha = score;
@@ -238,6 +248,10 @@ static int quiescenceSearch(int alpha, const int beta) {
 			}
 		}
 	}
+	int hashFlag = HASH_FLAG_EXACT;
+	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
+	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
+	recordHash(bestEval, bestMove, hashFlag, 0);
 
 	return bestEval; // node that fails low
 }
@@ -278,17 +292,18 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	{
 		// new addition avoid having to re-evaluate if we already have a tt eval
 		const int staticEval{ (ttHit) ? score : evaluate(board) };
+
 		// evaluation margin substracted from static evaluation score fails high
 		if (staticEval - (120 * depth) >= beta)
 			// evaluation margin substracted from static evaluation score
 				return staticEval - 120 * depth;
 	}
 
+	// quiet move pruning
 	// most of these can be greatly improved with improving heuristic
 	if (!pvNode && !inCheck && searchPly) {
 
 		// i have not added the weird trick that the old_search has
-
 
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our board.side only has pawns on the board
@@ -317,12 +332,13 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		// razoring
 		if (depth <= 3 && canNull){
 			// get static eval and add first bonus
-			score = evaluate(board) + 125;
+			// as we need to preserve score for FP, we make a new variable here
+			int r_score = evaluate(board) + 125;
 
 			int newScore; // define new score
 
 			// static evaluation indicates a fail-low node
-			if (score < beta)
+			if (r_score < beta)
 			{
 				// on depth 1
 				if (depth == 1)
@@ -331,14 +347,14 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 					newScore = quiescenceSearch(alpha, beta);
 
 					// return quiescence score if it's greater then static evaluation score
-					return (newScore > score) ? newScore : score;
+					return (newScore > r_score) ? newScore : r_score;
 				}
 
 				// add second bonus to static evaluation
-				score += 175;
+				r_score += 175;
 
 				// static evaluation indicates a fail-low node
-				if (score < beta && depth <= 2)
+				if (r_score < beta && depth <= 2)
 				{
 					// get quiscence score
 					newScore = quiescenceSearch(alpha, beta);
@@ -346,13 +362,14 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 					// quiescence score indicates fail-low node
 					if (newScore < beta)
 						// return quiescence score if it's greater then static evaluation score
-							return (newScore > score) ? newScore : score;
+							return (newScore > r_score) ? newScore : r_score;
 				}
 			}
 		}
 	}
 
 
+	// late move pruning
 
     MoveList moveList;
     generateMoves(moveList);
@@ -381,6 +398,21 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	// late move pruning, we use the more conservative measure right now as i dont have
     	// improving heuristic
     	if (searchPly && !inCheck && isQuiet && bestEval > -MATE_SCORE) {
+
+    		// from carp chess engine, needs to be checked more thoroughlly
+    		const int lmr_depth = depth - std::min(depth, LMR_table[std::min(depth, 63)][std::min(count, 63)]);
+		    const int efp_margin = EFP_BASE + EFP_MARGIN * lmr_depth;
+
+    		// because quiet moves are unlikely drastically change the evaluation, we
+    		// can confidently use the tt-result from before if we have one
+    		if (lmr_depth <= EFP_THRESHOLD
+    			&& ( evaluate(board) ) + efp_margin < alpha) {
+				// (ttHit) ? score : evaluate(board) instead of evaluate(board)????
+
+    			skipQuiets= true;
+    			continue;
+    		}
+
 
     		// parameters obtained from CARP
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {

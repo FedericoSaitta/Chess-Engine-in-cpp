@@ -17,3 +17,7 @@ static int stopSearch { 0 };
 static int timePerMove { 0 };
 
 constexpr int MAX_HISTORY_SCORE{ 16'384 };
+
+constexpr int EFP_THRESHOLD { 5 };
+constexpr int EFP_BASE { 80 };
+constexpr int EFP_MARGIN { 90 };

@@ -200,6 +200,7 @@ void UCI(const std::string_view fileName) {
 
         // NON-UCI COMMANDS
         else if (token == "bench")  Test::BenchMark::staticSearch();
+        else if (token == "bench-eval") Test::BenchMark::staticEval();
         else if (token == "display" ) printBoardFancy();
         else if (token == "moveOrdering") Test::Debug::printMoveOrdering();
         else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";

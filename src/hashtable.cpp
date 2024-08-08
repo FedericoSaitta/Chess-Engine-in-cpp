@@ -65,7 +65,6 @@ void initTranspositionTable(const int megaBytes) {
         clearTranspositionTable();
     }
 
-
 }
 
 void clearTranspositionTable() {
@@ -78,7 +77,27 @@ void clearTranspositionTable() {
     }
 }
 
+// read entry from the transposition table
+tt* readHashEntry(Move& best_move) {
+    // addressing the location of the entry we want to read
+    tt *hash_entry { &transpositionTable[hashKey % transpotitionTableEntries] }; // does MIDA have a faster look up method??
 
+    // make sure we got the exact position that we need
+    // we start by comparing the current hash key with the one stored in the address
+    if (hash_entry->hashKey == hashKey) {
+        best_move = hash_entry->bestMove;
+
+        if (hash_entry->score < -MATE_SCORE)
+            hash_entry->score += searchPly;
+
+        else if (hash_entry->score > MATE_SCORE)
+            hash_entry->score -= searchPly;
+
+        return hash_entry;
+
+    }
+    return nullptr;
+}
 
 int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
 {

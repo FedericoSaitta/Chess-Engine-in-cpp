@@ -2,8 +2,7 @@
 // Created by Federico Saitta on 29/06/2024.
 //
 
-#ifndef TESTS_H
-#define TESTS_H
+#pragma once
 
 #include <iostream>
 
@@ -25,7 +24,6 @@ namespace Test::BenchMark {
     void matingPuzzles();
 
     void staticSearch(int depth=10);
+
+    void staticEval();
 }
-
-
-#endif //TESTS_H

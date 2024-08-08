@@ -55,6 +55,7 @@ int main() {
 
 #ifdef BENCHMARK_TEST
     Test::BenchMark::staticSearch();
+    Test::BenchMark::staticEval();
     Test::BenchMark::matingPuzzles();
     Test::BenchMark::standardPerft();
 #endif

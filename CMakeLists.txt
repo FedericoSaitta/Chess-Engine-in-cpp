@@ -58,7 +58,7 @@ set(SOURCE_FILES
 
         # Needed for testing
         benchmark_tests/perft_tests.cpp
-        benchmark_tests/branching_factor.cpp
+        benchmark_tests/search_and_eval.cpp
         benchmark_tests/puzzle_tests.cpp
         debug_tests/evaluation_tests.cpp
         debug_tests/move_tests.cpp
@@ -96,6 +96,7 @@ set(SOURCE_FILES
         include/timer.h
         include/timer.h
         include/game_statistics.h
+        texel-tuner/init_tuner.h
 )
 
 # Add executable

@@ -44,6 +44,14 @@ inline int pop_lsb(U64* b) {
     return lsb;
 }
 
+// should write a test for these but it looks good for now
+inline U64 shiftLeft(const U64 b) {
+    return b >> 1 & notHFile;
+}
+
+inline U64 shiftRight(const U64 b) {
+    return b << 1 & notAFile;
+}
 
 
 inline U64 getBishopAttacks(const int square, U64 occupancy) {
