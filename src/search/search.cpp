@@ -399,20 +399,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	// improving heuristic
     	if (searchPly && !inCheck && isQuiet && bestEval > -MATE_SCORE) {
 
-    		// from carp chess engine, needs to be checked more thoroughlly
-    		const int lmr_depth = depth - std::min(depth, LMR_table[std::min(depth, 63)][std::min(count, 63)]);
-		    const int efp_margin = EFP_BASE + EFP_MARGIN * lmr_depth;
-
-    		// because quiet moves are unlikely drastically change the evaluation, we
-    		// can confidently use the tt-result from before if we have one
-    		if (lmr_depth <= EFP_THRESHOLD
-    			&& ( evaluate(board) ) + efp_margin < alpha) {
-				// (ttHit) ? score : evaluate(board) instead of evaluate(board)????
-
-    			skipQuiets= true;
-    			continue;
-    		}
-
 
     		// parameters obtained from CARP
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {

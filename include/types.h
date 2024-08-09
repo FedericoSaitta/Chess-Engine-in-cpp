@@ -118,6 +118,10 @@ public:
         return flags() & PROMOTION;
     }
 
+    inline bool isQueenPromotion() const {
+        return (flags() & PROMOTIONS) == 0b0111;
+    }
+
     inline bool isEnPassant() const {
         return flags() == EN_PASSANT;
     }

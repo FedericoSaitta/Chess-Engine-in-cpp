@@ -107,8 +107,9 @@ to represent the pieces.
 - [X] Pawn pushes, En-Passant and Castling move generation is done on the fly.
 - [X] Copy-Restore approach is used to play and undo moves on the board
 - [X] Make-UnMake move and full Position class implementation
-- [ ] Legal move generation
 - [ ] Staged move generation
+- [ ] Legal move generation
+
 
 #### Board Evaluation:
 - [X] Hand-Crafted-Evaluation tuned with Texel tuner
@@ -119,7 +120,7 @@ to represent the pieces.
   - [X] pawn-shield bonus
 - Pawn evaluation:
   - [X] isolated, passed and double pawns
-  - [ ] pawn phalanx
+  - [X] pawn phalanx and protected pawns
   - [ ] unstoppable passer
 
 #### Searching Algorithm Features:
@@ -137,8 +138,7 @@ to represent the pieces.
 - [X] Delta Pruning
 - [X] Razoring
 - [X] Late Move Pruning
-- [ ] Transposition table in quiesce
-- [ ] Tuning of Late Move Pruning
+- [X] Transposition table in quiesce
 - [ ] Futility pruning
 - [ ] Improving heuristic 
 - [ ] Modern history scores and bonuses
@@ -161,18 +161,18 @@ Please note that though the versions are improving over time, the gain is not li
 are a rough measure of playing strength, and will only be confirmed or denied once the engine participates in larger 
 testing suites.
 
-| Version | ELO Gain | Estimated ELO |
-|---------|----------|---------------|
-| 1.3.0   | 115 ± 15 | 2250          |
-| 1.2.7   | 15 ± 10  | 2140          |
-| 1.2.6   | 36 ± 16  | 2130          |
-| 1.2.5   | 46 ± 18  | 2110          |
-| 1.2.4   | 69 ± 20  | 2080          |
-| 1.2.3   | 35 ± 20  | 2030          |
-| 1.2.2   | 65 ± 20  | 2010          |
-| 1.2.1   | 223 ± 41 | 1950          |
-| 1.2.0   | 200 ± 43 | 1730          |
-| 1.1.0   | -------- | 1550          |
+| Version | ELO Gain | CCRL Blitz ELO |
+|---------|----------|----------------|
+| 1.3.0   | 115 ± 15 | 2387           |
+| 1.2.7   | 15 ± 10  | ----           |
+| 1.2.6   | 36 ± 16  | ----           |
+| 1.2.5   | 46 ± 18  | ----           |
+| 1.2.4   | 69 ± 20  | ----           |
+| 1.2.3   | 35 ± 20  | ----           |
+| 1.2.2   | 65 ± 20  | ----           |
+| 1.2.1   | 223 ± 41 | ----           |
+| 1.2.0   | 200 ± 43 | ----           |
+| 1.1.0   | -------- | ----           |
 
 
 ### Patches:
