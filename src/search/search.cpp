@@ -74,9 +74,17 @@ void initSearchTables() {
 	}
 }
 static void resetSearchStates() {
-	memset(killerMoves, 0, sizeof(killerMoves));
+	// maybe there is a faster way to reset these
+	for (int i=0; i < MAX_PLY; i++) {
+		killerMoves[0][i] = Move(0, 0);
+		killerMoves[1][i] = Move(0, 0);
+
+		for (int b=0; b<MAX_PLY; b++) {
+			pvTable[i][b] = Move(0, 0);
+		}
+	}
+
 	memset(pvLength, 0, sizeof(pvLength));
-	memset(pvTable, 0, sizeof(pvTable));
 
 	nodes = 0;
 	followPV = 0;
@@ -90,7 +98,10 @@ static void resetSearchStates() {
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
     for (int count=0; count < moveList.count; count++) {
+
         if ( moveList.moves[count].first == pvTable[0][searchPly] ) {
+        	assert(!pvTable[0][searchPly].isNone() && "enablePVscoring: pv is following a null move");
+
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
         	break; 
@@ -115,17 +126,27 @@ static int getMoveTime(const bool timeConstraint) {
 		moveTime = timeAlloted / movesToGo;
 	}
 
+
 	assert((moveTime > 0) && "getMoveTime: movetime is zero/negative");
 	return moveTime;
 }
 static void isTimeUp() {
 	if ( searchTimer.elapsed() > timePerMove) stopSearch = 1;
 }
+static void printRepetitionTable() {
+	for (int i=0; i < 10; i++) {
+		std::cout << repetitionTable[i] << '\n';
+	}
+}
+
 static int isRepetition() {
-	for (int index=repetitionIndex - 1; index >= 0; index-= 2) {
+	// look if up until our repetition we have already encountered this position, asssuming the opponent
+	// plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
+	for (int index=0; index < repetitionIndex; index+= 1) {
 		// looping backwards over our previous keys
-		if (repetitionTable[index] == hashKey)
+		if (repetitionTable[index] == hashKey) {
 			return 1; // repetition found
+		}
 	}
 	return 0; // no repetition
 }
@@ -159,21 +180,28 @@ void printKillerTable() {
 
 static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
 	const int bonus = std::min(2100, 300 * depth - 300);
+	assert(bestMove.from() < 64 && "updateHistory: out of bounds table indexing");
+	assert(bestMove.to() < 64 && "updateHistory: out of bounds table indexing");
 
 	// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
 		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+
+		assert( std::abs(historyScores[bestMove.from()][bestMove.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
 	}
 
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
 	assert((quietMoveCount <= 32) && "updateHistory: quietMoveCount is too large");
 	for (int i = 0; i < quietMoveCount; i++) {
 		Move m = quiets[i];
-		assert(m != Move(0, 0));
+		assert(!m.isNone() && "updatedHistory: in loop, move is noen");
 
 		// Could i avoid this if check with double the bonus?
 		// We do not want to cancel the bonus we just handed to the bestMove
-		if (m != bestMove) historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+		if (m != bestMove) {
+			historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+			assert( std::abs(historyScores[m.from()][m.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
+		}
 	}
 
 }
@@ -184,7 +212,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 	if (stopSearch) return 0; // If the time is up, we return 0;
 
 	if ( searchPly > (MAX_PLY - 1) ) return evaluate(board);
-
 	const int standPat{ evaluate(board) };
 
 	// delta pruning
@@ -237,7 +264,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 		// found a better move
 		if (score > bestEval) { // Known as PV node (principal variation)
 			bestEval = score;
-			bestMove = move;
+			bestMove = move; // saving the TT move
 
 			if (score > alpha) {
 				alpha = score;
@@ -248,10 +275,12 @@ static int quiescenceSearch(int alpha, const int beta) {
 			}
 		}
 	}
+
 	int hashFlag = HASH_FLAG_EXACT;
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
-	recordHash(bestEval, bestMove, hashFlag, 0);
+
+	if (bestEval != standPat) recordHash(bestEval, bestMove, hashFlag, 0);
 
 	return bestEval; // node that fails low
 }
@@ -369,7 +398,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	}
 
 
-	// late move pruning
 
     MoveList moveList;
     generateMoves(moveList);
@@ -469,10 +497,10 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	if (score > bestEval) {
     		// Known as PV node (principal variation)
     		bestEval = score;
+    		bestMove = move; // saving the TT move
 
     		if (score > alpha){
     			alpha = score;
-    			bestMove = move; // store best move (for TT)
 
     			pvTable[searchPly][searchPly] = move;
     			// copy move from deeper plies to curernt ply

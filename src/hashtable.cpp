@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <assert.h>
 
 #include <vector>
 #include <cstdint>
@@ -77,31 +78,10 @@ void clearTranspositionTable() {
     }
 }
 
-// read entry from the transposition table
-tt* readHashEntry(Move& best_move) {
-    // addressing the location of the entry we want to read
-    tt *hash_entry { &transpositionTable[hashKey % transpotitionTableEntries] }; // does MIDA have a faster look up method??
-
-    // make sure we got the exact position that we need
-    // we start by comparing the current hash key with the one stored in the address
-    if (hash_entry->hashKey == hashKey) {
-        best_move = hash_entry->bestMove;
-
-        if (hash_entry->score < -MATE_SCORE)
-            hash_entry->score += searchPly;
-
-        else if (hash_entry->score > MATE_SCORE)
-            hash_entry->score -= searchPly;
-
-        return hash_entry;
-
-    }
-    return nullptr;
-}
-
 int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
 {
     // creates a pointer to the hash entry
+    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "probeHash: hashkey too large");
     const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
 
     // make sure we have the correct hashKey, not sure about the depth line
@@ -125,6 +105,7 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
                 return beta;
         }
         // store best move
+        assert(!hashEntry->bestMove.isNone() && "probeHash: trying to probe a null Move");
         *best_move = hashEntry->bestMove;
     }
     return NO_HASH_ENTRY; // in case we dont get a tt hit
@@ -132,11 +113,14 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
 
 void recordHash(int score, const Move bestMove, const int flag, const int depth)
 {
+    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "recordHash: hashkey too large");
     tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
 
     // independent from distance of path taken from root node to current mating position
     if (score < -MATE_SCORE) score += searchPly;
     if (score > MATE_SCORE) score -= searchPly;
+
+    assert(!bestMove.isNone() && "recordHash: Trying to store a null move");
 
     hashEntry->hashKey = hashKey;
     hashEntry->score = score;
@@ -144,6 +128,7 @@ void recordHash(int score, const Move bestMove, const int flag, const int depth)
     hashEntry->depth = depth;
     hashEntry->bestMove = bestMove;
 }
+
 int checkHashOccupancy() {
     float count {};
     for (const tt* position = transpositionTable; position < transpositionTable + transpotitionTableEntries; ++position) {

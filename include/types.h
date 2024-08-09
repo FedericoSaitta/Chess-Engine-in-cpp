@@ -1,7 +1,3 @@
-//
-// Created by Federico Saitta on 18/07/2024.
-//
-
 #pragma once
 
 #include "macros.h"

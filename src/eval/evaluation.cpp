@@ -11,6 +11,8 @@
 #include <immintrin.h>
 #include <algorithm>
 #include "../../include/misc.h"
+#include <assert.h>
+
 #define FLIP(sq) ((sq)^56)
 
 //// ******* these boards are horizontally symmetric so no need for fancy flipping yet ////
@@ -44,6 +46,10 @@ int evaluate(const Board& pos) {
     std::int8_t blackBishops{ 0 };
 
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
+
+        assert( std::abs(score[WHITE]) < (std::pow(2, 30) ) && "evaluate: eval is too high");
+        assert( std::abs(score[BLACK]) < (std::pow(2, 30) ) && "evaluate: eval is too high");
+
         U64 bitboardCopy = pos.bitboards[bbPiece];
 
         // defo could improve the conditional branching in here

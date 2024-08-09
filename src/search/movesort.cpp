@@ -62,6 +62,10 @@ constexpr int secondKiller{ 800'000 };
 
 int scoreMove(const Move move) {
 
+	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
+	assert(move.from() < 64 && "scoreMove: out of bounds table indexing");
+	assert(move.to() < 64 && "scoreMove: out of bounds table indexing");
+
 	if (scorePV && (pvTable[0][searchPly] == move)) {
 		scorePV = 0;
 		return principalVariationBonus;
@@ -100,6 +104,8 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 }
 
 Move pickBestMove(MoveList& moveList, const int start) {
+	assert(start < moveList.count && "pickBestMove: out of bounds start index");
+
     int bestMoveScore{ moveList.moves[start].second };
     int bestMoveIndex{ start };
 
@@ -114,6 +120,8 @@ Move pickBestMove(MoveList& moveList, const int start) {
 	const std::pair<Move, int> tempMove = moveList.moves[start];
 	moveList.moves[start] = moveList.moves[bestMoveIndex];
 	moveList.moves[bestMoveIndex] = tempMove;
+
+	assert(!moveList.moves[start].first.isNone() && "pickBestMove: returned move is none");
 
 	return moveList.moves[start].first;
 }

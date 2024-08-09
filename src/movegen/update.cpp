@@ -310,7 +310,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	}
 	
 	// used in Quiescent search
-	if ( move.isCapture() || move.isQueenPromotion() ) {
+	if ( move.isCapture() || move.isQueenPromotion()) {
 		return makeMove(move, 0); // make the move
 		// forgetting this return statement causes issues within the quiescence search
 	}
