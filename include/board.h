@@ -41,9 +41,9 @@ public:
     inline U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
 
     inline void resetBoard() {
-        for (int i=0; i<512; i++) history[i].resetUndoInfo();
-
+        memset(history, 0, sizeof(history));
         memset(bitboards, 0ULL, sizeof(bitboards));
+
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
 
         gamePly = 0;

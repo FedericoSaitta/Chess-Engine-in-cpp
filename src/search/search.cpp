@@ -73,18 +73,10 @@ void initSearchTables() {
 		LMP_table[1][depth] = static_cast<int>( 3.87 +  0.712 * depth * depth );
 	}
 }
-static void resetSearchStates() {
-	// maybe there is a faster way to reset these
-	for (int i=0; i < MAX_PLY; i++) {
-		killerMoves[0][i] = Move(0, 0);
-		killerMoves[1][i] = Move(0, 0);
-
-		for (int b=0; b<MAX_PLY; b++) {
-			pvTable[i][b] = Move(0, 0);
-		}
-	}
-
+void resetSearchStates() {
+	memset(killerMoves, 0, sizeof(killerMoves));
 	memset(pvLength, 0, sizeof(pvLength));
+	memset(pvTable, 0, sizeof(pvTable));
 
 	nodes = 0;
 	followPV = 0;
@@ -293,7 +285,7 @@ static void ageHistory() {
 	}
 }
 
-
+template<bool rootNode=false>
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
@@ -397,7 +389,12 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		}
 	}
 
-
+	// Internal Iterative Reduction
+	// Without a TT hit, it's better to do a reduced search to then setup the TT entry for the next
+	// IID iteration.
+	if (rootNode && depth >= 4 && !ttHit) {
+		depth -= 1;
+	}
 
     MoveList moveList;
     generateMoves(moveList);
@@ -565,7 +562,8 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
         singleDepthTimer.reset();
 
-        const int score { negamax(alpha, beta, currentDepth, DO_NULL) };
+		// set the RootNode bool to true
+        const int score { negamax<true>(alpha, beta, currentDepth, DO_NULL) };
 
 		// If the previous search exceeds the hard or soft time limit, we stop searching
         if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
