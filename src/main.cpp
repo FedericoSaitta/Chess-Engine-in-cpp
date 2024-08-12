@@ -45,19 +45,6 @@ int main() {
     // killer position 1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -
    // Test::BenchMark::standardPerft();
 
-    /* results from bench and bench-eval
-        bench
-        Nodes: 2.92045 Million
-        AVG Branching Ratio: 2.85586
-        Time taken: 9.52927s
-        bench-eval
-        Total Eval: -2544
-        Time taken: 9.80222 s
-        Speed: 5.30492 MPos/s
-
-        DEBUG MOVE GIVES DIFFERENT RESULTS WHICH IS NOT GOOD
-    */
-
 #ifdef TUNE_ARAMIS
     // to avoid including unwanted macros etc.
     #include "init_tuner.h"

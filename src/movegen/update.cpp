@@ -87,7 +87,8 @@ void Board::removePiece(const int s) {
 //Undos a move in the current position, rolling it back to the previous position
 void Board::undo(const Move move) {
 
-	LOG_WARNING((move == Move(0, 0)) ? "undo: undoing a NULL MOVE" : "");
+	assert(move.to() != move.from() && "undo: start and end-square are same");
+	assert(!move.isNone() && "undo: undoing a NULL MOVE");
 
 	MoveFlags type = move.flags();
 	const Color C { static_cast<Color>(side) };
@@ -157,8 +158,9 @@ void Board::undo(const Move move) {
 
 int Board::makeMove(const Move move, const int onlyCaptures) {
 
-	assert((move != Move(0, 0)) && "makeMove: making a NULL MOVE");
+	assert(!move.isNone() && "makeMove: making a NULL MOVE");
 	assert((board.gamePly < 512) && "makeMove: gamePly is too large");
+	assert(move.to() != move.from() && "makeMove: start and end-square are same");
 
 	if(!onlyCaptures) {
 

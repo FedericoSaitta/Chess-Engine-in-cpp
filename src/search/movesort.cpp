@@ -6,6 +6,7 @@
 #include "searchparams.h"
 #include "config.h"
 
+#include "misc.h"
 #include <algorithm>
 #include <assert.h>
 #include <utility>
@@ -67,7 +68,12 @@ int scoreMove(const Move move) {
 	assert(move.to() < 64 && "scoreMove: out of bounds table indexing");
 
 	if (scorePV && (pvTable[0][searchPly] == move)) {
+		assert((scorePV == 1) && "scoreMove: scorePV is unitialized");
+		assert(!pvTable[0][searchPly].isNone() && "scoreMove: pv move is None");
+		assert(!move.isNone() && "scoreMove: current move is None");
+
 		scorePV = 0;
+
 		return principalVariationBonus;
 	}
 
@@ -91,7 +97,7 @@ int scoreMove(const Move move) {
 
 
 void giveScores(MoveList& moveList, const Move bestMove) {
-	for (int count = 0; count < moveList.count; ++count) {
+	for (int count = 0; count < moveList.count; count++) {
 		const Move move{ moveList.moves[count].first };
 
 		assert(!move.isNone() && "givesScores: move is None");

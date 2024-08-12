@@ -89,10 +89,12 @@ void resetSearchStates() {
 
 static void enablePVscoring(const MoveList& moveList) {
     followPV = 0;
+
     for (int count=0; count < moveList.count; count++) {
 
         if ( moveList.moves[count].first == pvTable[0][searchPly] ) {
         	assert(!pvTable[0][searchPly].isNone() && "enablePVscoring: pv is following a null move");
+        	assert(!moveList.moves[count].first.isNone() && "enablePVscoring: pv is following a null move");
 
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
@@ -199,6 +201,7 @@ static void updateHistory(const Move bestMove, const int depth, const Move* quie
 }
 
 static int quiescenceSearch(int alpha, const int beta) {
+
 	Move bestMove;
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (stopSearch) return 0; // If the time is up, we return 0;
@@ -285,8 +288,10 @@ static void ageHistory() {
 	}
 }
 
+
 template<bool rootNode=false>
 static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
+	assert(depth >= 0 && "negamax: depth is negative");
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
 	int bestEval {-INF - 1};
@@ -305,26 +310,18 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	if (searchPly > MAX_PLY - 1) return evaluate(board);
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
+
 	const int inCheck{ board.currentlyInCheck() };
 	if (inCheck) depth++; // Search extension if board.side is in check
-
-	// STATIC NULL MOVE PRUNING / REVERSE FUTILITY PRUNING
-	if (depth < 3 && (!pvNode) && (!inCheck) &&  (std::abs(beta - 1) > (-INF + 100) ) )
-	{
-		// new addition avoid having to re-evaluate if we already have a tt eval
-		const int staticEval{ (ttHit) ? score : evaluate(board) };
-
-		// evaluation margin substracted from static evaluation score fails high
-		if (staticEval - (120 * depth) >= beta)
-			// evaluation margin substracted from static evaluation score
-				return staticEval - 120 * depth;
-	}
 
 	// quiet move pruning
 	// most of these can be greatly improved with improving heuristic
 	if (!pvNode && !inCheck && searchPly) {
 
-		// i have not added the weird trick that the old_search has
+		// reverse futility pruning
+		const int eval { ttHit ? score : evaluate(board) };
+		if (depth < 9 && (eval - depth * 80) >= beta)
+			return eval;
 
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our board.side only has pawns on the board
@@ -387,13 +384,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 				}
 			}
 		}
-	}
-
-	// Internal Iterative Reduction
-	// Without a TT hit, it's better to do a reduced search to then setup the TT entry for the next
-	// IID iteration.
-	if (rootNode && depth >= 4 && !ttHit) {
-		depth -= 1;
 	}
 
     MoveList moveList;
@@ -540,7 +530,6 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 }
 
 
-
 void iterativeDeepening(const int depth, const bool timeConstraint) {
 	resetSearchStates();
 
@@ -557,6 +546,7 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 	for (int currentDepth = 1; currentDepth <= depth; ){
 		nodes = 0;
         followPV = 1;
+
 		if (stopSearch) break;
 		if (searchTimer.elapsed() > softTimeLimit) break;
 
