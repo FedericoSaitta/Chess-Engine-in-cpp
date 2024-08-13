@@ -12,4 +12,4 @@ int scoreMove(Move move);
 
 void giveScores(MoveList& moveList, Move bestMove);
 
-Move pickBestMove(MoveList& moveList, int start);
+std::pair<Move, int> pickBestMove(MoveList& moveList, int start);

@@ -105,6 +105,8 @@ namespace Test::BenchMark {
             std::string line;
 
 
+
+
             while (std::getline(outputStream, line)) {
 
                 std::vector<std::string> tokens = split(line);
@@ -124,6 +126,9 @@ namespace Test::BenchMark {
             }
 
         }
+
+
+        resetGameVariables();
 
         const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
         std::cout << "Nodes: " << totalNodes / 1'000'000 << " Million\n";

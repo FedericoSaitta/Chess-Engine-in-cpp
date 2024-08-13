@@ -7,6 +7,7 @@
 #include <iostream>
 #include "init.h"
 #include <cmath>
+#include <assert.h>
 
 enum Color { WHITE = 0, BLACK = 1 };
 
@@ -126,19 +127,12 @@ public:
     // Non-Noisy moves are: undepromtions( even capture promotions ) and quiet moves (castling etc)
     inline bool isNoisy() const {
         return isCapture() || isPromotion();
-        /*
-        switch(flags()) {
-            case (CAPTURE): return true;
-            case (EN_PASSANT): return true;
-            case (PC_QUEEN): return true;
-            case (PR_QUEEN): return true;
-            default: return false;
-        }
-        */
     }
 
     // this can be written so much better
     inline PieceType promotionPiece() const {
+        assert( (std::max( ( flags() & PROMOTIONS) - 3, 0) < KING) && "promotionPiece: is wrong");
+
         return PieceType( std::max( ( flags() & PROMOTIONS) - 3, 0) );
     }
 

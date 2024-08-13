@@ -5,6 +5,7 @@
 #include "../include/inline_functions.h"
 #include "searchparams.h"
 #include "config.h"
+#include "see.h"
 
 #include "misc.h"
 #include <algorithm>
@@ -61,6 +62,8 @@ constexpr int captureBonus{ 1'000'000 }; // so captures are always above killers
 constexpr int firstKiller{ 900'000 };
 constexpr int secondKiller{ 800'000 };
 
+
+static int conversion[] {-1, 1};
 int scoreMove(const Move move) {
 
 	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
@@ -78,7 +81,7 @@ int scoreMove(const Move move) {
 	}
 
 	if (move.isCapture()) {
-		// promotion captures
+		// back to old code for now
 		if (move.isPromotion()) return mvv_lva[ PAWN ][ move.promotionPiece() ] + captureBonus;
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
@@ -102,14 +105,13 @@ void giveScores(MoveList& moveList, const Move bestMove) {
 
 		assert(!move.isNone() && "givesScores: move is None");
 		assert((scoreMove(move) <= principalVariationBonus) && "giveScores: score is too large");
-		assert((scoreMove(move) >= -MAX_HISTORY_SCORE) && "giveScores: score is too small");
 
 		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
 		else moveList.moves[count].second = scoreMove(move);
 	}
 }
 
-Move pickBestMove(MoveList& moveList, const int start) {
+std::pair<Move, int> pickBestMove(MoveList& moveList, const int start) {
 	assert(start < moveList.count && "pickBestMove: out of bounds start index");
 
     int bestMoveScore{ moveList.moves[start].second };
@@ -129,5 +131,5 @@ Move pickBestMove(MoveList& moveList, const int start) {
 
 	assert(!moveList.moves[start].first.isNone() && "pickBestMove: returned move is none");
 
-	return moveList.moves[start].first;
+	return moveList.moves[start];
 }

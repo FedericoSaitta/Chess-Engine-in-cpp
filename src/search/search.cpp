@@ -34,6 +34,7 @@
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
 #include "movesort.h"
+#include "see.h"
 #include "../logger/logger.h"
 
 U64 repetitionTable[512]{};
@@ -224,7 +225,6 @@ static int quiescenceSearch(int alpha, const int beta) {
 	const bool ttHit = value != NO_HASH_ENTRY;
 	if (searchPly && ttHit && !pvNode) return value;
 
-
 	MoveList moveList;
 	generateMoves(moveList);
 
@@ -234,7 +234,12 @@ static int quiescenceSearch(int alpha, const int beta) {
 	int bestEval { standPat };
 
 	for (int count=0; count < moveList.count; count++) {
-		const Move move { pickBestMove(moveList, count ) };
+		std::pair scoredPair { pickBestMove(moveList, count ) };
+		const Move move { scoredPair.first };
+		const int moveScore { scoredPair.second };
+
+		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
+		//if (move.isCapture() && !see(move, -105)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -403,7 +408,8 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	bool skipQuiets{ false };
 
     for (int count=0; count < moveList.count; count++) {
-    	const Move move { pickBestMove(moveList, count ) };
+    	std::pair scoredPair { pickBestMove(moveList, count ) };
+    	const Move move { scoredPair.first };
 
     	// En-passant, captures and promotions are noisy
     	const bool isQuiet = ( !move.isNoisy() );
@@ -529,21 +535,74 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	return bestEval; // known as fail-low node
 }
 
+int aspirationWindow(int currentDepth, const int previousScore) {
+	int alpha;
+	int beta;
+	int score{};
 
-void iterativeDeepening(const int depth, const bool timeConstraint) {
+	int delta { windowWidth };
+
+	if (currentDepth > 3) {
+		alpha = previousScore - delta;
+		beta = previousScore + delta;
+	} else { // use aspiration window
+		alpha = -INF;
+		beta = INF;
+	}
+
+	while (true) {
+		// perform a search starting at the root node
+		score = negamax<true>(alpha, beta, currentDepth, DO_NULL);
+
+		if (score > alpha && score < beta) break;
+
+		// If we fell outside the window, we expand it and try again
+		delta = delta + delta / 2;
+		alpha = previousScore - delta;
+		beta = previousScore + delta;
+
+	}
+	return score;
+}
+
+void sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) {
+	// Extracting the PV line and printing out in the terminal and logging file
+	std::string pvString{};
+	for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
+
+	const auto nps = static_cast<std::int64_t>(1'000 * nodes / depthTimer.elapsed());
+
+	std::string scoreType = "cp";
+	int adjustedScore = score;
+
+	if (score > -MATE_VALUE && score < -MATE_SCORE) {
+		scoreType = "mate";
+		adjustedScore = -(score + MATE_VALUE) / 2 - 1;
+	} else if (score > MATE_SCORE && score < MATE_VALUE) {
+		scoreType = "mate";
+		adjustedScore = (MATE_VALUE - score) / 2 + 1;
+	}
+
+	// Print the information
+	std::cout << "info score " << scoreType << " " << adjustedScore
+			  << " depth " << depth
+			  << " nodes " << nodes
+			  << " nps " << nps
+			  << " time " << depthTimer.roundedElapsed()
+			  << " pv " << pvString << std::endl;
+}
+
+void iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint);
-
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
-
-
-	int alpha { -INF };
-	int beta { INF };
 
 	searchTimer.reset();
 
-	for (int currentDepth = 1; currentDepth <= depth; ){
+	int score{};
+
+	for (int depth = 1; depth <= maxDepth; depth++){
 		nodes = 0;
         followPV = 1;
 
@@ -552,40 +611,12 @@ void iterativeDeepening(const int depth, const bool timeConstraint) {
 
         singleDepthTimer.reset();
 
-		// set the RootNode bool to true
-        const int score { negamax<true>(alpha, beta, currentDepth, DO_NULL) };
-
-		// If the previous search exceeds the hard or soft time limit, we stop searching
-        if ( (score <= alpha) || (score >= beta) ) { // we fell outside the window
-	        alpha = -INF;
-        	beta = INF;
-        	continue; // we redo the search at the same depth
-        }
-		// otherwise we set up the window for the next iteration
-		alpha = score - windowWidth;
-		beta = score + windowWidth;
+        score = aspirationWindow(depth, score);
 
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;
 
-		// extracting the PV line and printing out in the terminal and logging file
-        std::string pvString{};
-        for (int count=0;  count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
-
-		// check if we need to send mating scores
-		if ( score > -MATE_VALUE && score < -MATE_SCORE) {
-			std::cout << "info score mate " << -(score + MATE_VALUE) / 2 - 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(1000 * nodes / singleDepthTimer.elapsed())
-			<< " time " << singleDepthTimer.roundedElapsed() << " pv " << pvString << std::endl;
-
-		} else if( score > MATE_SCORE && score < MATE_VALUE) {
-			std::cout << "info score mate " << (MATE_VALUE - score) / 2 + 1 << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<std::int64_t>(1000 * nodes / singleDepthTimer.elapsed())
-			<< " time " << singleDepthTimer.roundedElapsed() << " pv " << pvString << std::endl;
-		} else {
-			std::cout << "info score cp " << score << " depth " << currentDepth << " nodes " << nodes << " nps " << static_cast<int>(1000 * nodes / singleDepthTimer.elapsed())
-			<< " time " << singleDepthTimer.roundedElapsed() << " pv " << pvString << std::endl;
-		}
-
-		currentDepth++; // we can proceed to the next iteration
+		sendUciInfo(score, depth, nodes, singleDepthTimer);
     }
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));

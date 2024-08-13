@@ -74,6 +74,10 @@ public:
 
     bool currentlyInCheck() const; // true if the side to move is in check
     bool nonPawnMaterial() const; // true if the side to move has pieces other than pawns and a king
+
+    // SHOULD TEST THESE TWO FUNCTIONS
+    U64 attackersForSide(Color c, int square, U64 occupancy) const;
+    U64 allAttackers(int square, U64 occupancy) const;
 };
 
 extern Board board;

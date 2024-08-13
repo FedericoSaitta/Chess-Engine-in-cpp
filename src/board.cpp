@@ -10,6 +10,7 @@
 #include "search/search.h"
 #include "../include/types.h"
 #include "inline_functions.h"
+#include "eval/evalparams.h"
 
 Board board{};
 
@@ -116,6 +117,34 @@ bool Board::currentlyInCheck() const {
 
 bool Board::nonPawnMaterial() const {
     return ( bitboards[QUEEN + 6 * side] | bitboards[ROOK + 6 * side] | bitboards[BISHOP + 6 * side] | bitboards[KNIGHT + 6 * side]);
+}
+
+
+U64 Board::attackersForSide(const Color c, const int square, const std::uint64_t occupancy) const {
+
+    U64 attackingPawns   = bitboards[make_piece(c, PAWN)];
+    U64 attackingKnights = bitboards[make_piece(c, KNIGHT)];
+    U64 attackingBishops = bitboards[make_piece(c, BISHOP)];
+    U64 attackingRooks   = bitboards[make_piece(c, ROOK)];
+    U64 attackingQueens  = bitboards[make_piece(c, QUEEN)];
+    U64 attackingKing    = bitboards[make_piece(c, KING)];
+
+
+    U64 interCardinalRays = getBishopAttacks(square, occupancy);
+    U64 cardinalRaysRays  = getRookAttacks(square, occupancy);
+
+    U64 attackers = interCardinalRays & (attackingBishops | attackingQueens);
+
+    attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
+    attackers |= bitKnightAttacks[square] & attackingKnights;
+    attackers |= bitKingAttacks[square] & attackingKing;
+    attackers |= (bitPawnAttacks[c][square]) & attackingPawns;
+
+    return attackers;
+}
+
+U64 Board::allAttackers(const int square, const U64 occupancy) const {
+    return attackersForSide(WHITE, square, occupancy) | attackersForSide(BLACK, square, occupancy);
 }
 
 

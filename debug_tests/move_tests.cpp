@@ -36,8 +36,9 @@ namespace Test::Debug{
 
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
-            const Move move{ pickBestMove(moveList, count) };
-            const int score { moveList.moves[count].second };
+            std::pair<Move, int> scoredPair { pickBestMove(moveList, count ) };
+            const Move move { scoredPair.first };
+            const int score { scoredPair.second };
 
             printMove( move );
             std::cout << " score: " << score << '\n';
@@ -61,8 +62,9 @@ namespace Test::Debug{
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
 
-            const Move move{ pickBestMove(moveList, count) };
-            const int score { moveList.moves[count].second };
+            std::pair<Move, int> scoredPair { pickBestMove(moveList, count ) };
+            const Move move { scoredPair.first };
+            const int score { scoredPair.second };
 
             COPY_HASH()
             if( !board.makeMove(move, 0) ) continue;

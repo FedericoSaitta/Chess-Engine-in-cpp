@@ -98,6 +98,8 @@ set(SOURCE_FILES
         include/timer.h
         include/game_statistics.h
         texel-tuner/init_tuner.h
+        src/search/see.cpp
+        src/search/see.h
 )
 
 # Add executable
