@@ -239,7 +239,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 		const int moveScore { scoredPair.second };
 
 		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
-		//if (move.isCapture() && !see(move, -105)) continue; // very basic SEE for now
+		if (move.isCapture() && !see(move, -105)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -621,7 +621,7 @@ void iterativeDeepening(const int maxDepth, const bool timeConstraint) {
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
 
-	ageHistory();
+	//ageHistory();
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
 	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
