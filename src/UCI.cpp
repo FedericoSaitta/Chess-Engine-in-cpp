@@ -9,7 +9,6 @@
 #include "uci.h"
 #include "config.h"
 
-#include "movegen/update.h"
 #include "hashtable.h"
 #include "search/search.h"
 #include "board.h"
@@ -20,6 +19,7 @@
 
 #include "logger/logger.h"
 
+Board pos{};
 
 int gameLengthTime{};
 int whiteClockTime{};
@@ -71,27 +71,36 @@ static void handlePosition(std::istringstream& inputStream) {
             if (token != "moves") FEN += token + ' ';
 
             else {
-                board.parseFEN(FEN);
+                pos.parseFEN(FEN);
                 std::string moveString;
 
                 while(inputStream >> moveString){
-                    const Move move = parseMove(moveString);
+                    const Move move {parseMove(moveString, pos)};
 
-                    if (! ((move.from() == 0) && (move.to() == 0)) ) { //so if the move inputStream != 0
+                    std::cout << moveString << '\n';
+
+                    if (!move.isNone() ) { //so if the move inputStream != 0
+                        std::cout << "making a move\n";
                         repetitionIndex++;
                         repetitionTable[repetitionIndex] = hashKey;
-                        if (board.makeMove(move, 0) == 0) { LOG_ERROR("Move inputStream illegal " + token ); };
-                    } else { LOG_ERROR("Move inputStream Null " + token ); }
+                        if (pos.makeMove(move, 0) == 0) {
+                            std::cerr << "Could not find the move" << std::endl;
+                            LOG_ERROR("Move inputStream illegal " + token );
+                        }
+                    } else {
+                        std::cerr << "Move is Null" << std::endl;
+                        LOG_ERROR("Move inputStream Null " + token );
+                    }
                 }
                 goto no_re_parsing;
-                // once we are done making the moves, we dont want to re-parse the board as that would nullify the moves
+                // once we are done making the moves, we dont want to re-parse the pos as that would nullify the moves
             }
         }
 
     } else if (token == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     }
-    board.parseFEN(FEN);
+    pos.parseFEN(FEN);
 
     no_re_parsing:
 }
@@ -122,7 +131,7 @@ static void handleGo(std::istringstream& inputStream) {
         else if (token == "movetime") {
             movesToGo = 1; // as we will only need to make a singular move
             if (inputStream >> token) {
-                if (board.side == WHITE) whiteClockTime = std::stoi(token);
+                if (pos.side == WHITE) whiteClockTime = std::stoi(token);
                 else blackClockTime = std::stoi(token);
             }
         }
@@ -201,7 +210,7 @@ void UCI(const std::string_view fileName) {
         // NON-UCI COMMANDS
         else if (token == "bench")  Test::BenchMark::staticSearch();
         else if (token == "bench-eval") Test::BenchMark::staticEval();
-        else if (token == "display" ) printBoardFancy();
+        else if (token == "display" ) pos.printBoardFancy();
         else if (token == "moveOrdering") Test::Debug::printMoveOrdering();
         else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }

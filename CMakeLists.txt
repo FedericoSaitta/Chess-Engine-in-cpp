@@ -68,7 +68,6 @@ set(SOURCE_FILES
 
         src/movegen/movegen.h
         src/search/search.h
-        src/movegen/update.h
         include/misc.h
         include/macros.h
         include/uci.h
@@ -86,18 +85,21 @@ set(SOURCE_FILES
         include/config.h
         src/logger/logger.cpp
         debug_tests/game_scenario.cpp
-        texel-tuner/init_tuner.h
-        texel-tuner/threadpool.cpp
-        texel-tuner/tuner.cpp
-        texel-tuner/base.h
-        texel-tuner/config.h
-        texel-tuner/init_tuner.h
-        texel-tuner/engine/myeval.cpp
-        texel-tuner/init_tuner.cpp
+
+        #texel-tuner/init_tuner.h
+        #texel-tuner/threadpool.cpp
+        #texel-tuner/tuner.cpp
+        #texel-tuner/base.h
+        #texel-tuner/config.h
+        #texel-tuner/init_tuner.h
+        #texel-tuner/engine/myeval.cpp
+        #texel-tuner/init_tuner.cpp
+        #texel-tuner/init_tuner.h
+
         include/timer.h
         include/timer.h
         include/game_statistics.h
-        texel-tuner/init_tuner.h
+
         src/search/see.cpp
         src/search/see.h
 )

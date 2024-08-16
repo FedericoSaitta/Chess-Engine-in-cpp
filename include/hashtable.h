@@ -1,18 +1,15 @@
-//
-// Created by Federico Saitta on 10/07/2024.
-//
-
 #pragma once
 
 #include "macros.h"
 #include "types.h"
+#include "board.h"
+
 extern U64 randomPieceKeys[12][64];
 extern U64 randomEnPassantKeys[64];
 extern U64 randomCastlingKeys[16];
 extern U64 sideKey;
 
 extern U64 hashKey; // of the position
-
 
 // https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
 #define    HASH_FLAG_EXACT   0 // evaluation from evaluation function
@@ -41,5 +38,5 @@ void recordHash(int score, Move best_move, int flag, int depth);
 
 int checkHashOccupancy();
 
-U64 generateHashKey();
+U64 generateHashKey(const Board& board);
 

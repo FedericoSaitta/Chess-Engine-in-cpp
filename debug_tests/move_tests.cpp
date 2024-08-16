@@ -22,9 +22,9 @@ namespace Test::Debug{
 
         board.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         MoveList moveList{};
-        generateMoves(moveList);
+        board.generateMoves(moveList);
 
-        giveScores(moveList, 0);
+        giveScores(moveList, 0, board);
         for (int count=0; count < moveList.count; count++) {
             const Move move { moveList.moves[count].first };
             const int score { moveList.moves[count].second };
@@ -55,10 +55,10 @@ namespace Test::Debug{
 
     void printMoveOrdering() {
         MoveList moveList{};
-        generateMoves(moveList);
+        board.generateMoves(moveList);
 
-        generateMoves(moveList);
-        giveScores(moveList, 0);
+        board.generateMoves(moveList);
+        giveScores(moveList, 0, board);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
 

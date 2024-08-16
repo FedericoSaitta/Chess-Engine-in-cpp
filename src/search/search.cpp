@@ -24,18 +24,16 @@
 
 #include "board.h"
 
-#include "../movegen/update.h"
 
-#include "../movegen/update.h"
 #include "../include/hashtable.h"
 #include "timer.h"
 #include "../include/uci.h"
-#include "../include/board.h"
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
 #include "movesort.h"
 #include "see.h"
 #include "../logger/logger.h"
+
 
 U64 repetitionTable[512]{};
 int repetitionIndex{};
@@ -99,19 +97,17 @@ static void enablePVscoring(const MoveList& moveList) {
 
             scorePV = 1; // if we do find a move
             followPV = 1; // we are in principal variation so we want to follow it
-        	break; 
+        	break;
         }
     }
 }
 
-static int getMoveTime(const bool timeConstraint) {
-
-	// std::cout << whiteClockTime << ' ' << blackClockTime << ' ' << whiteIncrementTime << ' ' << blackIncrementTime << ' ' << movesToGo << '\n';
+static int getMoveTime(const bool timeConstraint, const int turn) {
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// We give 100 millisecond lag compensation
-	const int timeAlloted = (board.side == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
-	const int increment = (board.side == WHITE) ? whiteIncrementTime : blackIncrementTime;
+	const int timeAlloted = (turn == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
+	const int increment = (turn == WHITE) ? whiteIncrementTime : blackIncrementTime;
 	int moveTime{};
 
 	if (movesToGo == 0) {
@@ -127,11 +123,6 @@ static int getMoveTime(const bool timeConstraint) {
 }
 static void isTimeUp() {
 	if ( searchTimer.elapsed() > timePerMove) stopSearch = 1;
-}
-static void printRepetitionTable() {
-	for (int i=0; i < 10; i++) {
-		std::cout << repetitionTable[i] << '\n';
-	}
 }
 
 static int isRepetition() {
@@ -161,16 +152,6 @@ static bool isKiller(const Move move) {
 	assert(!move.isNone());
 	if ( (move == killerMoves[0][searchPly]) || (move == killerMoves[1][searchPly]) ) return true;
 	return false;
-}
-
-void printKillerTable() {
-	for(int i=0; i<MAX_PLY; i++) {
-		std::cout << "\n KILLER 1: ";
-		printMove(killerMoves[0][i]);
-
-		std::cout << "  KILLER 2: ";
-		printMove(killerMoves[1][i]);
-	}
 }
 
 static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
@@ -207,8 +188,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (stopSearch) return 0; // If the time is up, we return 0;
 
-	if ( searchPly > (MAX_PLY - 1) ) return evaluate(board);
-	const int standPat{ evaluate(board) };
+	if ( searchPly > (MAX_PLY - 1) ) return evaluate(pos);
+	const int standPat{ evaluate(pos) };
 
 	// delta pruning
 	if (standPat < (alpha - 975) ) return alpha;
@@ -226,20 +207,20 @@ static int quiescenceSearch(int alpha, const int beta) {
 	if (searchPly && ttHit && !pvNode) return value;
 
 	MoveList moveList;
-	generateMoves(moveList);
+	pos.generateMoves(moveList);
 
-	giveScores(moveList, Move(0, 0)); // as there is no bestmove
+	giveScores(moveList, Move(0, 0), pos); // as there is no bestmove
 
 	const int originalAlpha {alpha};
 	int bestEval { standPat };
 
 	for (int count=0; count < moveList.count; count++) {
-		std::pair scoredPair { pickBestMove(moveList, count ) };
+		const std::pair scoredPair { pickBestMove(moveList, count ) };
 		const Move move { scoredPair.first };
 		const int moveScore { scoredPair.second };
 
 		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
-		if (move.isCapture() && !see(move, -105)) continue; // very basic SEE for now
+		if (move.isCapture() && !see(move, -105, pos)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -247,8 +228,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 		repetitionTable[repetitionIndex] = hashKey;
 
 		// maybe switch to only looking at quiet moves instead of captures
-		// board.undo Illegal Moves or non-captures
-		if( !board.makeMove(move, 1) ) {
+		// pos.undo Illegal Moves or non-captures
+		if( !pos.makeMove(move, 1) ) {
 			searchPly--;
 			repetitionIndex--;
 			continue;
@@ -258,7 +239,7 @@ static int quiescenceSearch(int alpha, const int beta) {
 
 		searchPly--;
 		repetitionIndex--;
-		board.undo(move);
+		pos.undo(move);
 		RESTORE_HASH()
 
 		// found a better move
@@ -312,29 +293,29 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	if (searchPly && ttHit && !pvNode) return score;
 
 	if ((nodes & 4095) == 0) isTimeUp();
-	if (searchPly > MAX_PLY - 1) return evaluate(board);
+	if (searchPly > MAX_PLY - 1) return evaluate(pos);
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
 
-	const int inCheck{ board.currentlyInCheck() };
-	if (inCheck) depth++; // Search extension if board.side is in check
+	const int inCheck{ pos.currentlyInCheck() };
+	if (inCheck) depth++; // Search extension if pos.side is in check
 
 	// quiet move pruning
 	// most of these can be greatly improved with improving heuristic
 	if (!pvNode && !inCheck && searchPly) {
 
 		// reverse futility pruning
-		const int eval { ttHit ? score : evaluate(board) };
+		const int eval { ttHit ? score : evaluate(pos) };
 		if (depth < 9 && (eval - depth * 80) >= beta)
 			return eval;
 
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
-		// Do not attempt null move pruning in case our board.side only has pawns on the board
+		// Do not attempt null move pruning in case our pos.side only has pawns on the pos
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
-		if (depth > 3  && canNull && board.nonPawnMaterial()) {
+		if (depth > 3  && canNull && pos.nonPawnMaterial()) {
 			COPY_HASH()
-			board.nullMove();
+			pos.nullMove();
 
 			searchPly++;
 			repetitionIndex++;
@@ -344,7 +325,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 			const int r = std::min(4 + depth / 4, depth);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - r, DONT_NULL);
 
-			board.undoNullMove();
+			pos.undoNullMove();
 			searchPly--;
 			repetitionIndex--;
 			RESTORE_HASH() // un-making the null move
@@ -356,7 +337,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 		if (depth <= 3 && canNull){
 			// get static eval and add first bonus
 			// as we need to preserve score for FP, we make a new variable here
-			int r_score = evaluate(board) + 125;
+			int r_score = evaluate(pos) + 125;
 
 			int newScore; // define new score
 
@@ -392,7 +373,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	}
 
     MoveList moveList;
-    generateMoves(moveList);
+    pos.generateMoves(moveList);
 
     if (followPV) enablePVscoring(moveList); // check if we are in a principal-variation node
 
@@ -401,7 +382,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	int movesSearched{};
 
 	// score the moves before picking the best one
-	giveScores(moveList, bestMove);
+	giveScores(moveList, bestMove, pos);
 
 	Move quiets[32];
 	int quietMoveCount{};
@@ -434,7 +415,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	repetitionTable[repetitionIndex] = hashKey;
 
         // Illegal Moves
-        if( !board.makeMove(move, 0) ) {
+        if( !pos.makeMove(move, 0) ) {
             searchPly--;
         	repetitionIndex--;
 
@@ -479,7 +460,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
     	}
         searchPly--;
     	repetitionIndex--;
-    	board.undo(move);
+    	pos.undo(move);
         RESTORE_HASH()
 
     	if (stopSearch) return 0;
@@ -595,7 +576,7 @@ void sendUciInfo(const int score, const int depth, const int nodes, const Timer&
 void iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
 
-	timePerMove = getMoveTime(timeConstraint);
+	timePerMove = getMoveTime(timeConstraint, pos.side);
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
 	searchTimer.reset();

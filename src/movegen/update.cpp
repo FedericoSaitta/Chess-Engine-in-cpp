@@ -1,4 +1,5 @@
-#include "update.h"
+
+#include "board.h"
 #include <assert.h>
 #include <cstring>
 #include <variant>
@@ -159,7 +160,7 @@ void Board::undo(const Move move) {
 int Board::makeMove(const Move move, const int onlyCaptures) {
 
 	assert(!move.isNone() && "makeMove: making a NULL MOVE");
-	assert((board.gamePly < 512) && "makeMove: gamePly is too large");
+	assert((gamePly < 512) && "makeMove: gamePly is too large");
 	assert(move.to() != move.from() && "makeMove: start and end-square are same");
 
 	if(!onlyCaptures) {

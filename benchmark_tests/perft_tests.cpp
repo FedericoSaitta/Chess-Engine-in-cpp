@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <chrono>
 #include <fstream>
-#include "../src/movegen/update.h"
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"
@@ -43,7 +42,7 @@ namespace Test::BenchMark {
         }
 
         MoveList moveList;
-        generateMoves(moveList);
+        board.generateMoves(moveList);
 
         for (int moveCount = 0; moveCount < moveList.count; moveCount++)
         {
@@ -65,7 +64,7 @@ namespace Test::BenchMark {
         const auto start = std::chrono::steady_clock::now();
 
         MoveList moveList;
-        generateMoves(moveList);
+        board.generateMoves(moveList);
 
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
             COPY_HASH();

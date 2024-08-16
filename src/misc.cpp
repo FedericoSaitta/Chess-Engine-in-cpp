@@ -61,7 +61,8 @@ void printBitBoard(const U64 bb, const bool mirrored) {
 static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
 static constexpr std::string_view playingSides[2] = {"White", "Black"};
 
-void printBoardFancy() { // this will always be the right way around, doesnt work on windows
+
+void Board::printBoardFancy() const { // this will always be the right way around, doesnt work on windows
     Piece mirrorredMailBox[64] {};
 
     for (int row = 0; row < 8; ++row) {
@@ -71,8 +72,8 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
         // Swap elements to reverse the row
         while (start < end) {
             // Swap elements at 'start' and 'end'
-            mirrorredMailBox[start] = board.mailbox[end];
-            mirrorredMailBox[end] = board.mailbox[start];
+            mirrorredMailBox[start] = mailbox[end];
+            mirrorredMailBox[end] = mailbox[start];
 
             ++start;
             --end;
@@ -90,25 +91,13 @@ void printBoardFancy() { // this will always be the right way around, doesnt wor
 
     std::string castleRightsString{};
     for (int i = 0; i < 4; ++i) {
-        if (board.history[board.gamePly].castle & (1 << i)) { castleRightsString += castlePieces[i]; }
+        if (history[gamePly].castle & (1 << i)) { castleRightsString += castlePieces[i]; }
     }
 
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
-    std::cout << playingSides[board.side] << " to move, Castling: " << castleRightsString
-              << ", En Passant: " << chessBoard[board.history[board.gamePly].enPassSq] << '\n';
+    std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
+              << ", En Passant: " << chessBoard[history[gamePly].enPassSq] << '\n';
     std::cout << "HashKey: " << hashKey << std::endl;
-}
-
-void printAttackedSquares(const int side) {
-    std::cout << '\n';
-    for (int square = 63; square >= 0; --square) {
-        if ((square + 1) % 8 == 0){ std::cout << (1 + square / 8) << "| "; }
-        
-        std::cout << isSqAttacked(square, side) << ' ';
-        if (square % 8 == 0){ std::cout << '\n'; }
-    }
-    std::cout << "   H G F E D C B A";
-    std::cout << '\n';
 }
 
 // for UCI protocol
@@ -166,13 +155,15 @@ void printMovesList(const MoveList& moveList) {
     }
 
 }
-Move parseMove(const std::string_view move) {
+Move parseMove(const std::string_view move, const Board& currentBoard) {
 
     const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
     const int endSquare = (move[2] - 'a') + (move[3] - '0') * 8 - 8;
 
     MoveList moveList;
-    generateMoves(moveList);
+    currentBoard.generateMoves(moveList);
+
+    printMovesList(moveList);
 
     for (int count=0; count< moveList.count; count++) {
 
@@ -189,6 +180,8 @@ Move parseMove(const std::string_view move) {
             } else { return moveList.moves[count].first; }
         }
     }
+
+    std::cerr << "Could not find a move\n";
     return 0; // returns null move
 }
 

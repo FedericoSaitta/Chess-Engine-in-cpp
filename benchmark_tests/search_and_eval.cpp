@@ -10,7 +10,6 @@
 #include <sstream>
 #include <cmath>
 
-#include "../src/movegen/update.h"
 #include "macros.h"
 #include "hashtable.h"
 #include "board.h"

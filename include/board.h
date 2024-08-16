@@ -8,6 +8,8 @@
 #include <iostream>
 #include "macros.h"
 #include "types.h"
+#include "../src/movegen/movegen.h"
+#include "inline_functions.h"
 
 extern const char* chessBoard[65];
 
@@ -35,12 +37,12 @@ public:
 
     void parseFEN(const std::string& fenString);
 
-    inline U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
-    inline U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
+    U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
+    U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
 
-    inline U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
+    U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
 
-    inline void resetBoard() {
+    void resetBoard() {
         memset(history, 0, sizeof(history));
         memset(bitboards, 0ULL, sizeof(bitboards));
 
@@ -50,15 +52,15 @@ public:
         side = WHITE;
     }
 
-    inline void resetOcc() {
+    void resetOcc() {
         // used to only reset the occupancies
         bitboards[WHITE_OCC] = 0ULL;
         bitboards[BLACK_OCC] = 0ULL;
         bitboards[BOTH_OCC] = 0ULL;
     }
 
-    inline Piece getMovedPiece(const Move move) const {return mailbox[move.from()];}
-    inline Piece getCapturedPiece(const Move move) const { return mailbox[move.to()]; }
+    Piece getMovedPiece(const Move move) const {return mailbox[move.from()];}
+    Piece getCapturedPiece(const Move move) const { return mailbox[move.to()]; }
 
     template <bool UpdateHash> void movePiece(int from, int to);
     template <bool UpdateHash> void movePieceQuiet(int from, int to);
@@ -78,6 +80,36 @@ public:
     // SHOULD TEST THESE TWO FUNCTIONS
     U64 attackersForSide(Color c, int square, U64 occupancy) const;
     U64 allAttackers(int square, U64 occupancy) const;
+
+    void generateMoves(MoveList& moveList) const;
+    
+    int isSqAttacked(const int square, const int side) const {
+
+        // we use side^1 to look at the opponent's attacks and + 6 * side to look at our own pieces, side = 1 for black
+        // attacked by pawns
+        if ( (bitPawnAttacks[side^1][square] & bitboards[PAWN + 6 * side]) ) return 1;
+
+        // attacked by knight
+        if ( bitKnightAttacks[square] & bitboards[KNIGHT + 6 * side] ) return 1;
+
+        // attacked by bishop
+        if ( (getBishopAttacks(square, bitboards[BOTH_OCC]) & bitboards[BISHOP + 6 * side] ) ) return 1;
+
+        // attacked by rook
+        if ( (getRookAttacks(square, bitboards[BOTH_OCC]) & bitboards[ROOK + 6 * side] ) ) return 1;
+
+        // attacked by queen
+        if ( (getQueenAttacks(square, bitboards[BOTH_OCC]) & bitboards[QUEEN + 6 * side] ) ) return 1;
+
+        // attacked by king
+        if ( bitKingAttacks[square] & bitboards[KING + 6 * side] ) return 1;
+
+        return 0;
+    }
+
+    void printBoardFancy() const;
+
+
 };
 
 extern Board board;

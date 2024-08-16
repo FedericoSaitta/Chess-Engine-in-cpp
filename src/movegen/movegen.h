@@ -3,10 +3,7 @@
 //
 #pragma once
 
-#include "hashtable.h"
-#include "init.h"
-#include "inline_functions.h"
-#include "macros.h"
+#include "types.h"
 
 
 struct MoveList {
@@ -18,5 +15,3 @@ inline void addMove(MoveList& moveList, const Move move) {
     moveList.moves[moveList.count].first = move;
     moveList.count++;
 }
-
-void generateMoves(MoveList& moveList);

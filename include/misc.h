@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include "macros.h"
+#include "board.h"
 
 
 void printBitBoard(U64 bb, bool mirrored=false);
@@ -24,7 +25,7 @@ extern const char* unicodePieces[];
 std::string algebraicNotation(Move move);
 std::string getStringFlags(MoveFlags flag);
 
-Move parseMove(std::string_view move);
+Move parseMove(std::string_view move, const Board& board);
 void printHistoryInfo();
 
 std::vector<std::string> split(const std::string& str);

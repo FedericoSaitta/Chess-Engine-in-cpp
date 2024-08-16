@@ -34,6 +34,11 @@ void clearHistoryTable();
 void iterativeDeepening(int depth, bool timeConstraint=false);
 
 
+extern Board pos;
+
+
+
+
 class Search {
 private:
 

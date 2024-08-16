@@ -27,12 +27,12 @@ U64 hashKey{};
 std::int64_t transpotitionTableEntries{};
 tt* transpositionTable{ nullptr };
 
-U64 generateHashKey() { // to uniquely identify a position
+U64 generateHashKey(const Board& pos) { // to uniquely identify a position
     U64 key{};
     U64 tempPieceBitboard{};
 
     for (int piece=0; piece<12; piece++) {
-        tempPieceBitboard = board.bitboards[piece];
+        tempPieceBitboard = pos.bitboards[piece];
 
         while (tempPieceBitboard) {
             const int square = pop_lsb(&tempPieceBitboard);
@@ -40,10 +40,10 @@ U64 generateHashKey() { // to uniquely identify a position
         }
     }
 
-    if (board.history[board.gamePly].enPassSq != 64) key ^= randomEnPassantKeys[board.history[board.gamePly].enPassSq];
+    if (pos.history[pos.gamePly].enPassSq != 64) key ^= randomEnPassantKeys[pos.history[pos.gamePly].enPassSq];
 
-    key ^= randomCastlingKeys[board.history[board.gamePly].castle];
-    if (board.side == BLACK) key ^= sideKey; // only done if side to move is black
+    key ^= randomCastlingKeys[pos.history[pos.gamePly].castle];
+    if (pos.side == BLACK) key ^= sideKey; // only done if side to move is black
 
     return key;
 }
@@ -69,12 +69,16 @@ void initTranspositionTable(const int megaBytes) {
 }
 
 void clearTranspositionTable() {
-    for (int index=0; index < transpotitionTableEntries; index++) {
-        transpositionTable[index].hashKey=0;
-        transpositionTable[index].depth=0;
-        transpositionTable[index].flag=0;
-        transpositionTable[index].score=0;
-        transpositionTable[index].bestMove=Move(0, 0);
+    if (transpositionTable != nullptr) { // extra check for ucinewgame
+        for (int index=0; index < transpotitionTableEntries; index++) {
+            transpositionTable[index].hashKey=0;
+            transpositionTable[index].depth=0;
+            transpositionTable[index].flag=0;
+            transpositionTable[index].score=0;
+            transpositionTable[index].bestMove=Move(0, 0);
+        }
+    } else {
+        std::cerr << "clearTranspositionTable: trying to clear a nullptr tt" << std::endl;
     }
 }
 

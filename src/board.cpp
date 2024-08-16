@@ -85,7 +85,7 @@ void Board::parseFEN(const std::string& fenString) {
             case 'K': history[gamePly].castle |= WK; break;
             case 'Q': history[gamePly].castle |= WQ; break;
             case 'k': history[gamePly].castle |= BK; break;
-            case 'q': board.history[gamePly].castle |= BQ; break;
+            case 'q': history[gamePly].castle |= BQ; break;
             default: break;
         }
     }
@@ -107,7 +107,7 @@ void Board::parseFEN(const std::string& fenString) {
     }
 
     // Now we initialize the zobrist hash key
-    hashKey = generateHashKey();
+    hashKey = generateHashKey(*this);
 }
 
 

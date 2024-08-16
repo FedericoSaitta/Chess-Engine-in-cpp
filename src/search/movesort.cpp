@@ -62,9 +62,7 @@ constexpr int captureBonus{ 1'000'000 }; // so captures are always above killers
 constexpr int firstKiller{ 900'000 };
 constexpr int secondKiller{ 800'000 };
 
-
-static int conversion[] {-1, 1};
-int scoreMove(const Move move) {
+int scoreMove(const Move move, const Board& pos) {
 
 	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
 	assert(move.from() < 64 && "scoreMove: out of bounds table indexing");
@@ -85,11 +83,11 @@ int scoreMove(const Move move) {
 		if (move.isPromotion()) return mvv_lva[ PAWN ][ move.promotionPiece() ] + captureBonus;
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
-		assert( (move.isEnPassant() ? board.mailbox[move.to()] == NO_PIECE : board.mailbox[move.to()] != NO_PIECE)
+		assert( (move.isEnPassant() ? pos.mailbox[move.to()] == NO_PIECE : pos.mailbox[move.to()] != NO_PIECE)
 				&& "scoreMove: enpassant or capture move are capturing wrong piece type");
-		assert((board.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
+		assert((pos.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
 
-		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus;
+		return mvv_lva[ pos.mailbox[move.from()] ][ pos.mailbox[move.to()] ] + captureBonus;
 	}
 
 	if (killerMoves[0][searchPly] == move) return firstKiller;
@@ -99,15 +97,15 @@ int scoreMove(const Move move) {
 }
 
 
-void giveScores(MoveList& moveList, const Move bestMove) {
+void giveScores(MoveList& moveList, const Move bestMove, const Board& pos) {
 	for (int count = 0; count < moveList.count; count++) {
 		const Move move{ moveList.moves[count].first };
 
 		assert(!move.isNone() && "givesScores: move is None");
-		assert((scoreMove(move) <= principalVariationBonus) && "giveScores: score is too large");
+		assert((scoreMove(move, pos) <= principalVariationBonus) && "giveScores: score is too large");
 
 		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
-		else moveList.moves[count].second = scoreMove(move);
+		else moveList.moves[count].second = scoreMove(move, pos);
 	}
 }
 
