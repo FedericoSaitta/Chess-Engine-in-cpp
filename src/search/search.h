@@ -31,18 +31,16 @@ extern int historyScores[64][64];
 
 void initSearchTables();
 void clearHistoryTable();
-void iterativeDeepening(int depth, bool timeConstraint=false);
 
-
-extern Board pos;
-
-
-
-
-class Search {
+class Searcher {
 private:
 
+
 public:
-    //Board pos{};
+    Board pos{};
+    int quiescenceSearch(int alpha, const int beta);
+    int aspirationWindow(int currentDepth, const int previousScore);
+    int negamax(int alpha, const int beta, int depth, const NodeType canNull);
+    void iterativeDeepening(int depth, bool timeConstraint=false);
 
 };

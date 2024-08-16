@@ -28,13 +28,15 @@ namespace Test::BenchMark {
 
     void matingPuzzles() {
 
+        Searcher thread;
+
         for (const auto& puzzle : matePuzzles) {
 
             clearTranspositionTable();
-            board.parseFEN(puzzle.FEN);
+            thread.pos.parseFEN(puzzle.FEN);
 
             const auto start = std::chrono::steady_clock::now();
-            iterativeDeepening(puzzle.depth * 2); // as we are considering half moves
+            thread.iterativeDeepening(puzzle.depth * 2); // as we are considering half moves
             const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
 
             std::cout << "Mating Move: " << puzzle.matingMove << " Time taken: " << duration.count() << "s\n\n";

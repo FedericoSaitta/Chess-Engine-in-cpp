@@ -87,17 +87,19 @@ namespace Test::BenchMark {
         double averageBranchingRatio{};
         double totalNodes{};
 
+        Searcher thread;
+
         const auto start = std::chrono::steady_clock::now();
 
         for (std::string FEN: testFEN) {
             resetGameVariables();
-            board.parseFEN(FEN);
+            thread.pos.parseFEN(FEN);
 
             std::streambuf* originalCoutBuffer = std::cout.rdbuf();
             std::ostringstream output;
             std::cout.rdbuf(output.rdbuf());
 
-            iterativeDeepening(depth);
+            thread.iterativeDeepening(depth);
 
             std::cout.rdbuf(originalCoutBuffer);
             std::istringstream outputStream(output.str());

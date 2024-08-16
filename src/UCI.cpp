@@ -19,7 +19,7 @@
 
 #include "logger/logger.h"
 
-Board pos{};
+Searcher thread;
 
 int gameLengthTime{};
 int whiteClockTime{};
@@ -71,11 +71,11 @@ static void handlePosition(std::istringstream& inputStream) {
             if (token != "moves") FEN += token + ' ';
 
             else {
-                pos.parseFEN(FEN);
+                thread.pos.parseFEN(FEN);
                 std::string moveString;
 
                 while(inputStream >> moveString){
-                    const Move move {parseMove(moveString, pos)};
+                    const Move move {parseMove(moveString, thread.pos)};
 
                     std::cout << moveString << '\n';
 
@@ -83,7 +83,7 @@ static void handlePosition(std::istringstream& inputStream) {
                         std::cout << "making a move\n";
                         repetitionIndex++;
                         repetitionTable[repetitionIndex] = hashKey;
-                        if (pos.makeMove(move, 0) == 0) {
+                        if (thread.pos.makeMove(move, 0) == 0) {
                             std::cerr << "Could not find the move" << std::endl;
                             LOG_ERROR("Move inputStream illegal " + token );
                         }
@@ -93,18 +93,17 @@ static void handlePosition(std::istringstream& inputStream) {
                     }
                 }
                 goto no_re_parsing;
-                // once we are done making the moves, we dont want to re-parse the pos as that would nullify the moves
+                // once we are done making the moves, we dont want to re-parse the thread.pos as that would nullify the moves
             }
         }
 
     } else if (token == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     }
-    pos.parseFEN(FEN);
+    thread.pos.parseFEN(FEN);
 
     no_re_parsing:
 }
-
 
 
 static void handleGo(std::istringstream& inputStream) {
@@ -112,12 +111,12 @@ static void handleGo(std::istringstream& inputStream) {
     movesToGo = 0; // need to reset to zero to ensure that if uci switches behaviour we dont use previous time controls
     while (inputStream >> token) {
         if (token == "perft") {
-            if (inputStream >> token) Test::BenchMark::perft(std::stoi(token));
+            if (inputStream >> token) Test::BenchMark::perft(std::stoi(token), thread.pos);
             std::cout << '\n';
             goto end_of_function;
         }
         if (token == "depth") {
-            if (inputStream >> token) iterativeDeepening(std::stoi(token), false);
+            if (inputStream >> token) thread.iterativeDeepening(std::stoi(token), false);
             goto end_of_function;
         }
 
@@ -131,7 +130,7 @@ static void handleGo(std::istringstream& inputStream) {
         else if (token == "movetime") {
             movesToGo = 1; // as we will only need to make a singular move
             if (inputStream >> token) {
-                if (pos.side == WHITE) whiteClockTime = std::stoi(token);
+                if (thread.pos.side == WHITE) whiteClockTime = std::stoi(token);
                 else blackClockTime = std::stoi(token);
             }
         }
@@ -142,7 +141,7 @@ static void handleGo(std::istringstream& inputStream) {
         gameLengthTime = whiteClockTime;
         isNewGame = false;
     }
-    iterativeDeepening(MAX_PLY, true);
+    thread.iterativeDeepening(MAX_PLY, true);
 
     end_of_function:
 }
@@ -210,7 +209,7 @@ void UCI(const std::string_view fileName) {
         // NON-UCI COMMANDS
         else if (token == "bench")  Test::BenchMark::staticSearch();
         else if (token == "bench-eval") Test::BenchMark::staticEval();
-        else if (token == "display" ) pos.printBoardFancy();
+        else if (token == "display" ) thread.pos.printBoardFancy();
         else if (token == "moveOrdering") Test::Debug::printMoveOrdering();
         else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }

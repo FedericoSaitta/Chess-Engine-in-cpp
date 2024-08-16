@@ -81,21 +81,5 @@ namespace Test::Debug{
 
     }
 
-    void historyScores() {
-        //resetGameVariables();
-        board.parseFEN("rnbqkb1r/pppppppp/5n2/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 3");
-
-        printMoveOrdering();
-        iterativeDeepening(3, false);
-
-        std::cout << "AGED HISTORY TABLE:\n";
-        for (int square=0; square < 64; square++) {
-            std::cout << "History Table: " << unicodePieces[square] << '\n';
-            printHistoryTable(square);
-        }
-
-        // now we check how the move scores have changed and display move ordering
-        printMoveOrdering();
-    }
 }
 

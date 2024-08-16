@@ -182,7 +182,7 @@ static void updateHistory(const Move bestMove, const int depth, const Move* quie
 
 }
 
-static int quiescenceSearch(int alpha, const int beta) {
+int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 	Move bestMove;
 	if ((nodes & 4095) == 0) isTimeUp();
@@ -266,17 +266,8 @@ static int quiescenceSearch(int alpha, const int beta) {
 	return bestEval; // node that fails low
 }
 
-static void ageHistory() {
-	for (int a=0; a<64; a++) {
-		for (int b=0; b<64; b++) {
-			historyScores[a][b] /= 2;
-		}
-	}
-}
 
-
-template<bool rootNode=false>
-static int negamax(int alpha, const int beta, int depth, const NodeType canNull) {
+int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 	assert(depth >= 0 && "negamax: depth is negative");
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
@@ -516,7 +507,7 @@ static int negamax(int alpha, const int beta, int depth, const NodeType canNull)
 	return bestEval; // known as fail-low node
 }
 
-int aspirationWindow(int currentDepth, const int previousScore) {
+int Searcher::aspirationWindow(int currentDepth, const int previousScore) {
 	int alpha;
 	int beta;
 	int score{};
@@ -533,7 +524,7 @@ int aspirationWindow(int currentDepth, const int previousScore) {
 
 	while (true) {
 		// perform a search starting at the root node
-		score = negamax<true>(alpha, beta, currentDepth, DO_NULL);
+		score = negamax(alpha, beta, currentDepth, DO_NULL);
 
 		if (score > alpha && score < beta) break;
 
@@ -573,7 +564,7 @@ void sendUciInfo(const int score, const int depth, const int nodes, const Timer&
 			  << " pv " << pvString << std::endl;
 }
 
-void iterativeDeepening(const int maxDepth, const bool timeConstraint) {
+void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
 
 	timePerMove = getMoveTime(timeConstraint, pos.side);

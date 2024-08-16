@@ -15,8 +15,6 @@
 #include "misc.h"
 #include "../src/movegen/movegen.h"
 #include <sstream>
-#include <filesystem>
-#include <fstream>
 
 
 static std::vector<std::string> split(const std::string &str, const char delimiter) {
@@ -34,7 +32,7 @@ static std::vector<std::string> split(const std::string &str, const char delimit
 namespace Test::BenchMark {
     static std::int64_t nodes{};
 
-    void perftDriver(const int depth) {
+    void perftDriver(const int depth, Board& board) {
 
         if (depth == 0) {
             nodes++;
@@ -51,14 +49,14 @@ namespace Test::BenchMark {
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) {
                 continue;
             }
-            perftDriver(depth - 1);
+            perftDriver(depth - 1, board);
 
             board.undo(moveList.moves[moveCount].first);
             RESTORE_HASH();
         }
     }
 
-    std::int64_t perft(const int depth, const bool printInfo) {
+    std::int64_t perft(const int depth, Board& board, const bool printInfo) {
         nodes = 0;
 
         const auto start = std::chrono::steady_clock::now();
@@ -73,7 +71,7 @@ namespace Test::BenchMark {
 
          //   const std::int64_t cumulativeNodes {nodes};
 
-            perftDriver(depth - 1);
+            perftDriver(depth - 1, board);
 
             board.undo(moveList.moves[moveCount].first);
             RESTORE_HASH();
@@ -119,6 +117,8 @@ namespace Test::BenchMark {
         const auto start = std::chrono::steady_clock::now();
 
         std::string line{};
+        Board board{};
+
         while (std::getline(epdFile, line)) {
 
             std::vector<std::string> tokens = split(line, ';');
@@ -134,7 +134,7 @@ namespace Test::BenchMark {
                 const int nodeCount = std::stoi( (split(tokens[depth - startDepth + 1], ' '))[1]);
 
                 totalNodes += nodeCount;
-                if ( perft(depth, false) != nodeCount ){
+                if ( perft(depth, board, false) != nodeCount ){
                     std::cerr << " Error in FEN: " << tokens[0]
                     << " at depth: " << depth << std::endl;
                 }

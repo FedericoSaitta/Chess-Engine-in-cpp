@@ -5,11 +5,12 @@
 #pragma once
 
 #include <iostream>
+#include "board.h"
 
 namespace Test::BenchMark {
 
-    void perftDriver(int depth);
-    std::int64_t perft(int depth, bool printInfo=true);
+    void perftDriver(int depth, Board& board);
+    std::int64_t perft(int depth, Board& board, bool printInfo=true);
     void standardPerft();
 
 
