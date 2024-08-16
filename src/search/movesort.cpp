@@ -62,7 +62,7 @@ constexpr int captureBonus{ 1'000'000 }; // so captures are always above killers
 constexpr int firstKiller{ 900'000 };
 constexpr int secondKiller{ 800'000 };
 
-int scoreMove(const Move move, const Board& pos) {
+int Searcher::scoreMove(const Move move, const Board& pos) {
 
 	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
 	assert(move.from() < 64 && "scoreMove: out of bounds table indexing");
@@ -97,7 +97,7 @@ int scoreMove(const Move move, const Board& pos) {
 }
 
 
-void giveScores(MoveList& moveList, const Move bestMove, const Board& pos) {
+void Searcher::giveScores(MoveList& moveList, const Move bestMove, const Board& pos) {
 	for (int count = 0; count < moveList.count; count++) {
 		const Move move{ moveList.moves[count].first };
 
@@ -109,7 +109,7 @@ void giveScores(MoveList& moveList, const Move bestMove, const Board& pos) {
 	}
 }
 
-std::pair<Move, int> pickBestMove(MoveList& moveList, const int start) {
+std::pair<Move, int> Searcher::pickBestMove(MoveList& moveList, const int start) {
 	assert(start < moveList.count && "pickBestMove: out of bounds start index");
 
     int bestMoveScore{ moveList.moves[start].second };

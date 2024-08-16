@@ -20,11 +20,13 @@ namespace Test::Debug{
 
     void moveSorting() {
 
-        board.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-        MoveList moveList{};
-        board.generateMoves(moveList);
+        Searcher thread;
 
-        giveScores(moveList, 0, board);
+        thread.pos.parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        MoveList moveList{};
+        thread.pos.generateMoves(moveList);
+
+        thread.giveScores(moveList, 0, thread.pos);
         for (int count=0; count < moveList.count; count++) {
             const Move move { moveList.moves[count].first };
             const int score { moveList.moves[count].second };
@@ -36,7 +38,7 @@ namespace Test::Debug{
 
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
-            std::pair<Move, int> scoredPair { pickBestMove(moveList, count ) };
+            std::pair<Move, int> scoredPair { thread.pickBestMove(moveList, count ) };
             const Move move { scoredPair.first };
             const int score { scoredPair.second };
 
@@ -46,36 +48,29 @@ namespace Test::Debug{
     }
 
 
-    static void printHistoryTable(const int sq) {
-        for (int square=0; square < 64; square++) {
-            std::cout << historyScores[sq][square] << ' ';
-            if ( (square + 1) % 8 == 0) std::cout << '\n';
-        }
-    }
-
-    void printMoveOrdering() {
+    void printMoveOrdering(Searcher& thread) {
         MoveList moveList{};
-        board.generateMoves(moveList);
+        thread.pos.generateMoves(moveList);
 
-        board.generateMoves(moveList);
-        giveScores(moveList, 0, board);
+        thread.pos.generateMoves(moveList);
+        thread.giveScores(moveList, 0, thread.pos);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
 
-            std::pair<Move, int> scoredPair { pickBestMove(moveList, count ) };
+            std::pair<Move, int> scoredPair { thread.pickBestMove(moveList, count ) };
             const Move move { scoredPair.first };
             const int score { scoredPair.second };
 
             COPY_HASH()
-            if( !board.makeMove(move, 0) ) continue;
+            if( !thread.pos.makeMove(move, 0) ) continue;
 
             printMove( move );
-            std::cout << ": " << unicodePieces[board.mailbox[move.to()]] << " score: " << score
+            std::cout << ": " << unicodePieces[thread.pos.mailbox[move.to()]] << " score: " << score
                       << " is capture: " << move.isCapture() << " is promotion: " << move.isPromotion()
                       << " promotion piece: " << promotedPieces[move.promotionPiece()]
-                      << " gives check: " << board.currentlyInCheck() << '\n';
+                      << " gives check: " << thread.pos.currentlyInCheck() << '\n';
 
-            board.undo(move);
+            thread.pos.undo(move);
             RESTORE_HASH()
         }
 

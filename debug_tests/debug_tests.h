@@ -2,8 +2,9 @@
 // Created by Federico Saitta on 12/07/2024.
 //
 
-#ifndef DEBUG_TESTS_H
-#define DEBUG_TESTS_H
+#pragma once
+
+#include "../src/search/search.h"
 
 namespace Test::Debug {
     void countPawnAttacks();
@@ -14,8 +15,7 @@ namespace Test::Debug {
 
     void moveSorting();
 
-    void printMoveOrdering();
-
+    void printMoveOrdering(Searcher& thread);
 
     void mirrorEval();
     void equalEvalTuner();
@@ -24,5 +24,3 @@ namespace Test::Debug {
     void boardInCheck();
     void boardNonPawnMat();
 }
-
-#endif //DEBUG_TESTS_H

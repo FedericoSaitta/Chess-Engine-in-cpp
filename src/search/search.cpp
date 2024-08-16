@@ -72,7 +72,10 @@ void initSearchTables() {
 		LMP_table[1][depth] = static_cast<int>( 3.87 +  0.712 * depth * depth );
 	}
 }
-void resetSearchStates() {
+
+
+
+void Searcher::resetSearchStates() {
 	memset(killerMoves, 0, sizeof(killerMoves));
 	memset(pvLength, 0, sizeof(pvLength));
 	memset(pvTable, 0, sizeof(pvTable));
@@ -86,7 +89,7 @@ void resetSearchStates() {
 }
 
 
-static void enablePVscoring(const MoveList& moveList) {
+void Searcher::enablePVscoring(const MoveList& moveList) {
     followPV = 0;
 
     for (int count=0; count < moveList.count; count++) {
@@ -102,7 +105,7 @@ static void enablePVscoring(const MoveList& moveList) {
     }
 }
 
-static int getMoveTime(const bool timeConstraint, const int turn) {
+int Searcher::getMoveTime(const bool timeConstraint, const int turn) {
 	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
 
 	// We give 100 millisecond lag compensation
@@ -121,11 +124,11 @@ static int getMoveTime(const bool timeConstraint, const int turn) {
 	assert((moveTime > 0) && "getMoveTime: movetime is zero/negative");
 	return moveTime;
 }
-static void isTimeUp() {
+void Searcher::isTimeUp() {
 	if ( searchTimer.elapsed() > timePerMove) stopSearch = 1;
 }
 
-static int isRepetition() {
+int Searcher::isRepetition() {
 	// look if up until our repetition we have already encountered this position, asssuming the opponent
 	// plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
 	for (int index=0; index < repetitionIndex; index+= 1) {
@@ -137,7 +140,7 @@ static int isRepetition() {
 	return 0; // no repetition
 }
 
-static void updateKillers(const Move bestMove) {
+void Searcher::updateKillers(const Move bestMove) {
 
 	// update killer moves if we found a new unique bestMove
 	if (killerMoves[0][searchPly] != bestMove) {
@@ -148,13 +151,13 @@ static void updateKillers(const Move bestMove) {
 	}
 }
 
-static bool isKiller(const Move move) {
+bool Searcher::isKiller(const Move move) {
 	assert(!move.isNone());
 	if ( (move == killerMoves[0][searchPly]) || (move == killerMoves[1][searchPly]) ) return true;
 	return false;
 }
 
-static void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
+void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
 	const int bonus = std::min(2100, 300 * depth - 300);
 	assert(bestMove.from() < 64 && "updateHistory: out of bounds table indexing");
 	assert(bestMove.to() < 64 && "updateHistory: out of bounds table indexing");
@@ -537,7 +540,7 @@ int Searcher::aspirationWindow(int currentDepth, const int previousScore) {
 	return score;
 }
 
-void sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) {
+void Searcher::sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) {
 	// Extracting the PV line and printing out in the terminal and logging file
 	std::string pvString{};
 	for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
