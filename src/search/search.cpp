@@ -39,6 +39,9 @@ static int LMP_table[2][11];
 
 int nodes{};
 
+constexpr int SEE_PRUNING_THRESHOLD = 9;
+constexpr int SEE_CAPTURE_MARGIN = -20;
+
 void initSearchTables() {
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
@@ -382,6 +385,13 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     			skipQuiets= true;
     			continue;
     		}
+    	}
+
+    	// SEE pruning for captures only
+    	if (move.isCapture() && bestEval > -MATE_SCORE
+    		&& depth <= SEE_PRUNING_THRESHOLD
+    		&& !see(move, depth * depth * (SEE_CAPTURE_MARGIN), pos) ) {
+    		continue;
     	}
 
         COPY_HASH()

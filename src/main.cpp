@@ -4,7 +4,7 @@
 #include "benchmark_tests.h"
 #include "debug_tests.h"
 
-#define DEBUG_TEST
+// #define DEBUG_TEST
 // #define BENCHMARK_TEST
 //#define TUNE_ARAMIS
 

@@ -13,8 +13,6 @@ static const int SEEPieceValues[] = {
 };
 
 int moveEstimatedValue(const Move move, const Board& pos) {
-
-
     // Start with the value of the piece on the target square
     int value = SEEPieceValues[ pos.mailbox[move.to()] % 6];
 
@@ -37,7 +35,9 @@ int see(const Move move, const int threshold, const Board& pos) {
     const int to{move.to()};
 
     // Next victim is moved piece or promotion type
-    int nextVictim = pos.mailbox[from] % 6;
+    const int nextVictim = pos.mailbox[from] % 6;
+
+    assert(nextVictim != NO_PIECE && "nextVictim is none");
 
     // Balance is the value of the move minus threshold. Function
     // call takes care for Enpass, Promotion and Castling moves.
