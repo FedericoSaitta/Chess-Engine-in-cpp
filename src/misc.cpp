@@ -185,16 +185,6 @@ Move parseMove(const std::string_view move, const Board& currentBoard) {
     return 0; // returns null move
 }
 
-void printHistoryInfo() {
-
-    for (int i=0; i < 10; i++) {
-
-        std::cout << "castle: " << board.history[i].castle
-                  << " captured: " << board.history[i].captured
-                  << " en pass: " << chessBoard[board.history[i].enPassSq] << '\n';
-
-    }
-}
 
 std::vector<std::string> split(const std::string& str) {
     std::vector<std::string> tokens;

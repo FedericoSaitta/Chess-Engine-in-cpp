@@ -108,8 +108,4 @@ public:
     }
 
     void printBoardFancy() const;
-
-
 };
-
-extern Board board;

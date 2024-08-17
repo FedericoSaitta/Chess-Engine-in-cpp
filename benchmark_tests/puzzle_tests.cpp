@@ -33,7 +33,7 @@ namespace Test::BenchMark {
         for (const auto& puzzle : matePuzzles) {
 
             clearTranspositionTable();
-            thread.pos.parseFEN(puzzle.FEN);
+            thread.parseFEN(puzzle.FEN);
 
             const auto start = std::chrono::steady_clock::now();
             thread.iterativeDeepening(puzzle.depth * 2); // as we are considering half moves

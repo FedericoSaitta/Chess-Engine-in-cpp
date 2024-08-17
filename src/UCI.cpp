@@ -1,6 +1,3 @@
-//
-//
-//
 #include <iostream>
 #include <string>
 #include <vector>
@@ -20,35 +17,11 @@
 #include "logger/logger.h"
 
 Searcher thread;
-
-int gameLengthTime{};
-int whiteClockTime{};
-int blackClockTime{};
-int whiteIncrementTime{};
-int blackIncrementTime{};
-
-int movesToGo{};
 static bool isNewGame{true};
-
-// Helper function to split a string by space
 
 void resetGameVariables() {
     isNewGame = true;
-    // resetting all the time-controls just in case
-    gameLengthTime = 0;
-    whiteClockTime = 0;
-    blackClockTime = 0;
-    whiteIncrementTime = 0;
-    blackIncrementTime = 0;
-
-    movesToGo = 0;
-
-    // reset the hash Table
-    clearTranspositionTable();
-    memset(historyScores, 0, sizeof(historyScores));
-
-    repetitionIndex = 0;
-    memset(repetitionTable, 0, sizeof(repetitionTable));
+    thread.resetGame();
 }
 
 static void handleUci() {
@@ -71,7 +44,7 @@ static void handlePosition(std::istringstream& inputStream) {
             if (token != "moves") FEN += token + ' ';
 
             else {
-                thread.pos.parseFEN(FEN);
+                thread.parseFEN(FEN);
                 std::string moveString;
 
                 while(inputStream >> moveString){
@@ -81,8 +54,8 @@ static void handlePosition(std::istringstream& inputStream) {
 
                     if (!move.isNone() ) { //so if the move inputStream != 0
                         std::cout << "making a move\n";
-                        repetitionIndex++;
-                        repetitionTable[repetitionIndex] = hashKey;
+                        thread.repetitionIndex++;
+                        thread.repetitionTable[thread.repetitionIndex] = hashKey;
                         if (thread.pos.makeMove(move, 0) == 0) {
                             std::cerr << "Could not find the move" << std::endl;
                             LOG_ERROR("Move inputStream illegal " + token );
@@ -100,7 +73,7 @@ static void handlePosition(std::istringstream& inputStream) {
     } else if (token == "startpos") {
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     }
-    thread.pos.parseFEN(FEN);
+    thread.parseFEN(FEN);
 
     no_re_parsing:
 }
@@ -108,7 +81,7 @@ static void handlePosition(std::istringstream& inputStream) {
 
 static void handleGo(std::istringstream& inputStream) {
     std::string token;
-    movesToGo = 0; // need to reset to zero to ensure that if uci switches behaviour we dont use previous time controls
+    thread.movesToGo = 0; // need to reset to zero to ensure that if uci switches behaviour we dont use previous time controls
     while (inputStream >> token) {
         if (token == "perft") {
             if (inputStream >> token) Test::BenchMark::perft(std::stoi(token), thread.pos);
@@ -120,25 +93,25 @@ static void handleGo(std::istringstream& inputStream) {
             goto end_of_function;
         }
 
-        if (token == "wtime") { if (inputStream >> token) whiteClockTime = std::stoi(token); }
-        else if (token == "btime") { if (inputStream >> token) blackClockTime = std::stoi(token); }
+        if (token == "wtime") { if (inputStream >> token) thread.whiteClockTime = std::stoi(token); }
+        else if (token == "btime") { if (inputStream >> token) thread.blackClockTime = std::stoi(token); }
 
-        else if (token == "winc") { if (inputStream >> token) whiteIncrementTime = std::stoi(token); }
-        else if (token == "binc") { if (inputStream >> token) blackIncrementTime = std::stoi(token); }
+        else if (token == "winc") { if (inputStream >> token) thread.whiteIncrementTime = std::stoi(token); }
+        else if (token == "binc") { if (inputStream >> token) thread.blackIncrementTime = std::stoi(token); }
 
-        else if (token == "movestogo") { if (inputStream >> token) movesToGo = std::stoi(token); }
+        else if (token == "movestogo") { if (inputStream >> token) thread.movesToGo = std::stoi(token); }
         else if (token == "movetime") {
-            movesToGo = 1; // as we will only need to make a singular move
+            thread.movesToGo = 1; // as we will only need to make a singular move
             if (inputStream >> token) {
-                if (thread.pos.side == WHITE) whiteClockTime = std::stoi(token);
-                else blackClockTime = std::stoi(token);
+                if (thread.pos.side == WHITE)thread. whiteClockTime = std::stoi(token);
+                else thread.blackClockTime = std::stoi(token);
             }
         }
         else LOG_ERROR("Unrecognized go input " + token);
     }
 
     if (isNewGame) {
-        gameLengthTime = whiteClockTime;
+        thread.gameLengthTime = thread.whiteClockTime;
         isNewGame = false;
     }
     thread.iterativeDeepening(MAX_PLY, true);

@@ -26,6 +26,7 @@ namespace Test::Debug {
 
 
     void boardInCheck() {
+        Board board;
         // No need to test this heavily as we know isSquareAttacked function is correct because of perft
         board.parseFEN("rnbqkbnr/ppp1pppp/3p4/1B6/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2"); // black is in check
         if (board.currentlyInCheck() != true) std::cerr << "Bug inside Board::currentlyInCheck()" << '\n';
@@ -41,6 +42,7 @@ namespace Test::Debug {
     }
 
     void boardNonPawnMat() {
+        Board board;
         board.parseFEN("rnb1kb1r/pp1qpppp/2pp4/2Q5/3P2P1/2NB1n2/PPP1NK2/R1B4R b kq - 1 11"); // plenty of pieces
         if (board.nonPawnMaterial() != true) std::cerr << "Bug inside Board::nonPawnMaterial()" << '\n';
 

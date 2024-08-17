@@ -82,7 +82,7 @@ void clearTranspositionTable() {
     }
 }
 
-int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
+int probeHash(const int alpha, const int beta, Move* best_move, const int depth, const int searchPly)
 {
     // creates a pointer to the hash entry
     assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "probeHash: hashkey too large");
@@ -115,7 +115,7 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth)
     return NO_HASH_ENTRY; // in case we dont get a tt hit
 }
 
-void recordHash(int score, const Move bestMove, const int flag, const int depth)
+void recordHash(int score, const Move bestMove, const int flag, const int depth, const int searchPly)
 {
     assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "recordHash: hashkey too large");
     tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];

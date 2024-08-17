@@ -1,33 +1,11 @@
-#include <fstream>
-#include <iostream>
-
 #include "uci.h"
 #include "init.h"
 
 #include "benchmark_tests.h"
 #include "debug_tests.h"
 
-// #define DEBUG_TEST
+#define DEBUG_TEST
 // #define BENCHMARK_TEST
-
-#include <fstream>
-#include <iostream>
-#include <random>
-#include <cmath>
-#include "uci.h"
-#include "init.h"
-#include "benchmark_tests.h"
-#include "debug_tests.h"
-#include "../src/search/movesort.h"
-#include "../include/board.h"
-#include "../include/macros.h"
-#include "../include/misc.h"
-#include "../src/search/search.h"
-#include "search/search.h"
-#include "board.h"
-#include "eval/evaluation.h"
-#include "logger/logger.h"
-
 //#define TUNE_ARAMIS
 
 
@@ -68,10 +46,7 @@ int main() {
     Test::Debug::countBishopMoves_noEdges();
     Test::Debug::countRookMoves_noEdges();
 
- //   Test::Debug::moveSorting();
-
     Test::Debug::mirrorEval();
-   // Test::Debug::historyScores();
 
     Test::Debug::boardInCheck();
     Test::Debug::boardNonPawnMat();

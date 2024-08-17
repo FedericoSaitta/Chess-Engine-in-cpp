@@ -1,6 +1,3 @@
-//
-// Created by Federico Saitta on 10/07/2024.
-//
 #pragma once
 
 #include "../../include/hashtable.h"
@@ -19,40 +16,81 @@ enum NodeType {
 #define MATE_VALUE 49'000
 #define MATE_SCORE 48'000 // this is more like a boundary to the scores
 
-extern int searchPly;
-extern U64 repetitionTable[512];
-extern int repetitionIndex;
-
-extern int scorePV;
-extern Move pvTable[MAX_PLY][MAX_PLY];
-
-extern Move killerMoves[2][MAX_PLY];
-extern int historyScores[64][64];
-
 void initSearchTables();
 void clearHistoryTable();
 
 class Searcher {
-private:
-
 
 public:
-    Board pos{};
-    int quiescenceSearch(int alpha, const int beta);
-    int aspirationWindow(int currentDepth, const int previousScore);
-    int negamax(int alpha, const int beta, int depth, const NodeType canNull);
+    Board pos;
+
+    // Search Tables:          //
+    Move killerMoves[2][MAX_PLY];
+    int historyScores[64][64];
+
+    Move pvTable[MAX_PLY][MAX_PLY];
+    int pvLength[MAX_PLY];
+
+    U64 repetitionTable[512];
+    int repetitionIndex;
+
+    // Search Variables:       //
+    int searchPly;
+
+    int scorePV;
+    int followPV; // if it is true then we follow the principal variation
+
+    // Time Control variables: //
+    Timer searchTimer;
+    Timer singleDepthTimer;
+
+    int gameLengthTime;
+    int whiteClockTime;
+    int blackClockTime;
+    int whiteIncrementTime;
+    int blackIncrementTime;
+
+    int movesToGo;
+    //                         //
+
+    void parseFEN(const std::string& fenString) {
+        repetitionIndex = 0;
+        memset(repetitionTable, 0, sizeof(repetitionTable));
+        pos.parseFEN(fenString);
+    }
+
+    void resetGame(){
+        // resetting all the time-controls just in case
+        gameLengthTime = 0;
+        whiteClockTime = 0;
+        blackClockTime = 0;
+        whiteIncrementTime = 0;
+        blackIncrementTime = 0;
+
+        movesToGo = 0;
+
+        // reset the hash Table
+        clearTranspositionTable();
+        memset(historyScores, 0, sizeof(historyScores));
+
+        repetitionIndex = 0;
+        memset(repetitionTable, 0, sizeof(repetitionTable));
+    }
+    int quiescenceSearch(int alpha, int beta);
+    int aspirationWindow(int currentDepth, int previousScore);
+    int negamax(int alpha, int beta, int depth, NodeType canNull);
     void iterativeDeepening(int depth, bool timeConstraint=false);
 
-    void sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer);
+    void sendUciInfo(int score, int depth, int nodes, const Timer& depthTimer);
 
-    void updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount);
-    bool isKiller(const Move move);
-    void updateKillers(const Move bestMove);
+    void updateHistory(Move bestMove, int depth, const Move* quiets, int quietMoveCount);
+    bool isKiller(Move move);
+    void updateKillers(Move bestMove);
     int isRepetition();
 
     void isTimeUp();
 
-    int getMoveTime(const bool timeConstraint, const int turn);
+    int getMoveTime(bool timeConstraint, int turn);
     void enablePVscoring(const MoveList& moveList);
 
     void resetSearchStates();

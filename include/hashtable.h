@@ -33,8 +33,8 @@ extern std::int64_t transpotitionTableEntries;
 
 void initTranspositionTable(int megaBytes);
 void clearTranspositionTable();
-int probeHash(int alpha, int beta, Move* best_move, int depth);
-void recordHash(int score, Move best_move, int flag, int depth);
+int probeHash(int alpha, int beta, Move* best_move, int depth, int searchPly);
+void recordHash(int score, Move best_move, int flag, int depth, int searchPly);
 
 int checkHashOccupancy();
 

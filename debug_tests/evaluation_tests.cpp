@@ -24,13 +24,13 @@ U64 flipVertical(U64 x) {
             ( (x >> 56) );
 }
 
-static void mirrorBitboards() {
+static void mirrorBitboards(Board& board) {
     for (int piece=0; piece < 12; piece++) {
         board.bitboards[piece] = flipVertical(board.bitboards[piece]);
     }
 }
 
-static void swapColours() {
+static void swapColours(Board& board) {
     for (int piece=0; piece < 6; piece++) {
         const U64 tempCopy{ board.bitboards[piece] };
 
@@ -59,6 +59,8 @@ namespace Test::Debug {
         if (!file.is_open()) { std::cerr << "Error opening file: " << fileName << std::endl; }
 
         std::string line;
+        Board board;
+
         while (std::getline(file, line)) {
             std::vector<std::string> tokens = split(line);
 
@@ -75,8 +77,8 @@ namespace Test::Debug {
 
             // Now we flip ranks and change colours
             //   printBoardFancy();
-            mirrorBitboards();
-            swapColours();
+            mirrorBitboards(board);
+            swapColours(board);
             //  printBoardFancy();
 
             int mirroredWhiteEval { evaluate(board) };

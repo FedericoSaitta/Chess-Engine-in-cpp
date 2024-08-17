@@ -87,13 +87,14 @@ namespace Test::BenchMark {
         double averageBranchingRatio{};
         double totalNodes{};
 
-        Searcher thread;
-
         const auto start = std::chrono::steady_clock::now();
 
         for (std::string FEN: testFEN) {
-            resetGameVariables();
-            thread.pos.parseFEN(FEN);
+            // putting this outside will yield slightly different results
+            Searcher thread;
+            thread.resetGame();
+
+            thread.parseFEN(FEN);
 
             std::streambuf* originalCoutBuffer = std::cout.rdbuf();
             std::ostringstream output;
@@ -104,9 +105,6 @@ namespace Test::BenchMark {
             std::cout.rdbuf(originalCoutBuffer);
             std::istringstream outputStream(output.str());
             std::string line;
-
-
-
 
             while (std::getline(outputStream, line)) {
 
@@ -127,7 +125,6 @@ namespace Test::BenchMark {
             }
 
         }
-
 
         resetGameVariables();
 

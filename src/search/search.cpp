@@ -34,26 +34,8 @@
 #include "see.h"
 #include "../logger/logger.h"
 
-
-U64 repetitionTable[512]{};
-int repetitionIndex{};
-
-int searchPly{};
-
-Move killerMoves[2][MAX_PLY]{}; // zero initialization to ensure no random bonuses to moves
-int historyScores[64][64]{}; // zero initialization to ensure no random bonuses to moves
-
-Move pvTable[MAX_PLY][MAX_PLY]{};
-static int pvLength[MAX_PLY]{};
-
-int scorePV{};
-static int followPV{}; // if it is true then we follow the principal variation
-
 static int LMR_table[MAX_PLY][MAX_PLY];
 static int LMP_table[2][11];
-
-Timer searchTimer{};
-Timer singleDepthTimer{};
 
 int nodes{};
 
@@ -72,7 +54,6 @@ void initSearchTables() {
 		LMP_table[1][depth] = static_cast<int>( 3.87 +  0.712 * depth * depth );
 	}
 }
-
 
 
 void Searcher::resetSearchStates() {
@@ -205,7 +186,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 	bool pvNode = (beta - alpha) > 1;
 
-	int value = probeHash(alpha, beta, &bestMove, 0);
+	int value = probeHash(alpha, beta, &bestMove, 0, searchPly);
 	const bool ttHit = value != NO_HASH_ENTRY;
 	if (searchPly && ttHit && !pvNode) return value;
 
@@ -264,7 +245,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
-	if (bestEval != standPat) recordHash(bestEval, bestMove, hashFlag, 0);
+	if (bestEval != standPat) recordHash(bestEval, bestMove, hashFlag, 0, searchPly);
 
 	return bestEval; // node that fails low
 }
@@ -282,7 +263,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
-	int score = probeHash(alpha, beta, &bestMove, depth);
+	int score = probeHash(alpha, beta, &bestMove, depth, searchPly);
 	const bool ttHit = score != NO_HASH_ENTRY;
 	if (searchPly && ttHit && !pvNode) return score;
 
@@ -505,22 +486,22 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
-	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth);
+	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth, searchPly);
 
 	return bestEval; // known as fail-low node
 }
 
-int Searcher::aspirationWindow(int currentDepth, const int previousScore) {
+int Searcher::aspirationWindow(const int currentDepth, const int previousScore) {
 	int alpha;
 	int beta;
 	int score{};
 
 	int delta { windowWidth };
 
-	if (currentDepth > 3) {
+	if (currentDepth > 3) { // use aspiration window
 		alpha = previousScore - delta;
 		beta = previousScore + delta;
-	} else { // use aspiration window
+	} else {
 		alpha = -INF;
 		beta = INF;
 	}

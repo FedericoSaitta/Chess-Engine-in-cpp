@@ -11,9 +11,6 @@
 #include "../include/types.h"
 #include "inline_functions.h"
 #include "eval/evalparams.h"
-
-Board board{};
-
 const char* chessBoard[65] = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -49,9 +46,6 @@ void Board::parseFEN(const std::string& fenString) {
 
     // re-setting the board state each time a new FEN is parsed
     resetBoard();
-
-    repetitionIndex = 0;
-    memset(repetitionTable, 0, sizeof(repetitionTable));
 
     // FEN string like: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
     // is the accepted format, missing whitespaces will result in errors
