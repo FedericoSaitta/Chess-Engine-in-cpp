@@ -1,23 +1,20 @@
-//
-// Created by Federico Saitta on 26/07/2024.
-//
-
 #pragma once
-
-// SEARCH PARAMETERS //
-constexpr double LMR_BASE = 0.75;
-constexpr double LMR_DIVISION = 3.0;
-
-constexpr int LMR_MIN_MOVES { 4 }; // searching the first 4 moves at the full depth
-constexpr int LMR_MIN_DEPTH { 3 };
-
-constexpr int windowWidth{ 50 }; // the aspritation window, the width is 100
 
 static int stopSearch { 0 };
 static int timePerMove { 0 };
 
 constexpr int MAX_HISTORY_SCORE{ 16'384 };
 
-constexpr int EFP_THRESHOLD { 5 };
-constexpr int EFP_BASE { 80 };
-constexpr int EFP_MARGIN { 90 };
+
+// SEARCH PARAMETERS //
+constexpr double LMR_BASE = 0.75;
+constexpr double LMR_DIVISION = 3.0;
+
+/*
+inline extern int SEE_PRUNING_THRESHOLD = 9;
+inline extern int SEE_CAPTURE_MARGIN = -35;
+inline extern int SEE_QUIET_MARGIN = -80;
+
+// agrressive had -15 and -65
+inline extern int seeMargins[] {SEE_CAPTURE_MARGIN, SEE_QUIET_MARGIN };
+*/

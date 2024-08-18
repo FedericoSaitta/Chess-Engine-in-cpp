@@ -12,44 +12,50 @@ static const int SEEPieceValues[] = {
     100,  300,  300,  500, 900,    0,    0,    0,
 };
 
-int moveEstimatedValue(const Move move, const Board& pos) {
-    // Start with the value of the piece on the target square
-    int value = SEEPieceValues[ pos.mailbox[move.to()] % 6];
-
-    // Factor in the new piece's value and remove our promoted pawn
-    if (move.isPromotion())
-        value += SEEPieceValues[move.promotionPiece()] - SEEPieceValues[PAWN];
-
-    // Target square is encoded as empty for enpass moves
-    else if (move.isEnPassant())
-        value = SEEPieceValues[PAWN];
-
-    return value;
-}
-
 
 
 int see(const Move move, const int threshold, const Board& pos) {
 
     const int from {move.from()};
     const int to{move.to()};
+    const int flags{move.flags()};
+    int nextVictim;
+    int value;
 
-    // Next victim is moved piece or promotion type
-    const int nextVictim = pos.mailbox[from] % 6;
+    // castling moves cannot have bad SEE
+    if ( (flags == OO) || (flags == OOO) ) return 1;
 
-    assert(nextVictim != NO_PIECE && "nextVictim is none");
+    if (move.isPromotion()) nextVictim = move.promotionPiece();
+    else nextVictim = pos.mailbox[from] % 6;
 
     // Balance is the value of the move minus threshold. Function
     // call takes care for Enpass, Promotion and Castling moves.
-    int value = moveEstimatedValue(move, pos) - threshold;
+    if (move.isCapture()) {
+        if (move.isEnPassant()){
+            value = SEEPieceValues[PAWN];
+        } else {
+            value = SEEPieceValues[ pos.mailbox[to] % 6];
+        }
 
-    if (value < 0) return 0; // in the case of a non-capture
+    } else {
+        value = 0;
+    }
 
-    value -= SEEPieceValues[nextVictim];
+    // Factor in the new piece's value and remove our promoted pawn
+    if (move.isPromotion()){
+        value += SEEPieceValues[nextVictim] - SEEPieceValues[PAWN];
+    }
+
+
+    int balance = value -  threshold;
+
+    if (balance < 0) return 0; // in the case of a non-capture
+
+    balance -= SEEPieceValues[nextVictim];
 
     // if the the difference between the nextVictim and the target is larger than the threshold,
     // the move is a good enough capture regardless of future recaptures
-    if (value >= 0) return 1;
+    if (balance >= 0) return 1;
 
     const U64 whiteOcc { pos.bitboards[WHITE_OCC] };
     const U64 blackOcc { pos.bitboards[BLACK_OCC] };
@@ -79,9 +85,9 @@ int see(const Move move, const int threshold, const Board& pos) {
         }
 
         color ^= 1; // swap the colour
-        value = -value - 1 - SEEPieceValues[piecetype];
+        balance = -balance - 1 - SEEPieceValues[piecetype];
 
-        if (value >= 0)
+        if (balance >= 0)
         {
             if (piecetype == KING && (attackers & (color == WHITE ? whiteOcc : blackOcc)))
                 color ^= 1; // swap the colour

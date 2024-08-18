@@ -10,7 +10,8 @@
 
 
 int main() {
-    initAll(256); // Done at compile time :), using 256 MB size hash
+// for now lets do 64
+    initAll(64); // Done at compile time :), using 256 MB size hash
     UCI();
 
     // some sigsevfault is happening if we run uci before this

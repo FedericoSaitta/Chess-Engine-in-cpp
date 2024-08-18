@@ -102,4 +102,19 @@ public:
 
     std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
 
+
+    int LMR_MIN_MOVES { 4 }; // searching the first 4 moves at the full depth
+    int LMR_MIN_DEPTH { 2 };
+
+    int windowWidth{ 46 }; // the aspritation window, the width is 100
+
+    int SEE_THRESHOLD{ 105 };
+
+    int RFP_MARGIN { 76 };
+    int RFP_DEPTH { 9 };
+
+    int NMP_DEPTH { 2 };
+    float NMP_BASE { 3.38 };
+    float NMP_DIVISION{ 4.48 };
+
 };

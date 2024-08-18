@@ -16,6 +16,9 @@
 
 #include "logger/logger.h"
 
+#include "search.h"
+#include "search/searchparams.h"
+
 Searcher thread;
 static bool isNewGame{true};
 
@@ -27,6 +30,23 @@ void resetGameVariables() {
 static void handleUci() {
     std::cout << "id name Aramis v1.3.0 \n";
     std::cout << "id author Federico Saitta\n";
+
+    std::cout << "option name Hash type spin default 64 min 1 max 256\n";
+
+    // all the variable search parameters
+    std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
+    std::cout << "option name LMR_MIN_DEPTH type spin default 3 min 2 max 6\n";
+
+    std::cout << "option name windowWidth type spin default 50 min 10 max 100\n";
+    std::cout << "option name SEE_THRESHOLD type spin default 105 min 80 max 125\n";
+
+    std::cout << "option name RFP_MARGIN type spin default 80 min 60 max 120\n";
+    std::cout << "option name RFP_DEPTH type spin default 9 min 7 max 11\n";
+
+    std::cout << "option name NMP_DEPTH type spin default 3 min 2 max 4\n";
+    std::cout << "option name NMP_BASE type spin default 4 min 3 max 5\n";
+    std::cout << "option name NMP_DIVISION type spin default 4 min 3 max 6\n";
+
     std::cout << "uciok\n";
 }
 static void handleIsReady() {
@@ -119,14 +139,68 @@ static void handleGo(std::istringstream& inputStream) {
     end_of_function:
 }
 
+
 static void handleOption(std::istringstream& inputStream) {
     // again this is not the best, could use a while loop or some other way
     std::string token;
     inputStream >> std::skipws >> token;
     if (token == "name") {
-        if ((inputStream >> token) && (token == "Hash")) {
-            if ((inputStream >> token) && (token == "value")) {
+        inputStream >> token;
+
+        if ((token == "Hash")) {
+            if (inputStream >> token && (token == "value")) {
                 if ((inputStream >> token)) initTranspositionTable( std::stoi(token) );
+            }
+        }
+
+        if ((token == "LMR_MIN_MOVES")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.LMR_MIN_MOVES = ( std::stoi(token) );
+            }
+        }
+        if ((token == "LMR_MIN_DEPTH")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.LMR_MIN_DEPTH = ( std::stoi(token) );
+            }
+        }
+
+        if ((token == "windowWidth")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.windowWidth = ( std::stoi(token) );
+            }
+        }
+
+        if ((token == "SEE_THRESHOLD")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.SEE_THRESHOLD = ( std::stoi(token) );
+            }
+        }
+        if ((token == "RFP_MARGIN")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.RFP_MARGIN = ( std::stoi(token) );
+            }
+        }
+        if ((token == "RFP_DEPTH")) {
+            if ( (token == "value")) {
+                if ((inputStream >> token)) thread.RFP_DEPTH = ( std::stoi(token) );
+            }
+        }
+
+        if ((token == "NMP_DEPTH")) {
+            if ((token == "value")) {
+                if ((inputStream >> token)) thread.NMP_DEPTH = ( std::stoi(token) );
+            }
+        }
+        if ((token == "NMP_BASE")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.NMP_BASE = ( std::stoi(token) );
+            }
+        }
+
+        if ( (token == "NMP_DIVISION")) {
+            if ((inputStream >> token) && (token == "value")) {
+                if ((inputStream >> token)) thread.NMP_DIVISION = ( std::stoi(token) );
+
             }
         }
     }
@@ -136,6 +210,7 @@ static void cleanUp() {
     if (transpositionTable != nullptr) free(transpositionTable);
 }
 
+//option name TEST type spin default 100 min 50 max 150
 void UCI(const std::string_view fileName) {
     std::string line{};
     std::ifstream file{};

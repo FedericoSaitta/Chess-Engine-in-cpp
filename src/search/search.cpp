@@ -39,9 +39,6 @@ static int LMP_table[2][11];
 
 int nodes{};
 
-constexpr int SEE_PRUNING_THRESHOLD = 9;
-constexpr int SEE_CAPTURE_MARGIN = -20;
-
 void initSearchTables() {
 		for(int depth = 1; depth < MAX_PLY; depth++) {
 			for(int played = 1; played < 64; played++) {
@@ -142,6 +139,8 @@ bool Searcher::isKiller(const Move move) {
 }
 
 void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
+
+
 	const int bonus = std::min(2100, 300 * depth - 300);
 	assert(bestMove.from() < 64 && "updateHistory: out of bounds table indexing");
 	assert(bestMove.to() < 64 && "updateHistory: out of bounds table indexing");
@@ -207,7 +206,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 		const int moveScore { scoredPair.second };
 
 		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
-		if (move.isCapture() && !see(move, -105, pos)) continue; // very basic SEE for now
+		if (move.isCapture() && !see(move, -this->SEE_THRESHOLD, pos)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -282,16 +281,24 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	// most of these can be greatly improved with improving heuristic
 	if (!pvNode && !inCheck && searchPly) {
 
+        /*
 		// reverse futility pruning
 		const int eval { ttHit ? score : evaluate(pos) };
-		if (depth < 9 && (eval - depth * 80) >= beta)
+		if (depth < RFP_DEPTH && (eval - depth * RFP_MARGIN) >= beta)
+			return eval - depth * RFP_MARGIN;
+			*/
+
+		// reverse futility pruning
+		const int eval { ttHit ? score : evaluate(pos) };
+		if (depth < this->RFP_DEPTH && (eval - depth * this->RFP_MARGIN) >= beta)
 			return eval;
+
 
 		// NULL MOVE PRUNING: https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm
 		// Do not attempt null move pruning in case our pos.side only has pawns on the pos
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
-		if (depth > 3  && canNull && pos.nonPawnMaterial()) {
+		if (depth > this->NMP_DEPTH  && canNull && pos.nonPawnMaterial()) {
 			COPY_HASH()
 			pos.nullMove();
 
@@ -300,7 +307,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 			repetitionTable[repetitionIndex] = hashKey;
 
 			// more aggressive reduction
-			const int r = std::min(4 + depth / 4, depth);
+			const int r = std::min(static_cast<int>( this->NMP_BASE + depth / this->NMP_DIVISION ), depth);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - r, DONT_NULL);
 
 			pos.undoNullMove();
@@ -388,11 +395,12 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	}
 
     	// SEE pruning for captures only
-    	if (move.isCapture() && bestEval > -MATE_SCORE
-    		&& depth <= SEE_PRUNING_THRESHOLD
-    		&& !see(move, depth * depth * (SEE_CAPTURE_MARGIN), pos) ) {
-    		continue;
-    	}
+    	//if (bestEval > -MATE_SCORE
+    	//	&& depth <= SEE_PRUNING_THRESHOLD
+    	//	&& !see(move, depth * depth * (seeMargins[move.isCapture()]), pos) ) {
+    		// as our captures and noises are not the same
+    	//	continue;
+    	//}
 
         COPY_HASH()
         searchPly++;
@@ -425,7 +433,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	}
     	else {
     		// do not reduce noisy moves
-    		if( (movesSearched >= LMR_MIN_MOVES) && (depth >= LMR_MIN_DEPTH) && isQuiet ) {
+    		if( (movesSearched >= this->LMR_MIN_MOVES) && (depth >= this->LMR_MIN_DEPTH) && isQuiet ) {
 
     			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 
@@ -506,7 +514,7 @@ int Searcher::aspirationWindow(const int currentDepth, const int previousScore) 
 	int beta;
 	int score{};
 
-	int delta { windowWidth };
+	int delta { this->windowWidth };
 
 	if (currentDepth > 3) { // use aspiration window
 		alpha = previousScore - delta;
@@ -560,7 +568,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
 
 void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
-
+	// note that bench command will not change as we create a separate thread for it
 	timePerMove = getMoveTime(timeConstraint, pos.side);
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
@@ -586,8 +594,6 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
     }
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
-
-	//ageHistory();
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
 	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
