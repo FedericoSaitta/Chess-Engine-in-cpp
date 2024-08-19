@@ -105,7 +105,7 @@ int see(const Move move, const int threshold, const Board& board) {
         // If the balance is non negative after giving away our piece then we win
         if (balance >= 0) {
 
-            // As a slide speed up for move legality checking, if our last attacking
+            // As a slight speed up for move legality checking, if our last attacking
             // piece is a king, and our opponent still has attackers, then we've
             // lost as the move we followed would be illegal
             if (nextVictim == KING && (attackers & (color == WHITE ? board.bitboards[WHITE_OCC] : board.bitboards[BLACK_OCC])))

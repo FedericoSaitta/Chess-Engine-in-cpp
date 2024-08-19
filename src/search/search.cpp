@@ -386,7 +386,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	// improving heuristic
     	if (searchPly && !inCheck && isQuiet && bestEval > -MATE_SCORE) {
 
-
     		// parameters obtained from CARP
     		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
     			skipQuiets= true;
@@ -394,29 +393,28 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     		}
     	}
 
-
-    	/*
     	// SEE pruning for captures only
+    	// needed to not enter pruning if we havent seen any legal moves
+    	// this makes sure that we dont prune the only possible moves in a position
+    	// and then wrongly declare mate or stalemate
     	if (bestEval > -MATE_SCORE
-			&& depth <= 5) {
+			&& depth <= 9) {
 
+    		// CAPTURE MOVES
     		if (move.isCapture()) {
-    			if ( !see(move, depth * (-100), pos) ) {
+    			if ( !see(move, depth * depth * (-30), pos) ) { // from alexandria
     				continue;
     			}
     		}
 
-    		/*
+    		// QUIET MOVES
     		else {
-    			if ( !see(move, depth * depth * (- this->SEE_QUIET_MARGIN), pos) ) {
+    			if ( !see(move, depth * (-80), pos) ) {
     				continue;
     				}
     		}
-    		*/
 
-    	//}
-
-
+    	}
 
         COPY_HASH()
         searchPly++;
