@@ -41,6 +41,7 @@ public:
     U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }
 
     U64 getBitboard(const PieceType pc, const Color c) const { return bitboards[pc + 6 * c]; }
+    U64 getPieceTypeBitBoard(const int pc) const { return bitboards[pc] | bitboards[pc+6]; }
 
     void resetBoard() {
         memset(history, 0, sizeof(history));

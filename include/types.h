@@ -123,6 +123,10 @@ public:
         return flags() == EN_PASSANT;
     }
 
+    bool isCastling() const {
+        return (flags() == OO) || (flags() == OOO);
+    }
+
     // Noisy moves are: captures, en-passant and queen promotions
     // Non-Noisy moves are: undepromtions( even capture promotions ) and quiet moves (castling etc)
     inline bool isNoisy() const {

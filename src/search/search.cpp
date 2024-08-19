@@ -203,10 +203,10 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 	for (int count=0; count < moveList.count; count++) {
 		const std::pair scoredPair { pickBestMove(moveList, count ) };
 		const Move move { scoredPair.first };
-		const int moveScore { scoredPair.second };
 
 		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
-		if (move.isCapture() && !see(move, -this->SEE_THRESHOLD, pos)) continue; // very basic SEE for now
+		// we should prune promotions too at one point and also the movepicker in qs just should never hand out non-noises
+		if (move.isCapture() && !see(move, -105, pos)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -374,7 +374,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	bool skipQuiets{ false };
 
     for (int count=0; count < moveList.count; count++) {
-    	std::pair scoredPair { pickBestMove(moveList, count ) };
+	    std::pair scoredPair { pickBestMove(moveList, count ) };
     	const Move move { scoredPair.first };
 
     	// En-passant, captures and promotions are noisy
@@ -394,13 +394,29 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     		}
     	}
 
+
+    	/*
     	// SEE pruning for captures only
-    	//if (bestEval > -MATE_SCORE
-    	//	&& depth <= SEE_PRUNING_THRESHOLD
-    	//	&& !see(move, depth * depth * (seeMargins[move.isCapture()]), pos) ) {
-    		// as our captures and noises are not the same
-    	//	continue;
+    	if (bestEval > -MATE_SCORE
+			&& depth <= 5) {
+
+    		if (move.isCapture()) {
+    			if ( !see(move, depth * (-100), pos) ) {
+    				continue;
+    			}
+    		}
+
+    		/*
+    		else {
+    			if ( !see(move, depth * depth * (- this->SEE_QUIET_MARGIN), pos) ) {
+    				continue;
+    				}
+    		}
+    		*/
+
     	//}
+
+
 
         COPY_HASH()
         searchPly++;

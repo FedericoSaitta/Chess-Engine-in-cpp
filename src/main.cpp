@@ -10,8 +10,9 @@
 
 
 int main() {
-// for now lets do 64
-    initAll(64); // Done at compile time :), using 256 MB size hash
+    // for now lets do 8 Mb
+    initAll(8); // Done at compile time :), using 256 MB size hash
+
     UCI();
 
     // some sigsevfault is happening if we run uci before this
@@ -51,6 +52,7 @@ int main() {
 
     Test::Debug::boardInCheck();
     Test::Debug::boardNonPawnMat();
+    Test::Debug::see_test();
 #endif
 
 }

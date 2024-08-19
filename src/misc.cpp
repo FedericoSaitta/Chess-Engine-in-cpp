@@ -163,8 +163,6 @@ Move parseMove(const std::string_view move, const Board& currentBoard) {
     MoveList moveList;
     currentBoard.generateMoves(moveList);
 
-    printMovesList(moveList);
-
     for (int count=0; count< moveList.count; count++) {
 
         if ( ((moveList.moves[count].first).from() == startSquare) &&  ((moveList.moves[count].first).to() == endSquare) ){

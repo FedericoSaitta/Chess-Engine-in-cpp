@@ -117,4 +117,10 @@ public:
     float NMP_BASE { 3.38 };
     float NMP_DIVISION{ 4.48 };
 
+    // Now only tuning these
+    int SEE_PRUNING_THRESHOLD = 9;
+    int SEE_CAPTURE_MARGIN = 50;
+    int SEE_QUIET_MARGIN = 100;
+
+    //int seeMargins[] {SEE_CAPTURE_MARGIN, SEE_QUIET_MARGIN };
 };

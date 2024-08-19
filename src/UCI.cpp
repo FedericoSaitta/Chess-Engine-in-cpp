@@ -34,6 +34,7 @@ static void handleUci() {
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";
 
     // all the variable search parameters
+    /*
     std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
     std::cout << "option name LMR_MIN_DEPTH type spin default 3 min 2 max 6\n";
 
@@ -46,6 +47,11 @@ static void handleUci() {
     std::cout << "option name NMP_DEPTH type spin default 3 min 2 max 4\n";
     std::cout << "option name NMP_BASE type spin default 4 min 3 max 5\n";
     std::cout << "option name NMP_DIVISION type spin default 4 min 3 max 6\n";
+    */
+    std::cout << "option name SEE_PRUNING_THRESHOLD type spin default 9 min 6 max 11\n";
+    std::cout << "option name SEE_CAPTURE_MARGIN type spin default 35 min 5 max 100\n";
+    std::cout << "option name SEE_QUIET_MARGIN type spin default 80 min 20 max 120\n";
+
 
     std::cout << "uciok\n";
 }
@@ -70,10 +76,7 @@ static void handlePosition(std::istringstream& inputStream) {
                 while(inputStream >> moveString){
                     const Move move {parseMove(moveString, thread.pos)};
 
-                    std::cout << moveString << '\n';
-
                     if (!move.isNone() ) { //so if the move inputStream != 0
-                        std::cout << "making a move\n";
                         thread.repetitionIndex++;
                         thread.repetitionTable[thread.repetitionIndex] = hashKey;
                         if (thread.pos.makeMove(move, 0) == 0) {
@@ -85,6 +88,7 @@ static void handlePosition(std::istringstream& inputStream) {
                         LOG_ERROR("Move inputStream Null " + token );
                     }
                 }
+
                 goto no_re_parsing;
                 // once we are done making the moves, we dont want to re-parse the thread.pos as that would nullify the moves
             }
@@ -152,7 +156,7 @@ static void handleOption(std::istringstream& inputStream) {
                 if ((inputStream >> token)) initTranspositionTable( std::stoi(token) );
             }
         }
-
+        /*
         if ((token == "LMR_MIN_MOVES")) {
             if ((inputStream >> token) && (token == "value")) {
                 if ((inputStream >> token)) thread.LMR_MIN_MOVES = ( std::stoi(token) );
@@ -203,6 +207,23 @@ static void handleOption(std::istringstream& inputStream) {
 
             }
         }
+        */
+        if ((token == "SEE_PRUNING_THRESHOLD")) {
+            if (inputStream >> token && (token == "value")) {
+                if ((inputStream >> token)) thread.SEE_PRUNING_THRESHOLD = ( std::stoi(token) );
+            }
+        }
+        if ((token == "SEE_CAPTURE_MARGIN")) {
+            if (inputStream >> token && (token == "value")) {
+                if ((inputStream >> token)) thread.SEE_CAPTURE_MARGIN = ( std::stoi(token) );
+            }
+        }
+        if ((token == "SEE_QUIET_MARGIN")) {
+            if (inputStream >> token && (token == "value")) {
+                if ((inputStream >> token)) thread.SEE_QUIET_MARGIN = ( std::stoi(token) );
+            }
+        }
+
     }
 }
 

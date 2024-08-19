@@ -5,104 +5,116 @@
 #include "inline_functions.h"
 
 #include <assert.h>
+#include <mach-o/loader.h>
 #include <mach/machine.h>
 
-// using ethereal values
 static const int SEEPieceValues[] = {
-    100,  300,  300,  500, 900,    0,    0,    0,
+    161,  446,  464,  705, 1322,    0,    0,    0,
 };
 
 
+static int getlsb(uint64_t bb) {
+    assert(bb);  // lsb(0) is undefined
+    return __builtin_ctzll(bb);
+}
 
-int see(const Move move, const int threshold, const Board& pos) {
 
-    const int from {move.from()};
-    const int to{move.to()};
-    const int flags{move.flags()};
-    int nextVictim;
-    int value;
+int see(const Move move, const int threshold, const Board& board) {
+    // Unpack move information
+    const int from  = move.from();
+    const int to    = move.to();
 
-    // castling moves cannot have bad SEE
-    if ( (flags == OO) || (flags == OOO) ) return 1;
+    if (move.isCastling()) return true;
 
-    if (move.isPromotion()) nextVictim = move.promotionPiece();
-    else nextVictim = pos.mailbox[from] % 6;
+    // Next victim is moved piece or promotion type
+    int nextVictim = move.isPromotion() ? move.promotionPiece() : pieceType(board.mailbox[from]);
 
     // Balance is the value of the move minus threshold. Function
     // call takes care for Enpass, Promotion and Castling moves.
+    int value {};
     if (move.isCapture()) {
-        if (move.isEnPassant()){
-            value = SEEPieceValues[PAWN];
-        } else {
-            value = SEEPieceValues[ pos.mailbox[to] % 6];
-        }
-
-    } else {
-        value = 0;
+        if (move.isEnPassant()) value = SEEPieceValues[PAWN];
+        else value = SEEPieceValues[pieceType(board.mailbox[ to ])];
     }
 
-    // Factor in the new piece's value and remove our promoted pawn
-    if (move.isPromotion()){
-        value += SEEPieceValues[nextVictim] - SEEPieceValues[PAWN];
-    }
+    if (move.isPromotion()) value += SEEPieceValues[move.promotionPiece()] - SEEPieceValues[PAWN];
 
+    int balance = value - threshold;
 
-    int balance = value -  threshold;
+    // Best case still fails to beat the threshold
+    if (balance < 0) return false;
 
-    if (balance < 0) return 0; // in the case of a non-capture
-
+    // Worst case is losing the moved piece
     balance -= SEEPieceValues[nextVictim];
 
-    // if the the difference between the nextVictim and the target is larger than the threshold,
-    // the move is a good enough capture regardless of future recaptures
-    if (balance >= 0) return 1;
+    // If the balance is positive even if losing the moved piece,
+    // the exchange is guaranteed to beat the threshold.
+    if (balance >= 0) return true;
 
-    const U64 whiteOcc { pos.bitboards[WHITE_OCC] };
-    const U64 blackOcc { pos.bitboards[BLACK_OCC] };
-    const U64 allOcc { pos.bitboards[BOTH_OCC] };
+    // Grab sliders for updating revealed attackers
+    U64 bishops = board.getPieceTypeBitBoard(BISHOP) | board.getPieceTypeBitBoard(QUEEN);
+    U64 rooks   = board.getPieceTypeBitBoard(ROOK) | board.getPieceTypeBitBoard(QUEEN);
 
-    U64 occupied { (allOcc ^ (1ULL << from)) | (1ULL << to ) };
-    if (move.isEnPassant()) occupied ^= (1ULL << pos.history[pos.gamePly].enPassSq);
+    // Let occupied suppose that the move was actually made
+    U64 occupied = board.bitboards[BOTH_OCC];
 
-    U64 attackers = pos.allAttackers(to , occupied) & occupied;
+    // Now our opponents turn to recapture
+    int color = !board.side;
 
-    const U64 queens = pos.bitboards[WHITE_QUEEN] | pos.bitboards[BLACK_QUEEN];
-    const U64 bishops = pos.bitboards[WHITE_BISHOP] | pos.bitboards[BLACK_BISHOP] | queens;
-    const U64 rooks   = pos.bitboards[WHITE_ROOK] | pos.bitboards[BLACK_ROOK] | queens;
+    occupied = (occupied ^ (1ull << from)) | (1ull << to);
+    if (move.isEnPassant()) {
+        if (color == BLACK) { occupied ^= (1ull << (to - 8)); } // the move is white captures en-pass
+        else { occupied ^= (1ull << (to + 8));}
+    }
 
-    int color { GET_BIT(pos.bitboards[WHITE_OCC], from) ? BLACK : WHITE };
+    // Get all pieces which attack the target square. And with occupied
+    // so that we do not let the same piece attack twice
+    U64 attackers = board.allAttackers(to, occupied) & occupied;
 
-    while (true) {
-        attackers &= occupied;
-        U64 myAttackers = attackers & (color == WHITE ? whiteOcc : blackOcc);
+    while ( true ) {
 
-        if (!myAttackers) break;
+        // If we have no more attackers left we lose
+        U64 myAttackers = attackers & (color == WHITE ? board.bitboards[WHITE_OCC] : board.bitboards[BLACK_OCC]);
+        if (myAttackers == 0ULL) break;
 
-        int piecetype;
-        for (piecetype = 5; piecetype >= 0; piecetype--){
-            if (myAttackers & (pos.bitboards[piecetype] | pos.bitboards[piecetype + 6]))
+        // Find our weakest piece to attack with
+        for (nextVictim = PAWN; nextVictim <= QUEEN; nextVictim++)
+            if (myAttackers & board.getPieceTypeBitBoard( nextVictim ) )
                 break;
-        }
 
-        color ^= 1; // swap the colour
-        balance = -balance - 1 - SEEPieceValues[piecetype];
+        // Remove this attacker from the occupied
+        occupied ^= (1ull << getlsb(myAttackers & board.getPieceTypeBitBoard( nextVictim )) );
 
-        if (balance >= 0)
-        {
-            if (piecetype == KING && (attackers & (color == WHITE ? whiteOcc : blackOcc)))
-                color ^= 1; // swap the colour
+        // A diagonal move may reveal bishop or queen attackers
+        if (nextVictim == PAWN || nextVictim == BISHOP || nextVictim == QUEEN)
+            attackers |= getBishopAttacks(to, occupied) & bishops;
+
+        // A vertical or horizontal move may reveal rook or queen attackers
+        if (nextVictim == ROOK || nextVictim == QUEEN)
+            attackers |= getRookAttacks(to, occupied) & rooks;
+
+        // Make sure we did not add any already used attacks
+        attackers &= occupied;
+
+        // Swap the turn
+        color = !color;
+
+        // Negamax the balance and add the value of the next victim
+        balance = -balance - 1 - SEEPieceValues[nextVictim];
+
+        // If the balance is non negative after giving away our piece then we win
+        if (balance >= 0) {
+
+            // As a slide speed up for move legality checking, if our last attacking
+            // piece is a king, and our opponent still has attackers, then we've
+            // lost as the move we followed would be illegal
+            if (nextVictim == KING && (attackers & (color == WHITE ? board.bitboards[WHITE_OCC] : board.bitboards[BLACK_OCC])))
+                color = !color;
 
             break;
         }
-
-
-        occupied ^= (1ULL << ( bsf(myAttackers & (pos.bitboards[piecetype] | pos.bitboards[piecetype + 6]) ) ) );
-
-        if (piecetype == PAWN || piecetype == BISHOP || piecetype == QUEEN)
-            attackers |= getBishopAttacks(to, occupied) & bishops;
-        if (piecetype == ROOK || piecetype == QUEEN)
-            attackers |= getRookAttacks(to, occupied) & rooks;
     }
+
     // Side to move after the loop loses
-    return pos.side != color;
+    return board.side != color;
 }

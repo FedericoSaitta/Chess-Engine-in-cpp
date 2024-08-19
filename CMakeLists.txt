@@ -102,6 +102,7 @@ set(SOURCE_FILES
 
         src/search/see.cpp
         src/search/see.h
+        debug_tests/see_tests.cpp
 )
 
 # Add executable

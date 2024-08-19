@@ -23,4 +23,6 @@ namespace Test::Debug {
     void gameScenario();
     void boardInCheck();
     void boardNonPawnMat();
+
+    void see_test();
 }

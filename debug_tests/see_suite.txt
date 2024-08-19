@@ -1,0 +1,13 @@
+1k1r4/1pp4p/p7/4p3/8/P5P1/1PP4P/2K1R3 w - - 0 1 | e1e5 | 0 | true
+1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - - 0 1 | d3e5 | 0 | false
+r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 | g2h3 | 0 | true
+k3r3/8/8/4p3/8/2B5/1B6/K7 w - - 0 1 | c3e5 | 0 | true |
+4kbnr/p1P4p/b1q5/5pP1/4n3/5Q2/PP1PPP1P/RNB1KBNR w KQk f6 0 1 | g5f6 | 0 | true
+6k1/1pp4p/p1pb4/6q1/3P1pRr/2P4P/PP1Br1P1/5RKN w - - 0 1 | f1f4 | 0 | false
+6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1 | f7f8q | 0 | true
+r1bqk1nr/pppp1ppp/2n5/1B2p3/1b2P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1 | e1g1 | 0 | true
+4kbnr/p1P1pppp/b7/4q3/7n/8/PPQPPPPP/RNB1KBNR w KQk - 0 1 | c7c8q | 0 | true
+4kbnr/p1P1pppp/b7/4q3/7n/8/PP1PPPPP/RNBQKBNR w KQk - 0 1 | c7c8q | 0 | false
+3r3k/3r4/2n1n3/8/3p4/2PR4/1B1Q4/3R3K w - - 0 1 | d3d4 | 0 | false
+5rk1/1pp2q1p/p1pb4/8/3P1NP1/2P5/1P1BQ1P1/5RK1 b - - 0 1 | d6f4 | 0 | false
+5rk1/1pp2q1p/p1pb4/8/3P1NP1/2P5/1P1BQ1P1/5RK1 b - - 0 1 | d6f4 | -108 | true

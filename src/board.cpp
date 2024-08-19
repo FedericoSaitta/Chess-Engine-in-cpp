@@ -114,31 +114,22 @@ bool Board::nonPawnMaterial() const {
 }
 
 
-U64 Board::attackersForSide(const Color c, const int square, const std::uint64_t occupancy) const {
-
-    U64 attackingPawns   = bitboards[make_piece(c, PAWN)];
-    U64 attackingKnights = bitboards[make_piece(c, KNIGHT)];
-    U64 attackingBishops = bitboards[make_piece(c, BISHOP)];
-    U64 attackingRooks   = bitboards[make_piece(c, ROOK)];
-    U64 attackingQueens  = bitboards[make_piece(c, QUEEN)];
-    U64 attackingKing    = bitboards[make_piece(c, KING)];
-
-
-    U64 interCardinalRays = getBishopAttacks(square, occupancy);
-    U64 cardinalRaysRays  = getRookAttacks(square, occupancy);
-
-    U64 attackers = interCardinalRays & (attackingBishops | attackingQueens);
-
-    attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
-    attackers |= bitKnightAttacks[square] & attackingKnights;
-    attackers |= bitKingAttacks[square] & attackingKing;
-    attackers |= (bitPawnAttacks[c][square]) & attackingPawns;
-
-    return attackers;
-}
-
 U64 Board::allAttackers(const int square, const U64 occupancy) const {
-    return attackersForSide(WHITE, square, occupancy) | attackersForSide(BLACK, square, occupancy);
+    U64 whitePawns   = bitboards[WHITE_PAWN];
+    U64 blackPawns   = bitboards[BLACK_PAWN];
+
+    U64 attackingKnights = bitboards[WHITE_KNIGHT] | bitboards[BLACK_KNIGHT];
+    U64 attackingBishops = bitboards[WHITE_BISHOP] | bitboards[BLACK_BISHOP];
+    U64 attackingRooks   = bitboards[WHITE_ROOK] | bitboards[BLACK_ROOK];
+    U64 attackingQueens  = bitboards[WHITE_QUEEN] | bitboards[BLACK_QUEEN];
+    U64 attackingKing    = bitboards[WHITE_KING] | bitboards[BLACK_KING];
+
+    return (bitPawnAttacks[WHITE][square] & whitePawns & bitboards[BLACK_OCC])
+         | (bitPawnAttacks[BLACK][square] & blackPawns & bitboards[WHITE_OCC])
+         | (bitKnightAttacks[square] & attackingKnights)
+         | (getBishopAttacks(square, occupancy) & (attackingBishops | attackingQueens))
+         | (getRookAttacks(square, occupancy) & (attackingRooks | attackingQueens))
+         | (bitKingAttacks[square] & attackingKing);
 }
 
 
