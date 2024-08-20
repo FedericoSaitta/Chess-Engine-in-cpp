@@ -79,7 +79,7 @@ namespace Test::BenchMark {
         "7k/8/7P/5B2/5K2/8/8/8 b - - 0 175"
     };
 
-    void staticSearch(int depth) {
+    void staticSearch(Searcher& thread, int depth) {
 
         // Note that this test will tell use about pruning etc. but the result will not depend on ttHits and
         // proper History moves as each new FEN is treated as a different game.
@@ -90,8 +90,6 @@ namespace Test::BenchMark {
         const auto start = std::chrono::steady_clock::now();
 
         for (std::string FEN: testFEN) {
-            // putting this outside will yield slightly different results
-            Searcher thread;
             thread.resetGame();
 
             thread.parseFEN(FEN);

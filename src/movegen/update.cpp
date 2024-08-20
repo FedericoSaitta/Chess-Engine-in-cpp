@@ -298,7 +298,7 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 		}
 
 		// Zobrist Debug test from Maksim Korzh
-		assert((generateHashKey() == hashKey) && "makeMove: hashKey is wrong");
+		assert((generateHashKey(*this) == hashKey) && "makeMove: hashKey is wrong");
 
 		// make sure that the king has not been exposed into check
 		if ( isSqAttacked(bsf( bitboards[KING + 6 * (side^1)] ), side)) {
@@ -329,8 +329,8 @@ void Board::nullMove() {
 	gamePly++;
 	history[gamePly] = UndoInfo(history[gamePly - 1]);
 
-	assert((board.gamePly < 512) && "nullMove: gamePly is too large");
-	assert((generateHashKey() == hashKey) && "nullMove: hashKey is wrong");
+	assert((gamePly < 512) && "nullMove: gamePly is too large");
+	assert((generateHashKey(*this) == hashKey) && "nullMove: hashKey is wrong");
 }
 
 void Board::undoNullMove() {

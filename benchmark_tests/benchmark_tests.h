@@ -7,6 +7,9 @@
 #include <iostream>
 #include "board.h"
 
+
+class Searcher; // forward declaration
+
 namespace Test::BenchMark {
 
     void perftDriver(int depth, Board& board);
@@ -24,7 +27,7 @@ namespace Test::BenchMark {
     };
     void matingPuzzles();
 
-    void staticSearch(int depth=10);
+    void staticSearch(Searcher& thread, int depth=10);
 
     void staticEval();
 }

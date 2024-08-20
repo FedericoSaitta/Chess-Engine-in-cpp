@@ -1,6 +1,3 @@
-//
-// Created by Federico Saitta on 04/07/2024.
-//
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -15,7 +12,6 @@
 #include "config.h"
 
 #include "search.h"
-#include "searchparams.h"
 
 #include <assert.h>
 #include <cstdint>
@@ -34,9 +30,13 @@
 #include "see.h"
 #include "../logger/logger.h"
 
-static int LMR_table[MAX_PLY][MAX_PLY];
-static int LMP_table[2][11];
+constexpr int MAX_HISTORY_SCORE{ 16'384 };
 
+// SEARCH PARAMETERS //
+constexpr double LMR_BASE = 0.75;
+constexpr double LMR_DIVISION = 3.0;
+
+static int LMR_table[MAX_PLY][MAX_PLY];
 int nodes{};
 
 void initSearchTables() {
@@ -46,79 +46,6 @@ void initSearchTables() {
 			}
 		}
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
-
-	// Implement this once you have got improving heuristic done
-	// from Berserk chess engine
-	for(int depth = 1; depth < 10; depth++) {
-		LMP_table[0][depth] = static_cast<int>( 2.07 +  0.3743 * depth * depth );
-		LMP_table[1][depth] = static_cast<int>( 3.87 +  0.712 * depth * depth );
-	}
-}
-
-
-void Searcher::resetSearchStates() {
-	memset(killerMoves, 0, sizeof(killerMoves));
-	memset(pvLength, 0, sizeof(pvLength));
-	memset(pvTable, 0, sizeof(pvTable));
-
-	nodes = 0;
-	followPV = 0;
-	scorePV = 0;
-	searchPly = 0;
-
-	stopSearch = 0;
-}
-
-
-void Searcher::enablePVscoring(const MoveList& moveList) {
-    followPV = 0;
-
-    for (int count=0; count < moveList.count; count++) {
-
-        if ( moveList.moves[count].first == pvTable[0][searchPly] ) {
-        	assert(!pvTable[0][searchPly].isNone() && "enablePVscoring: pv is following a null move");
-        	assert(!moveList.moves[count].first.isNone() && "enablePVscoring: pv is following a null move");
-
-            scorePV = 1; // if we do find a move
-            followPV = 1; // we are in principal variation so we want to follow it
-        	break;
-        }
-    }
-}
-
-int Searcher::getMoveTime(const bool timeConstraint, const int turn) {
-	if (!timeConstraint) return 180'000; // maximum searching time of 3 minutes
-
-	// We give 100 millisecond lag compensation
-	const int timeAlloted = (turn == WHITE) ? whiteClockTime - 100 : blackClockTime - 100;
-	const int increment = (turn == WHITE) ? whiteIncrementTime : blackIncrementTime;
-	int moveTime{};
-
-	if (movesToGo == 0) {
-		 moveTime = timeAlloted / 30 + increment;
-		if ( (increment > 0) && (timeAlloted < (5 * increment) ) ) moveTime = static_cast<int>(0.75 * increment);
-	} else {
-		moveTime = timeAlloted / movesToGo;
-	}
-
-
-	assert((moveTime > 0) && "getMoveTime: movetime is zero/negative");
-	return moveTime;
-}
-void Searcher::isTimeUp() {
-	if ( searchTimer.elapsed() > timePerMove) stopSearch = 1;
-}
-
-int Searcher::isRepetition() {
-	// look if up until our repetition we have already encountered this position, asssuming the opponent
-	// plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
-	for (int index=0; index < repetitionIndex; index+= 1) {
-		// looping backwards over our previous keys
-		if (repetitionTable[index] == hashKey) {
-			return 1; // repetition found
-		}
-	}
-	return 0; // no repetition
 }
 
 void Searcher::updateKillers(const Move bestMove) {
@@ -128,22 +55,16 @@ void Searcher::updateKillers(const Move bestMove) {
 		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
 
 		killerMoves[1][searchPly] = killerMoves[0][searchPly];
-		killerMoves[0][searchPly] = bestMove; // store killer moves
+		killerMoves[0][searchPly] = bestMove;
+
+		assert((killerMoves[1][searchPly] != killerMoves[0][searchPly]) && "updateKillers: moves are identical");
 	}
 }
 
-bool Searcher::isKiller(const Move move) {
-	assert(!move.isNone());
-	if ( (move == killerMoves[0][searchPly]) || (move == killerMoves[1][searchPly]) ) return true;
-	return false;
-}
 
 void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
-
-
 	const int bonus = std::min(2100, 300 * depth - 300);
-	assert(bestMove.from() < 64 && "updateHistory: out of bounds table indexing");
-	assert(bestMove.to() < 64 && "updateHistory: out of bounds table indexing");
+	assert(!bestMove.isNone() && "updateHistory: bestMove is none");
 
 	// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
@@ -186,9 +107,9 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 		alpha = standPat; // Known as PV node (principal variation)
 	}
 
-	bool pvNode = (beta - alpha) > 1;
+	const bool pvNode = (beta - alpha) > 1;
 
-	int value = probeHash(alpha, beta, &bestMove, 0, searchPly);
+	const int value = probeHash(alpha, beta, &bestMove, 0, searchPly);
 	const bool ttHit = value != NO_HASH_ENTRY;
 	if (searchPly && ttHit && !pvNode) return value;
 
@@ -206,7 +127,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
 		// we should prune promotions too at one point and also the movepicker in qs just should never hand out non-noises
-		if (move.isCapture() && !see(move, -105, pos)) continue; // very basic SEE for now
+		if (move.isCapture() && !see(move, this->SEE_QS_THRESHOLD, pos)) continue; // very basic SEE for now
 
 		COPY_HASH()
 		searchPly++;
@@ -255,6 +176,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 	assert(depth >= 0 && "negamax: depth is negative");
+
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
 	int bestEval {-INF - 1};
@@ -280,13 +202,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	// quiet move pruning
 	// most of these can be greatly improved with improving heuristic
 	if (!pvNode && !inCheck && searchPly) {
-
-        /*
-		// reverse futility pruning
-		const int eval { ttHit ? score : evaluate(pos) };
-		if (depth < RFP_DEPTH && (eval - depth * RFP_MARGIN) >= beta)
-			return eval - depth * RFP_MARGIN;
-			*/
 
 		// reverse futility pruning
 		const int eval { ttHit ? score : evaluate(pos) };
@@ -382,34 +297,26 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
     	if (isQuiet && skipQuiets) continue;
 
-    	// late move pruning, we use the more conservative measure right now as i dont have
-    	// improving heuristic
+    	//#### LMP with CARP parameters, it can be improved with improving heurisitc ####//
     	if (searchPly && !inCheck && isQuiet && bestEval > -MATE_SCORE) {
-
-    		// parameters obtained from CARP
-    		if (!pvNode && depth <= 8 && quietMoveCount >= (4 + depth * depth)) {
+    		if (!pvNode && depth <= this->LMP_DEPTH && quietMoveCount >= (this->LMP_MULTIPLIER + depth * depth)) {
     			skipQuiets= true;
     			continue;
     		}
     	}
 
-    	// SEE pruning for captures only
-    	// needed to not enter pruning if we havent seen any legal moves
-    	// this makes sure that we dont prune the only possible moves in a position
-    	// and then wrongly declare mate or stalemate
-    	if (bestEval > -MATE_SCORE
-			&& depth <= 9) {
-
+    	//#### PVS SEE Pruning ####//
+    	if (bestEval > -MATE_SCORE && depth <= this->SEE_PRUNING_DEPTH) {
     		// CAPTURE MOVES
     		if (move.isCapture()) {
-    			if ( !see(move, depth * depth * (-30), pos) ) { // from alexandria
+    			if ( !see(move, depth * depth * (this->SEE_CAPTURE_MARGIN), pos) ) {
     				continue;
     			}
     		}
 
     		// QUIET MOVES
     		else {
-    			if ( !see(move, depth * depth * (-65), pos) ) {
+    			if ( !see(move, depth * depth * (this->SEE_QUIET_MARGIN), pos) ) {
     				continue;
     				}
     		}
@@ -428,7 +335,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
         	assert((searchPly >= 0) && "negamax: searchPly too small");
         	assert((repetitionIndex >= 0) && "negamax: repetition index too small");
-        	assert((generateHashKey() == hashKey) && "negamax: hashKey is wrong illegal move");
+        	assert((generateHashKey(pos) == hashKey) && "negamax: hashKey is wrong illegal move");
             continue;
         }
 
@@ -439,15 +346,13 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	    quietMoveCount++;
     	}
 
-    	// ****  LATE MOVE REDUCTION (LMR) **** // +45.88 +/- 20.68
+    	//#### LATE MOVE REDUCTION (LMR) ####//
     	if(movesSearched == 0) {
-    		// https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html
-    		// First move, use full-window search // this is the principal variation move
+    		// First move is always searched fully
     		score = -negamax(-beta, -alpha, depth-1, DO_NULL);
-    	}
-    	else {
+    	} else {
     		// do not reduce noisy moves
-    		if( (movesSearched >= this->LMR_MIN_MOVES) && (depth >= this->LMR_MIN_DEPTH) && isQuiet ) {
+    		if( (movesSearched >= this->LMR_MIN_MOVES) && (depth >= this->LMR_DEPTH) && isQuiet ) {
 
     			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
 
@@ -465,20 +370,20 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     				score = -negamax(-beta, -alpha, depth-1, DO_NULL);
     		}
     	}
+
         searchPly--;
     	repetitionIndex--;
     	pos.undo(move);
         RESTORE_HASH()
 
-    	if (stopSearch) return 0;
-
     	movesSearched++;
 
-    	// fail soft framework
+    	if (stopSearch) return 0;
+
+    	//#### FAIL SOFT FRAMEWORK ####//
     	if (score > bestEval) {
-    		// Known as PV node (principal variation)
     		bestEval = score;
-    		bestMove = move; // saving the TT move
+    		bestMove = move;
 
     		if (score > alpha){
     			alpha = score;
@@ -491,7 +396,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
     			pvLength[searchPly] = pvLength[searchPly + 1];
 
-    			// fail-hard beta cut off
     			if (score >= beta) {
     				// helps with better move ordering in branches at the same depth
     				if (isQuiet) {
@@ -504,12 +408,10 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	}
     }
 
-	// After we have looped over the possible moves, check for stalemate or checkmate
-	if (!legalMoves) { // we dont have any legal moves to make in this position
+	// Checking if we are in stalemate or check-mate
+	if (legalMoves == 0) {
 		if (inCheck) {
-			// we need to adjust this before sending it to the transposition table to make it independent of the path
-			// from the root node to the mating node
-			return -MATE_VALUE+ searchPly; // we want to return the mating score, (slightly above negative INF, +ply scores faster mates as better moves)
+			return -MATE_VALUE + searchPly; // adding searchPly ensures that faster mates are chosen over slower ones
 		}
 		return 0; // we are in stalemate
 	}
@@ -520,7 +422,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
 	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth, searchPly);
 
-	return bestEval; // known as fail-low node
+	return bestEval;
 }
 
 int Searcher::aspirationWindow(const int currentDepth, const int previousScore) {
@@ -528,7 +430,7 @@ int Searcher::aspirationWindow(const int currentDepth, const int previousScore) 
 	int beta;
 	int score{};
 
-	int delta { this->windowWidth };
+	int delta { this->ASP_WINDOW_WIDTH };
 
 	if (currentDepth > 3) { // use aspiration window
 		alpha = previousScore - delta;
@@ -539,6 +441,9 @@ int Searcher::aspirationWindow(const int currentDepth, const int previousScore) 
 	}
 
 	while (true) {
+		if ((nodes & 4095) == 0) isTimeUp();
+		if (stopSearch) return 0;
+
 		// perform a search starting at the root node
 		score = negamax(alpha, beta, currentDepth, DO_NULL);
 
@@ -553,37 +458,12 @@ int Searcher::aspirationWindow(const int currentDepth, const int previousScore) 
 	return score;
 }
 
-void Searcher::sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) {
-	// Extracting the PV line and printing out in the terminal and logging file
-	std::string pvString{};
-	for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
-
-	const auto nps = static_cast<std::int64_t>(1'000 * nodes / depthTimer.elapsed());
-
-	std::string scoreType = "cp";
-	int adjustedScore = score;
-
-	if (score > -MATE_VALUE && score < -MATE_SCORE) {
-		scoreType = "mate";
-		adjustedScore = -(score + MATE_VALUE) / 2 - 1;
-	} else if (score > MATE_SCORE && score < MATE_VALUE) {
-		scoreType = "mate";
-		adjustedScore = (MATE_VALUE - score) / 2 + 1;
-	}
-
-	// Print the information
-	std::cout << "info score " << scoreType << " " << adjustedScore
-			  << " depth " << depth
-			  << " nodes " << nodes
-			  << " nps " << nps
-			  << " time " << depthTimer.roundedElapsed()
-			  << " pv " << pvString << std::endl;
-}
-
 void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
+
 	// note that bench command will not change as we create a separate thread for it
-	timePerMove = getMoveTime(timeConstraint, pos.side);
+	calculateMoveTime(timeConstraint);
+
 	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 
 	searchTimer.reset();
@@ -610,5 +490,5 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
-	assert((generateHashKey() == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
+	assert((generateHashKey(pos) == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");
 }

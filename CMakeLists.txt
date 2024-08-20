@@ -80,7 +80,6 @@ set(SOURCE_FILES
 
         benchmark_tests/benchmark_tests.h
         debug_tests/debug_tests.h
-        src/search/searchparams.h
         src/logger/logger.h
         include/config.h
         src/logger/logger.cpp
@@ -103,6 +102,8 @@ set(SOURCE_FILES
         src/search/see.cpp
         src/search/see.h
         debug_tests/see_tests.cpp
+        src/search/time_manager.cpp
+        src/search/search_helper.cpp
 )
 
 # Add executable

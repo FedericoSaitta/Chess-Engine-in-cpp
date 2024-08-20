@@ -45,12 +45,14 @@ public:
     Timer singleDepthTimer;
 
     int gameLengthTime;
-    int whiteClockTime;
-    int blackClockTime;
-    int whiteIncrementTime;
-    int blackIncrementTime;
+    int time;
+    int increment;
 
     int movesToGo;
+
+    bool stopSearch;
+    int timePerMove;
+
     //                         //
 
     void parseFEN(const std::string& fenString) {
@@ -62,10 +64,8 @@ public:
     void resetGame(){
         // resetting all the time-controls just in case
         gameLengthTime = 0;
-        whiteClockTime = 0;
-        blackClockTime = 0;
-        whiteIncrementTime = 0;
-        blackIncrementTime = 0;
+        time = 0;
+        increment = 0;
 
         movesToGo = 0;
 
@@ -76,25 +76,37 @@ public:
         repetitionIndex = 0;
         memset(repetitionTable, 0, sizeof(repetitionTable));
     }
+
+    void resetSearchStates() {
+        memset(killerMoves, 0, sizeof(killerMoves));
+        memset(pvLength, 0, sizeof(pvLength));
+        memset(pvTable, 0, sizeof(pvTable));
+
+        followPV = 0;
+        scorePV = 0;
+        searchPly = 0;
+
+        stopSearch = false;
+    }
+
+
     int quiescenceSearch(int alpha, int beta);
     int aspirationWindow(int currentDepth, int previousScore);
     int negamax(int alpha, int beta, int depth, NodeType canNull);
     void iterativeDeepening(int depth, bool timeConstraint=false);
 
-    void sendUciInfo(int score, int depth, int nodes, const Timer& depthTimer);
+    void sendUciInfo(int score, int depth, int nodes, const Timer& depthTimer) const;
 
     void updateHistory(Move bestMove, int depth, const Move* quiets, int quietMoveCount);
-    bool isKiller(Move move);
-    void updateKillers(Move bestMove);
-    int isRepetition();
 
+    void updateKillers(Move bestMove);
+
+    bool isKiller(Move move) const;
+    bool isRepetition() const;
     void isTimeUp();
 
-    int getMoveTime(bool timeConstraint, int turn);
+    void calculateMoveTime(bool timeConstraint);
     void enablePVscoring(const MoveList& moveList);
-
-    void resetSearchStates();
-
 
     int scoreMove(Move move, const Board& board);
 
@@ -102,13 +114,14 @@ public:
 
     std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
 
+    // TUNABLE PARAMETERS //
+    int LMR_MIN_MOVES { 4 };
+    int LMR_DEPTH { 2 };
 
-    int LMR_MIN_MOVES { 4 }; // searching the first 4 moves at the full depth
-    int LMR_MIN_DEPTH { 2 };
+    int LMP_DEPTH{ 8 };
+    int LMP_MULTIPLIER{ 4 };
 
-    int windowWidth{ 46 }; // the aspritation window, the width is 100
-
-    int SEE_THRESHOLD{ 105 };
+    int ASP_WINDOW_WIDTH{ 46 };
 
     int RFP_MARGIN { 76 };
     int RFP_DEPTH { 9 };
@@ -117,10 +130,9 @@ public:
     float NMP_BASE { 3.38 };
     float NMP_DIVISION{ 4.48 };
 
-    // Now only tuning these
-    int SEE_PRUNING_THRESHOLD = 9;
-    int SEE_CAPTURE_MARGIN = 50;
-    int SEE_QUIET_MARGIN = 100;
+    int SEE_QS_THRESHOLD{ -105 };
 
-    //int seeMargins[] {SEE_CAPTURE_MARGIN, SEE_QUIET_MARGIN };
+    int SEE_PRUNING_DEPTH = 9;
+    int SEE_CAPTURE_MARGIN = -30;
+    int SEE_QUIET_MARGIN = -65;
 };
