@@ -409,7 +409,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
     		// QUIET MOVES
     		else {
-    			if ( !see(move, depth * (-80), pos) ) {
+    			if ( !see(move, depth * depth * (-65), pos) ) {
     				continue;
     				}
     		}
