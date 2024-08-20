@@ -9,7 +9,6 @@
 #include <cmath>
 
 #include "uci.h"
-#include "../src/search/movesort.h"
 #include "../include/board.h"
 #include "../include/macros.h"
 #include "../include/misc.h"

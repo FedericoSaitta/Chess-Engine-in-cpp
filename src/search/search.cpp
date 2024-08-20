@@ -1,3 +1,24 @@
+/* SEARCH DETAILS
+ * In negamax we consider noisy: promotions and captures (en-passant too)
+ * In quiesce we search: captures and queen promotions (promotion captures are all searched)
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * NOTES:
+ * - SEE should always be done before making the actual move
+ *
+ *
+ */
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -26,7 +47,6 @@
 #include "../include/uci.h"
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
-#include "movesort.h"
 #include "see.h"
 #include "../logger/logger.h"
 
@@ -125,9 +145,10 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 		const std::pair scoredPair { pickBestMove(moveList, count ) };
 		const Move move { scoredPair.first };
 
-		// QS SEE Pruning, only prune loosing captures, we dont want to prune promotions (non-capture promotions)
-		// we should prune promotions too at one point and also the movepicker in qs just should never hand out non-noises
-		if (move.isCapture() && !see(move, this->SEE_QS_THRESHOLD, pos)) continue; // very basic SEE for now
+		// QS SEE Pruning, only prune loosing captures or loosing queen promotions
+		if ( (move.isCapture() || move.isQueenPromotion() ) && !see(move, this->SEE_QS_THRESHOLD, pos)) {
+			continue; // very basic SEE for now
+		}
 
 		COPY_HASH()
 		searchPly++;
