@@ -28,7 +28,6 @@
 
 #include "game_statistics.h"
 #include "../include/macros.h"
-#include "../include/inline_functions.h"
 
 #include "config.h"
 
@@ -69,8 +68,9 @@ void initSearchTables() {
 }
 
 void Searcher::updateKillers(const Move bestMove) {
-
 	// update killer moves if we found a new unique bestMove
+	assert(!bestMove.isPromotion() && "updateKillers: Killer move is promotion");
+
 	if (killerMoves[0][searchPly] != bestMove) {
 		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
 

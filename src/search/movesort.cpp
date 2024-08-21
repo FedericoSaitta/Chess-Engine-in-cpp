@@ -55,9 +55,13 @@ static int mvv_lva[12][13] = {
 };
 constexpr int hashTableBonus{ 3'000'000 };
 constexpr int principalVariationBonus{ 2'000'000 }; // so PV is always above captures
+constexpr int queenPromotionBonus{ 1'500'000 }; // so PV is always above captures
+constexpr int underPromotionMalus{ -1'500'000 }; // so PV is always above captures
 constexpr int captureBonus{ 1'000'000 }; // so captures are always above killers
 constexpr int firstKiller{ 900'000 };
 constexpr int secondKiller{ 800'000 };
+
+constexpr int seeConversion[] {-1, 1};
 
 int Searcher::scoreMove(const Move move, const Board& pos) {
 
@@ -77,14 +81,17 @@ int Searcher::scoreMove(const Move move, const Board& pos) {
 
 	if (move.isCapture()) {
 		// back to old code for now
-		if (move.isPromotion()) return mvv_lva[ PAWN ][ move.promotionPiece() ] + captureBonus;
+		// adding one to offset captures from non-captures
+		if (move.isPromotion()) {
+			return mvv_lva[ PAWN ][ move.promotionPiece() ] + captureBonus;
+		}
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
 		assert( (move.isEnPassant() ? pos.mailbox[move.to()] == NO_PIECE : pos.mailbox[move.to()] != NO_PIECE)
 				&& "scoreMove: enpassant or capture move are capturing wrong piece type");
 		assert((pos.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
 
-		return mvv_lva[ pos.mailbox[move.from()] ][ pos.mailbox[move.to()] ] + captureBonus;
+		return mvv_lva[ pos.mailbox[move.from()] ][ pos.mailbox[move.to()] ] + captureBonus * seeConversion[ see(move, 0, pos) ];
 	}
 
 	if (killerMoves[0][searchPly] == move) return firstKiller;
