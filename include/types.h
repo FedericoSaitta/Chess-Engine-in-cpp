@@ -1,12 +1,9 @@
 #pragma once
 
 #include "macros.h"
-#include <cstring>
 #include <cstdint>
 #include <bit>
 #include <iostream>
-#include "init.h"
-#include <cmath>
 #include <assert.h>
 
 enum Color { WHITE = 0, BLACK = 1 };

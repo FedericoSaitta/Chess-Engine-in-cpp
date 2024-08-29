@@ -35,10 +35,9 @@ be soon sent to CCRL to test its performance against other engines, I estimate i
   - [Board Evaluation](#board-evaluation)
   - [Searching Algorithm Features](#searching-algorithm-features)
   - [Time Management](#time-management)
-  - [Perft Test](#perft-test)
-  - [Engine vs. Engine Match Results](#engine-vs-engine-match-results)
-- [Patches](#patches)
+  - [Engine Strength](#engine-strength)
 - [Credits](#credits)
+- [Room For Improvement](#room-for-improvement)
 
 ## Running the Engine:
 If you are on windows-x64 or macos-x64 head to the 'Releases' section and download the executable.
@@ -92,16 +91,13 @@ For windows:`ChessEngine.exe`
 `uci`, `isready`, `ucinewgame`, `quit`.
 
 ### Extra-UCI commands:
-`bench` to run a pre-established search-test suite.
-- It is useful for checking the correct engine behaviour in the case you build the project on your own. 
-As of v1.3.0 (25/07/2024) the correct results are: 
-- Nodes: 7.77954 Million, Branching Ratio: 3.15655 and the Time is depended on hardware, though the test should not take
-more than 15 seconds on most machines.
+`bench` to run a pre-established search-test suite
 `moveOrdering` to display the pseudo-legal moves in the current position and their relative scores
-`display` to print the current board-state in the terminal, on unix machines pieces will be displayed, on windows, letters will be used
-to represent the pieces.
+`display` to print the current board-state in the terminal
 
 ## Technical Details:
+The quoted ELO gains are from SPRT so the figures may not be accurate.
+
 #### Move Generation:
 - [X] Plain Magic Bitboards for all sliding and leaping pieces.
 - [X] Pawn pushes, En-Passant and Castling move generation is done on the fly.
@@ -116,81 +112,65 @@ to represent the pieces.
 - [X] Tapered evaluation which considers piece position on the board, and their mobility
 - [X] Rooks and Queens gain bonuses for being on semi-open and open files
 - King evaluation:
-  - [X] semi-open and open file malus
-  - [X] pawn-shield bonus
+  - [X] semi-open and open file malus (+10)
+  - [X] pawn-shield bonus (+10)
 - Pawn evaluation:
-  - [X] isolated, passed and double pawns
-  - [X] pawn phalanx and protected pawns
+  - [X] isolated, passed and double pawns (+40)
+  - [X] pawn phalanx and protected pawns (+20)
   - [ ] unstoppable passer
 
 #### Searching Algorithm Features:
-- [X] Move ordering by: Hash move, MVV-LVA, Killer 1, Killer 2, History moves, remaining moves.
-- [X] History table ageing after each turn.
-- [X] Fail-soft Negamax
 - [X] Quiescence search
 - [X] Iterative deepening
-- [X] Principal Variation Search.
-- [X] Aspiration windows
+- [X] Principal Variation Search
 - [X] Check Extension
 - [X] Late Move reductions
-- [X] Null Move Pruning
-- [X] Reverse Futility Pruning
-- [X] Delta Pruning
 - [X] Razoring
-- [X] Late Move Pruning
-- [X] Transposition table in quiesce
-- [ ] Futility pruning
-- [ ] Improving heuristic 
-- [ ] Modern history scores and bonuses
-- [ ] SEE pruning in quiesce
+- [X] Aspiration windows (+50)
+- [X] History malus and gravity (+30)
+- [X] Fail-soft Negamax (+20)
+- [X] Null Move Pruning (+100)
+- [X] Reverse Futility Pruning (+50)
+- [X] Delta Pruning (+30)
+- [X] Late Move Pruning (+60)
+- [X] Transposition table in quiesce (+20)
+- [X] SEE pruning in quiesce (+30)
+- [X] SEE PVS pruning in negamax (+20)
+- [X] SEE move ordering (captures only) (+10)
+- [ ] Improving heuristic
 - [ ] 50-move rule and insufficient material draws
-- [ ] Tuning of search parameters
 
 #### Time Management:
 - [X] Hard bound given by (Time / 30) + Increment
 - [X] Soft bound given by (Time Per Move) / 3
-
-#### Perft Test:
-On a 1.6 GHz Dual-Core Intel Core i5 (Macbook Air 2017), passes the standard.epd test with 4.8 Billion nodes in 184.3 s, so 26 MNps.
-
-#### Engine vs. Engine Match Results: 
-
-Here are the results of each version tested against the previous one. The tests were performed using fast-chess and 
-randomized positions from a small book 5 to 10 moves deep and less than 100 centipawn advantage for each side (thanks Stockfish).
-Please note that though the versions are improving over time, the gain is not linear, hence the estimate ELO values 
-are a rough measure of playing strength, and will only be confirmed or denied once the engine participates in larger 
-testing suites.
-
-| Version | ELO Gain | CCRL Blitz ELO |
-|---------|----------|----------------|
-| 1.3.0   | 115 ± 15 | 2387           |
-| 1.2.7   | 15 ± 10  | ----           |
-| 1.2.6   | 36 ± 16  | ----           |
-| 1.2.5   | 46 ± 18  | ----           |
-| 1.2.4   | 69 ± 20  | ----           |
-| 1.2.3   | 35 ± 20  | ----           |
-| 1.2.2   | 65 ± 20  | ----           |
-| 1.2.1   | 223 ± 41 | ----           |
-| 1.2.0   | 200 ± 43 | ----           |
-| 1.1.0   | -------- | ----           |
+- [ ] Best move stability
 
 
-### Patches:
-- v1.1.0: iterative deepening, negamax search with PVS and quiesce for captures and promotions, MVV-LVA, killer and history move ordering. Simple piece square table evaluation.
-- v1.2.0: Zobrist hashing for three-fold check and TT-table, null move pruning and basic LMR.
-- v1.2.1: Additions of Pesto Tables and tapered evaluation, aspiration windows.
-- v1.2.2: King-safety and pawn consideration (isolated, doubled, passed), piece mobility in middle and endgame.
-- v1.2.3: Razoring and static null move pruning
-- v1.2.4: Improvement to move sorting algorithm (from O(N^2) to O(NlogN)), added delta pruning
-- v1.2.5: More aggressive LMR (now reduces moves by dept/3 after the first six have been searched)
-- v1.2.6: Improved LMR formula based on Berserk engine (log * log)
-- v1.2.7: Added basic LMP (though this needs to be re-tuned)
-- v1.3.0: Few performance improvements in evaluation (+20), switch to fail-soft negamax (+20), bishop pair
-bonus and texel tuning (+70)
+#### Engine Strength:
+The Engine matches were run in fast-chess with a book from Fish-Test with positions of 80 cp or less.
+
+| Version | ELO Estimate | CCRL Blitz ELO |
+|---------|--------------|----------------|
+| 1.4.0   | 2500         | ----           |
+| 1.3.0   | 2400         | 2408           |
+| 1.1.0   | 1800         | ----           |
 
 ### Credits:
 - Maksim Korzh for his incredible chess programming in c series which was invaluable while implementing bitboard move-generation and transposition table.
 - Gediminas Masaitis for his Texel tuner without which the evaluation would be much weaker.
 - Sebastian Lague for his chess videos and small-chessbot tournament which sparked my interest in chess programming.
-- The Chess Programming Wiki: https://www.chessprogramming.org/Main_Page. 
+- The Chess Programming Wiki: https://www.chessprogramming.org/Main_Page.
 - [tissatussa](https://github.com/tissatussa) for testing compiles for Linux, using Xubuntu.
+
+### Room For Improvement:
+- Logical inaccuracies:
+  - negamax and quiesce classify noisy moves with different criteria, quiet-promotions are scored with history
+  - tt table and RFP use fail-hard while search is fail-soft
+- Simplifications:
+  - Make/Un-Make brought a negligible speed improvement over Copy/Make though the code is much more complex
+  - Revert to a simpler move ordering though it loses ELO, to better keep track of which moves lead to pruning
+- Search / Eval improvements:
+  - Plenty of ELO is to be gained with TT bucketing, ageing and replacement schemes.
+  - Better data generation could lead to better Texel-Tuning
+  - A few search features in the road-map have not been implemented
+  - Possible small bugs within TT.

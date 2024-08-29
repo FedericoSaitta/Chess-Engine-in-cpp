@@ -17,13 +17,13 @@ extern U64 hashKey; // of the position
 #define    HASH_FLAG_BETA    2 // evaluation from beta
 
 // transposition table data structure
-typedef struct tagHASHE {
+struct tt {
     U64 hashKey;
     int depth;
     int flag;
     int score;
     Move bestMove;
-}   tt;
+};
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
 

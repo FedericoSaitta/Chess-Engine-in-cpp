@@ -1,6 +1,3 @@
-//
-// Created by Federico Saitta on 18/07/2024.
-//
 #pragma once
 
 // these will be used once ill decide to improve upon eval function, one used by WEISS doesnt look bad at all

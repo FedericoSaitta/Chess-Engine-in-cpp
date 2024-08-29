@@ -1,6 +1,3 @@
-//
-// Created by Federico Saitta on 01/08/2024.
-//
 #pragma once
 
 #include "../src/logger/logger.h"

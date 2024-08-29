@@ -1,12 +1,7 @@
-//
-// Created by Federico Saitta on 29/06/2024.
-//
-
 #pragma once
 
 #include "../src/movegen/movegen.h"
 #include "../include/types.h"
-#include <iostream>
 #include <vector>
 #include "macros.h"
 #include "board.h"

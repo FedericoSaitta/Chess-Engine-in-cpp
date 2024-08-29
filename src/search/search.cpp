@@ -6,17 +6,9 @@
  *
  *
  *
- *
- *
- *
- *
- *
- *
- *
- *
  * NOTES:
  * - SEE should always be done before making the actual move
- *
+
  *
  */
 
@@ -45,7 +37,7 @@
 
 #include "../include/hashtable.h"
 #include "timer.h"
-#include "../include/uci.h"
+
 #include "../eval/evaluation.h"
 #include "../include/misc.h"
 #include "see.h"

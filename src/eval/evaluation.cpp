@@ -1,6 +1,3 @@
-//
-// Created by Federico Saitta on 10/07/2024.
-//
 #include <iostream>
 #include "../../include/macros.h"
 #include "../../include/types.h"
@@ -8,7 +5,6 @@
 #include "../../include/board.h"
  #include "evalparams.h"
 
-#include <immintrin.h>
 #include <algorithm>
 #include "../../include/misc.h"
 #include <assert.h>

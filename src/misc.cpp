@@ -1,7 +1,3 @@
-//
-// Created by Federico Saitta on 29/06/2024.
-//
-
 #include "misc.h"
 #include "board.h"
 #include "hashtable.h"

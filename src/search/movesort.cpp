@@ -11,11 +11,11 @@
 
 /*  MOVE SORTING ORDER
 	1. PV Move
-	2. Captures and Promotions
+	2. Good Captures and all capture promotions
 	3. Killer 1
 	4. Killer 2
 	5. History
-	6. Other moves
+	6. Bad Captures
 
 	In the case we run into a position that has already been store in the Transposition Table, we search the
 	stored move first.

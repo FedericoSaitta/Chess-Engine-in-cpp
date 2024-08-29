@@ -5,7 +5,7 @@
 #include <string>
 #include <ctime>
 #include <sstream>
-#include <filesystem> // C++17
+#include <filesystem>
 
 class Logger {
 private:

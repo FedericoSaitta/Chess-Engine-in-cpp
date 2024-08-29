@@ -1,7 +1,5 @@
-
 #include "board.h"
 #include <assert.h>
-#include <cstring>
 #include <variant>
 
 #include "../../include/macros.h"

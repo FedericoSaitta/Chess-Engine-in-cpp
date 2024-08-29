@@ -1,10 +1,6 @@
-//
-// Created by Federico Saitta on 29/06/2024.
-//
 #include "macros.h"
 #include "types.h"
 #include <random>
-#include <type_traits>
 
 #include "inline_functions.h"
 #include "hashtable.h"
