@@ -115,24 +115,28 @@ public:
     std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
 
     // TUNABLE PARAMETERS //
-    int LMR_MIN_MOVES { 4 };
+    int LMR_MIN_MOVES { 5 };
     int LMR_DEPTH { 2 };
 
-    int LMP_DEPTH{ 8 };
-    int LMP_MULTIPLIER{ 4 };
+    // these are here but once tuned should be constexpr and done at compile time
+    int LMR_BASE { 79 };
+    int LMR_DIVISION { 287 };
 
-    int ASP_WINDOW_WIDTH{ 46 };
+    int LMP_DEPTH{ 9 };
+    int LMP_MULTIPLIER{ 3 };
 
-    int RFP_MARGIN { 76 };
-    int RFP_DEPTH { 9 };
+    int ASP_WINDOW_WIDTH{ 43 };
+
+    int RFP_MARGIN { 75 };
+    int RFP_DEPTH { 10 };
 
     int NMP_DEPTH { 2 };
-    float NMP_BASE { 3.38 };
-    float NMP_DIVISION{ 4.48 };
+    int NMP_BASE { 336 };
+    int NMP_DIVISION{ 448 };
 
     int SEE_QS_THRESHOLD{ -105 };
 
-    int SEE_PRUNING_DEPTH = 9;
-    int SEE_CAPTURE_MARGIN = -30;
-    int SEE_QUIET_MARGIN = -65;
+    int SEE_PRUNING_DEPTH = 8;
+    int SEE_CAPTURE_MARGIN = -31;
+    int SEE_QUIET_MARGIN = -64;
 };

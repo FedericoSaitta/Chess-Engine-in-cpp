@@ -1,5 +1,7 @@
 /* SEARCH DETAILS
  * In negamax we consider noisy: promotions and captures (en-passant too)
+ *   - so killer moves are never promotions
+ *
  * In quiesce we search: captures and queen promotions (promotion captures are all searched)
  *
  *
@@ -52,8 +54,8 @@
 constexpr int MAX_HISTORY_SCORE{ 16'384 };
 
 // SEARCH PARAMETERS //
-constexpr double LMR_BASE = 0.75;
-constexpr double LMR_DIVISION = 3.0;
+constexpr double LMR_BASE = 0.79;
+constexpr double LMR_DIVISION = 2.87;
 
 static int LMR_table[MAX_PLY][MAX_PLY];
 int nodes{};
@@ -243,7 +245,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 			repetitionTable[repetitionIndex] = hashKey;
 
 			// more aggressive reduction
-			const int r = std::min(static_cast<int>( this->NMP_BASE + depth / this->NMP_DIVISION ), depth);
+			const int r = std::min(static_cast<int>( (this->NMP_BASE/100.0) + depth / (this->NMP_DIVISION/100.0) ), depth);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - r, DONT_NULL);
 
 			pos.undoNullMove();
@@ -375,7 +377,8 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     		// do not reduce noisy moves
     		if( (movesSearched >= this->LMR_MIN_MOVES) && (depth >= this->LMR_DEPTH) && isQuiet ) {
 
-    			int reduction = LMR_table[std::min(depth, 63)][std::min(count, 63)];
+    			//int reduction = ( (this->LMR_BASE / 100.0) + std::log(depth) * std::log(count) / (this->LMR_DIVISION / 100.0) );
+    			int reduction = LMR_table[std::min(depth, MAX_PLY)][std::min(count, MAX_PLY)];
 
     			reduction = std::min(depth - 1, std::max(reduction, 1)); // to avoid dropping into qs directly
     			score = -negamax(-alpha-1, -alpha, depth-1-reduction, DO_NULL); // Search this move with reduced depth:

@@ -39,22 +39,25 @@ static void handleUci() {
     std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
     std::cout << "option name LMR_DEPTH type spin default 3 min 2 max 6\n";
 
-    std::cout << "option name LMP_DEPTH type spin default 8 min 2 max 6\n";
+    std::cout << "option name LMR_BASE type spin default 75 min 25 max 125\n";
+    std::cout << "option name LMR_DIVISION type spin default 300 min 200 max 400\n";
+
+    std::cout << "option name LMP_DEPTH type spin default 8 min 2 max 10\n";
     std::cout << "option name LMP_MULTIPLIER type spin default 4 min 2 max 6\n";
 
-    std::cout << "option name ASP_WINDOW_WIDTH type spin default 50 min 10 max 100\n";
+    std::cout << "option name ASP_WINDOW_WIDTH type spin default 46 min 10 max 100\n";
 
-    std::cout << "option name RFP_MARGIN type spin default 80 min 60 max 120\n";
+    std::cout << "option name RFP_MARGIN type spin default 76 min 50 max 100\n";
     std::cout << "option name RFP_DEPTH type spin default 9 min 7 max 11\n";
 
-    std::cout << "option name NMP_DEPTH type spin default 3 min 2 max 4\n";
-    std::cout << "option name NMP_BASE type spin default 4 min 3 max 5\n";
-    std::cout << "option name NMP_DIVISION type spin default 4 min 3 max 6\n";
+    std::cout << "option name NMP_DEPTH type spin default 2 min 1 max 4\n";
+    std::cout << "option name NMP_BASE type spin default 338 min 300 max 500\n";
+    std::cout << "option name NMP_DIVISION type spin default 448 min 300 max 600\n";
 
-    std::cout << "option name SEE_QS_THRESHOLD type spin default 105 min 80 max 125\n";
+    std::cout << "option name SEE_QS_THRESHOLD type spin default -105 min -125 max -80\n";
     std::cout << "option name SEE_PRUNING_DEPTH type spin default 9 min 6 max 11\n";
-    std::cout << "option name SEE_CAPTURE_MARGIN type spin default 35 min 5 max 100\n";
-    std::cout << "option name SEE_QUIET_MARGIN type spin default 80 min 20 max 120\n";
+    std::cout << "option name SEE_CAPTURE_MARGIN type spin default -30 min -100 max -5\n";
+    std::cout << "option name SEE_QUIET_MARGIN type spin default -65 min -120 max -20\n";
 
     std::cout << "uciok\n";
 }
@@ -66,6 +69,9 @@ static void handleOption(const std::string& name, const int value) {
 
         {"LMR_MIN_MOVES", [](int v) { thread.LMR_MIN_MOVES = v; }},
         {"LMR_DEPTH", [](int v) { thread.LMR_DEPTH = v; }},
+
+        {"LMR_BASE", [](int v) { thread.LMR_BASE = v; }},
+        {"LMR_DIVISION", [](int v) { thread.LMR_DIVISION = v; }},
 
         {"LMP_DEPTH", [](int v) { thread.LMP_DEPTH = v; }},
         {"LMP_MULTIPLIER", [](int v) { thread.LMP_MULTIPLIER = v; }},
