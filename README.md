@@ -96,7 +96,8 @@ For windows:`ChessEngine.exe`
 `display` to print the current board-state in the terminal
 
 ## Technical Details:
-The quoted ELO gains are from SPRT so the figures may not be accurate.
+The quoted ELO gains are from SPRT so the figures may not be accurate. 
+SPSA and Texel-Tuning brought over 200 ELO so far.
 
 #### Move Generation:
 - [X] Plain Magic Bitboards for all sliding and leaping pieces.
