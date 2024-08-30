@@ -163,9 +163,7 @@ static void handlePosition(std::istringstream& inputStream) {
             std::string moveString;
 
             while((inputStream >> moveString)){
-                std::cout << moveString;
                 const Move move {parseMove(moveString, thread.pos)};
-
 
                 if (!move.isNone() ) { //so if the move inputStream != 0
                     thread.repetitionIndex++;
