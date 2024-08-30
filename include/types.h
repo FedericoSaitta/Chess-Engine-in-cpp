@@ -31,7 +31,7 @@ enum Occupancies {
 inline int pieceType(const Piece pc){ return pc % 6; }
 inline int color(const Piece pc){ return pc / 6; }
 
-
+// adding a copy assignment to allow for memset to know what to do would remove warnings
 struct UndoInfo {
 
     U64 castle;

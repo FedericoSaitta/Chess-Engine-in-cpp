@@ -44,7 +44,6 @@ include_directories(
 
 # Source files
 set(SOURCE_FILES
-        # Needed for the engine to play
         src/main.cpp
         src/movegen/movegen.cpp
         src/board.cpp
@@ -56,16 +55,12 @@ set(SOURCE_FILES
         src/hashtable.cpp
         src/eval/evaluation.cpp
         src/search/movesort.cpp
-        src/search/movesort.cpp
-
-        # Needed for testing
         benchmark_tests/perft_tests.cpp
         benchmark_tests/search_and_eval.cpp
         benchmark_tests/puzzle_tests.cpp
         debug_tests/evaluation_tests.cpp
         debug_tests/move_tests.cpp
         debug_tests/bitmask_tests.cpp
-
         src/movegen/movegen.h
         src/search/search.h
         include/misc.h
@@ -77,28 +72,14 @@ set(SOURCE_FILES
         include/inline_functions.h
         include/types.h
         src/eval/evaluation.h
-
         benchmark_tests/benchmark_tests.h
         debug_tests/debug_tests.h
         src/logger/logger.h
         include/config.h
         src/logger/logger.cpp
         debug_tests/game_scenario.cpp
-
-        #texel-tuner/init_tuner.h
-        #texel-tuner/threadpool.cpp
-        #texel-tuner/tuner.cpp
-        #texel-tuner/base.h
-        #texel-tuner/config.h
-        #texel-tuner/init_tuner.h
-        #texel-tuner/engine/myeval.cpp
-        #texel-tuner/init_tuner.cpp
-        #texel-tuner/init_tuner.h
-
-        include/timer.h
         include/timer.h
         include/game_statistics.h
-
         src/search/see.cpp
         src/search/see.h
         debug_tests/see_tests.cpp
@@ -119,6 +100,8 @@ endif()
 
 # Linker settings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_link_libraries(ChessEngine pthread)
+    target_link_libraries(ChessEngine PRIVATE pthread)
 endif()
+
+# Link Threads library
 target_link_libraries(ChessEngine PRIVATE Threads::Threads)

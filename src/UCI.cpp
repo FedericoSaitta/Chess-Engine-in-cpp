@@ -212,7 +212,7 @@ static void handleGo(std::istringstream& inputStream) {
                 thread.time = std::stoi(token);
             }
         }
-        else LOG_ERROR("Unrecognized go input " + token);
+        else { LOG_ERROR("Unrecognized go input " + token); }
     }
 
     if (isNewGame) {
@@ -244,7 +244,7 @@ void UCI(const std::string_view fileName) {
             std::cerr << "Error: Could not open file " << fileName << std::endl;
             return; // Exit if the file cannot be opened
         }
-    } else LOG_INFO(("Reading from standard input (std::cin):"));
+    } else { LOG_INFO(("Reading from standard input (std::cin):")); }
 
     std::string command;
     std::string token;
