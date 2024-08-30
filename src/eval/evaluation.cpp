@@ -124,7 +124,7 @@ int evaluate(const Board& pos) {
                     score[BLACK] += BishopMobility * countBits( getBishopAttacks(square, allPieces) );
                     break;
 
-                case (KNIGHT || BLACK_KNIGHT):
+                case (KNIGHT):
                     score[WHITE] += KnightMobility * countBits( bitKnightAttacks[square] & allPieces );
                     break;
 

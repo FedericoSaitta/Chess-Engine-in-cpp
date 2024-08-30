@@ -2,6 +2,7 @@
 
 
 #include <iostream>
+#include <cstring>
 #include "macros.h"
 #include "types.h"
 #include "../src/movegen/movegen.h"
@@ -40,7 +41,7 @@ public:
     U64 getPieceTypeBitBoard(const int pc) const { return bitboards[pc] | bitboards[pc+6]; }
 
     void resetBoard() {
-        memset(history, 0, sizeof(history));
+        for (int i = 0; i < 512; i ++ )history[i].resetUndoInfo();
         memset(bitboards, 0ULL, sizeof(bitboards));
 
         for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
@@ -75,7 +76,6 @@ public:
     bool nonPawnMaterial() const; // true if the side to move has pieces other than pawns and a king
 
     // SHOULD TEST THESE TWO FUNCTIONS
-    U64 attackersForSide(Color c, int square, U64 occupancy) const;
     U64 allAttackers(int square, U64 occupancy) const;
 
     void generateMoves(MoveList& moveList) const;
