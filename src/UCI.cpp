@@ -29,7 +29,7 @@ void resetGameVariables() {
 }
 
 static void handleUci() {
-    std::cout << "id name Aramis v1.3.0 \n";
+    std::cout << "id name Aramis v1.4.0 \n";
     std::cout << "id author Federico Saitta\n";
 
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";

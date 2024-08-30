@@ -53,6 +53,8 @@ bool isLoggingEnabled() {
     #endif
 #endif
 
+    return false;
+
 
 }
 
