@@ -30,7 +30,6 @@
 #include <assert.h>
 #include <cstdint>
 #include <cmath>
-#include <mach-o/dyld.h>
 
 #include "board.h"
 

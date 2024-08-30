@@ -158,7 +158,7 @@ static void handlePosition(std::istringstream& inputStream) {
     }
     thread.parseFEN(FEN);
 
-    no_re_parsing:
+    no_re_parsing:;
 }
 
 
@@ -198,7 +198,7 @@ static void handleGo(std::istringstream& inputStream) {
     }
     thread.iterativeDeepening(MAX_PLY, true);
 
-    end_of_function:
+    end_of_function:;
 }
 
 static void cleanUp() {

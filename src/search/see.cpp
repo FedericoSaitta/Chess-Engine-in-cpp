@@ -5,18 +5,10 @@
 #include "inline_functions.h"
 
 #include <assert.h>
-#include <mach-o/loader.h>
-#include <mach/machine.h>
 
 static const int SEEPieceValues[] = {
     161,  446,  464,  705, 1322,    0,    0,    0,
 };
-
-
-static int getlsb(uint64_t bb) {
-    assert(bb);  // lsb(0) is undefined
-    return __builtin_ctzll(bb);
-}
 
 
 int see(const Move move, const int threshold, const Board& board) {
@@ -83,7 +75,7 @@ int see(const Move move, const int threshold, const Board& board) {
                 break;
 
         // Remove this attacker from the occupied
-        occupied ^= (1ull << getlsb(myAttackers & board.getPieceTypeBitBoard( nextVictim )) );
+        occupied ^= (1ull << bsf(myAttackers & board.getPieceTypeBitBoard( nextVictim )) );
 
         // A diagonal move may reveal bishop or queen attackers
         if (nextVictim == PAWN || nextVictim == BISHOP || nextVictim == QUEEN)

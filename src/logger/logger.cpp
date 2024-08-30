@@ -44,11 +44,17 @@ std::string getExecutableDirectory() {
 }
 
 bool isLoggingEnabled() {
+
+    // Lets always disable logging for now
+    return false;
+
+
 #ifdef RELEASE_BUILD
     return false; // Disable logging in release builds
 #else
     return true;  // Enable logging in debug builds
 #endif
+
 }
 
 // Define the global logger with a path in the current executable directory
