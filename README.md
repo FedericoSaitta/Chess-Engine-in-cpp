@@ -175,4 +175,5 @@ The Engine matches were run in fast-chess with a book from Fish-Test with positi
   - Plenty of ELO is to be gained with TT bucketing, ageing and replacement schemes.
   - Better data generation could lead to better Texel-Tuning
   - A few search features in the road-map have not been implemented
+  - Engine does not understand insufficient material draws
   - Possible small bugs within TT.
