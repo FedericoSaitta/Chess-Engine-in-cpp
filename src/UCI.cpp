@@ -154,9 +154,34 @@ static void handlePosition(std::istringstream& inputStream) {
         }
 
     } else if (token == "startpos") {
+
         FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        thread.parseFEN(FEN);
+        inputStream >> token;
+
+        if (token == "moves") {
+            std::string moveString;
+
+            while((inputStream >> moveString)){
+                std::cout << moveString;
+                const Move move {parseMove(moveString, thread.pos)};
+
+
+                if (!move.isNone() ) { //so if the move inputStream != 0
+                    thread.repetitionIndex++;
+                    thread.repetitionTable[thread.repetitionIndex] = hashKey;
+                    if (thread.pos.makeMove(move, 0) == 0) {
+                        std::cerr << "Could not find the move" << std::endl;
+                        LOG_ERROR("Move inputStream illegal " + token );
+                    }
+                } else {
+                    std::cerr << "Move is Null" << std::endl;
+                    LOG_ERROR("Move inputStream Null " + token );
+                }
+
+            }
+        }
     }
-    thread.parseFEN(FEN);
 
     no_re_parsing:;
 }
