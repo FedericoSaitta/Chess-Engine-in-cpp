@@ -42,7 +42,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
     std::string pvString{};
     for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
-    const auto nps = static_cast<std::uint64_t>(1'000 * nodes / depthTimer.elapsed());
+    const double nps { nodes / depthTimer.elapsed() };
 
     std::string scoreType = "cp";
     int adjustedScore = score;
@@ -59,7 +59,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
     std::cout << "info score " << scoreType << " " << adjustedScore
               << " depth " << depth
               << " nodes " << nodes
-              << " nps " << nps
+              << " nps " << 1'000 * static_cast<std::int64_t>(nps)
               << " time " << depthTimer.roundedElapsed()
               << " pv " << pvString << std::endl;
 }
