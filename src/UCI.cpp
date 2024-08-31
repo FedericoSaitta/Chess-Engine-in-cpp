@@ -178,11 +178,12 @@ static void handlePosition(std::istringstream& inputStream) {
                 }
 
             }
-
-            goto no_re_parsing;
         }
+
+        goto no_re_parsing;
     }
 
+    // this part is needed in the case we dont receive a moves command
     thread.parseFEN(FEN);
 
     no_re_parsing:;
