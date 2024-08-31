@@ -178,8 +178,12 @@ static void handlePosition(std::istringstream& inputStream) {
                 }
 
             }
+
+            goto no_re_parsing;
         }
     }
+
+    thread.parseFEN(FEN);
 
     no_re_parsing:;
 }
