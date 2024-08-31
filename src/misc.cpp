@@ -27,17 +27,6 @@ const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
 
 
 // from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
-static U64 mirrorHorizontal (U64 bb) {
-    constexpr U64 k1 = 0x5555555555555555;
-    constexpr U64 k2 = 0x3333333333333333;
-    constexpr U64 k4 = 0x0f0f0f0f0f0f0f0f;
-    bb = ((bb >> 1) & k1) | ((bb & k1) << 1);
-    bb = ((bb >> 2) & k2) | ((bb & k2) << 2);
-    bb = ((bb >> 4) & k4) | ((bb & k4) << 4);
-
-    return bb;
-}
-
 void printBitBoard(const U64 bb, const bool mirrored) {
     std::cout << '\n';
     for (int square = 63; square >= 0; --square) {
@@ -101,7 +90,7 @@ void printMove(const Move move) {
     std::printf("%s%s%c ", chessBoard[move.from()],
                           chessBoard[move.to()],
                           promotedPieces[move.promotionPiece()] );
-    std::cout << std::bitset<4> (move.flags()) << "   " << getStringFlags(move.flags());
+    std::cout << ( std::bitset<4> (move.flags()) )<< "   " << getStringFlags(move.flags());
 }
 
 std::string algebraicNotation(const Move move) {

@@ -91,11 +91,11 @@ public:
     inline Move(uint16_t m) { move = m; }
 
     inline Move(const uint16_t from, const uint16_t to) : move(0) {
-        move = (from << 6) | to;
+        move = static_cast<std::uint16_t>( (from << 6) | to );
     }
 
     inline Move(const uint16_t from, const uint16_t to, const MoveFlags flags) : move(0) {
-        move = (flags << 12) | (from << 6) | to;
+        move = static_cast<std::uint16_t>( (flags << 12) | (from << 6) | to);
     }
 
     inline int to() const { return int(move & 0x3f); }

@@ -22,11 +22,11 @@ public:
     // Return elapsed time in milliseconds with high precision
     double elapsed() const
     {
-        return std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count();
+        return static_cast<int>( std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count() );
     }
 
     int roundedElapsed() const
     {
-        return std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count();
+        return static_cast<int>( std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count() );
     }
 };

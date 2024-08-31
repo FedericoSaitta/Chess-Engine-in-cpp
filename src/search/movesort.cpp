@@ -63,7 +63,7 @@ constexpr int secondKiller{ 800'000 };
 
 constexpr int seeConversion[] {-1, 1};
 
-int Searcher::scoreMove(const Move move, const Board& pos) {
+int Searcher::scoreMove(const Move move, const Board& board) {
 
 	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
 	assert(move.from() < 64 && "scoreMove: out of bounds table indexing");
@@ -87,11 +87,11 @@ int Searcher::scoreMove(const Move move, const Board& pos) {
 		}
 
 		// score moves by MVV-LVA, it doesnt know if pieces are protected
-		assert( (move.isEnPassant() ? pos.mailbox[move.to()] == NO_PIECE : pos.mailbox[move.to()] != NO_PIECE)
+		assert( (move.isEnPassant() ? board.mailbox[move.to()] == NO_PIECE : board.mailbox[move.to()] != NO_PIECE)
 				&& "scoreMove: enpassant or capture move are capturing wrong piece type");
-		assert((pos.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
+		assert((board.mailbox[move.from()] != NO_PIECE) && "Starting piece is empty");
 
-		return mvv_lva[ pos.mailbox[move.from()] ][ pos.mailbox[move.to()] ] + captureBonus * seeConversion[ see(move, 0, pos) ];
+		return mvv_lva[ board.mailbox[move.from()] ][ board.mailbox[move.to()] ] + captureBonus * seeConversion[ see(move, 0, board) ];
 	}
 
 	if (killerMoves[0][searchPly] == move) return firstKiller;
@@ -101,15 +101,15 @@ int Searcher::scoreMove(const Move move, const Board& pos) {
 }
 
 
-void Searcher::giveScores(MoveList& moveList, const Move bestMove, const Board& pos) {
+void Searcher::giveScores(MoveList& moveList, const Move bestMove, const Board& board) {
 	for (int count = 0; count < moveList.count; count++) {
 		const Move move{ moveList.moves[count].first };
 
 		assert(!move.isNone() && "givesScores: move is None");
-		assert((scoreMove(move, pos) <= principalVariationBonus) && "giveScores: score is too large");
+		assert((scoreMove(move, board) <= principalVariationBonus) && "giveScores: score is too large");
 
 		if (bestMove == move) moveList.moves[count].second = hashTableBonus;
-		else moveList.moves[count].second = scoreMove(move, pos);
+		else moveList.moves[count].second = scoreMove(move, board);
 	}
 }
 

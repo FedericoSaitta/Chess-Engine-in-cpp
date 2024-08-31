@@ -80,26 +80,26 @@ public:
 
     void generateMoves(MoveList& moveList) const;
     
-    int isSqAttacked(const int square, const int side) const {
+    int isSqAttacked(const int square, const int turn) const {
 
         // we use side^1 to look at the opponent's attacks and + 6 * side to look at our own pieces, side = 1 for black
         // attacked by pawns
-        if ( (bitPawnAttacks[side^1][square] & bitboards[PAWN + 6 * side]) ) return 1;
+        if ( (bitPawnAttacks[turn^1][square] & bitboards[PAWN + 6 * turn]) ) return 1;
 
         // attacked by knight
-        if ( bitKnightAttacks[square] & bitboards[KNIGHT + 6 * side] ) return 1;
+        if ( bitKnightAttacks[square] & bitboards[KNIGHT + 6 * turn] ) return 1;
 
         // attacked by bishop
-        if ( (getBishopAttacks(square, bitboards[BOTH_OCC]) & bitboards[BISHOP + 6 * side] ) ) return 1;
+        if ( (getBishopAttacks(square, bitboards[BOTH_OCC]) & bitboards[BISHOP + 6 * turn] ) ) return 1;
 
         // attacked by rook
-        if ( (getRookAttacks(square, bitboards[BOTH_OCC]) & bitboards[ROOK + 6 * side] ) ) return 1;
+        if ( (getRookAttacks(square, bitboards[BOTH_OCC]) & bitboards[ROOK + 6 * turn] ) ) return 1;
 
         // attacked by queen
-        if ( (getQueenAttacks(square, bitboards[BOTH_OCC]) & bitboards[QUEEN + 6 * side] ) ) return 1;
+        if ( (getQueenAttacks(square, bitboards[BOTH_OCC]) & bitboards[QUEEN + 6 * turn] ) ) return 1;
 
         // attacked by king
-        if ( bitKingAttacks[square] & bitboards[KING + 6 * side] ) return 1;
+        if ( bitKingAttacks[square] & bitboards[KING + 6 * turn] ) return 1;
 
         return 0;
     }
