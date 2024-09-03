@@ -177,3 +177,8 @@ The Engine matches were run in fast-chess with a book from Fish-Test with positi
   - A few search features in the road-map have not been implemented
   - Engine does not understand insufficient material draws
   - Possible small bugs within TT.
+- Quality of Life improvements: 
+  - nps is 0 when less than 1000 nodes searched
+  - code coverage should be increased and core functions should 
+    have asser statements in key branching points
+  - uci tests should be written such that new releases work on multiple GUIs
