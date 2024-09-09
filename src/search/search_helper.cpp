@@ -27,8 +27,8 @@ bool Searcher::isKiller(const Move move) const {
 bool Searcher::isRepetition() const {
     // look if up until our repetition we have already encountered this position, asssuming the opponent
     // plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
-    for (int index=0; index < repetitionIndex; index+= 1) {
-        // looping backwards over our previous keys
+    for (int index=repetitionIndex - 1; index >= 0; index-= 1) {
+        // loop backwards to find repetitions faster
         if (repetitionTable[index] == hashKey) {
             return true; // repetition found
         }
@@ -37,12 +37,13 @@ bool Searcher::isRepetition() const {
 }
 
 
-void Searcher::sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) const {
+void Searcher::sendUciInfo(const int score, const int depth, const int nodes) const {
     // Extracting the PV line and printing out in the terminal and logging file
     std::string pvString{};
     for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
-    const double nps { nodes / depthTimer.elapsed() };
+    const std::int64_t nps { static_cast<std::int64_t>(1'000 * (nodes / singleDepthTimer.elapsed())) };
+    const int time { singleDepthTimer.floorElapsed() };
 
     std::string scoreType = "cp";
     int adjustedScore = score;
@@ -59,7 +60,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
     std::cout << "info score " << scoreType << " " << adjustedScore
               << " depth " << depth
               << " nodes " << nodes
-              << " nps " << 1'000 * static_cast<std::int64_t>(nps)
-              << " time " << depthTimer.roundedElapsed()
+              << " nps " << nps
+              << " time " << time
               << " pv " << pvString << std::endl;
 }

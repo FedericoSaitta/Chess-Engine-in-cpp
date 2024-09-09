@@ -29,13 +29,12 @@ void resetGameVariables() {
 }
 
 static void handleUci() {
-    std::cout << "id name Aramis v1.4.0 \n";
+    std::cout << "id name Aramis v1.5.0 \n";
     std::cout << "id author Federico Saitta\n";
 
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";
 
     // TUNABLE SEARCH PARAMETERS
-
     std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
     std::cout << "option name LMR_DEPTH type spin default 3 min 2 max 6\n";
 
@@ -91,7 +90,7 @@ static void handleOption(const std::string& name, const int value) {
         {"SEE_QUIET_MARGIN", [](int v) { thread.SEE_QUIET_MARGIN = v; }}
     };
 
-    auto it = optionsMap.find(name);
+    const auto it = optionsMap.find(name);
     if (it != optionsMap.end()) {
         it->second(value);
     } else {
@@ -162,7 +161,7 @@ static void handlePosition(std::istringstream& inputStream) {
         if (token == "moves") {
             std::string moveString;
 
-            while((inputStream >> moveString)){
+            while(inputStream >> moveString){
                 const Move move {parseMove(moveString, thread.pos)};
 
                 if (!move.isNone() ) { //so if the move inputStream != 0
@@ -233,7 +232,26 @@ static void cleanUp() {
     if (transpositionTable != nullptr) free(transpositionTable);
 }
 
-//option name TEST type spin default 100 min 50 max 150
+
+static void handleBench(std::istringstream& inputStream) {
+    std::string token;
+    inputStream >> std::skipws >> token;
+
+    if ( token == "eval" ) { Test::BenchMark::staticEval(); }
+    else if ( token == "game") { Test::Debug::gameScenario(); }
+    else if ( token == "") { Test::BenchMark::staticSearch(thread, 14); }
+    else {
+        try {
+            const int depth { std::stoi(token) };
+            Test::BenchMark::staticSearch(thread, depth);
+
+        } catch (...) {
+            std::cerr << "Depth value not recognized";
+        }
+    }
+}
+
+
 void UCI(const std::string_view fileName) {
     std::string line{};
     std::ifstream file{};
@@ -263,26 +281,24 @@ void UCI(const std::string_view fileName) {
         LOG_INFO(line);
 
         // UCI COMMANDS
-        if (token == "uci") handleUci();
-        else if (token == "isready") handleIsReady();
-        else if (token == "position") handlePosition(inputStream); // though this seems expensive because of al lthe checks,80 move game in 235 microsec
-        else if (token == "go") handleGo(inputStream);
+        if (token == "uci") { handleUci(); }
+        else if (token == "isready") { handleIsReady(); }
+        else if (token == "position") { handlePosition(inputStream); }
+        else if (token == "go") { handleGo(inputStream); }
 
-        else if (token == "setoption") handleOption(inputStream);
-        else if (token == "ucinewgame") resetGameVariables();
-        else if (token == "quit") { // we clean up allocated memory and exit the program
+        else if (token == "setoption") { handleOption(inputStream); }
+        else if (token == "ucinewgame") { resetGameVariables(); }
+        else if (token == "quit") {
+            // Freeing TT
             cleanUp();
             break;
         }
 
         // NON-UCI COMMANDS used for debugging
-        else if (token == "bench")  Test::BenchMark::staticSearch(thread);
-        else if (token == "bench-eval") Test::BenchMark::staticEval();
-        else if (token == "bench-game") Test::Debug::gameScenario();
-
-        else if (token == "display" ) thread.pos.printBoardFancy();
-        else if (token == "moveOrdering") Test::Debug::printMoveOrdering(thread);
-        else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
+        else if (token == "bench") { handleBench(inputStream); }
+        else if (token == "display" ) { thread.pos.printBoardFancy(); }
+        else if (token == "moveOrdering") { Test::Debug::printMoveOrdering(thread); }
+        else if (token == "hashfull") { std::cout << checkHashOccupancy() << "/1000\n"; }
     }
 }
 

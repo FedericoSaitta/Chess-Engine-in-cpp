@@ -4,6 +4,7 @@
 #include "benchmark_tests.h"
 
 #include "types.h"
+#include "move.h"
 #include <iostream>
 #include <random>
 #include <cstdint>
