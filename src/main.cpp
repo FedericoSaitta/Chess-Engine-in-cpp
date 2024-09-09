@@ -5,10 +5,9 @@
 // #define BENCHMARK_TEST
 //#define TUNE_ARAMIS
 
-
 int main() {
-    // for now lets do 8 Mb
-    initAll(256); // Done at compile time :), using 256 MB size hash
+    // In sprt testing 8 Mb or smaller should be used
+    initAll(256); // Done at compile time :), using 256 MB dynamic allocated hash
 
     UCI();
 
@@ -26,7 +25,6 @@ int main() {
     Test::BenchMark::matingPuzzles();
     Test::BenchMark::standardPerft();
 #endif
-
 
 #ifdef DEBUG_TEST
     #include "debug_tests.h"

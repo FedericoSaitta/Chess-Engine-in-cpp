@@ -113,14 +113,14 @@ bool Board::nonPawnMaterial() const {
 
 
 U64 Board::allAttackers(const int square, const U64 occupancy) const {
-    U64 whitePawns   = bitboards[WHITE_PAWN];
-    U64 blackPawns   = bitboards[BLACK_PAWN];
+    const U64 whitePawns   = bitboards[WHITE_PAWN];
+    const U64 blackPawns   = bitboards[BLACK_PAWN];
 
-    U64 attackingKnights = bitboards[WHITE_KNIGHT] | bitboards[BLACK_KNIGHT];
-    U64 attackingBishops = bitboards[WHITE_BISHOP] | bitboards[BLACK_BISHOP];
-    U64 attackingRooks   = bitboards[WHITE_ROOK] | bitboards[BLACK_ROOK];
-    U64 attackingQueens  = bitboards[WHITE_QUEEN] | bitboards[BLACK_QUEEN];
-    U64 attackingKing    = bitboards[WHITE_KING] | bitboards[BLACK_KING];
+    const U64 attackingKnights = bitboards[WHITE_KNIGHT] | bitboards[BLACK_KNIGHT];
+    const U64 attackingBishops = bitboards[WHITE_BISHOP] | bitboards[BLACK_BISHOP];
+    const U64 attackingRooks   = bitboards[WHITE_ROOK] | bitboards[BLACK_ROOK];
+    const U64 attackingQueens  = bitboards[WHITE_QUEEN] | bitboards[BLACK_QUEEN];
+    const U64 attackingKing    = bitboards[WHITE_KING] | bitboards[BLACK_KING];
 
     return (bitPawnAttacks[WHITE][square] & whitePawns & bitboards[BLACK_OCC])
          | (bitPawnAttacks[BLACK][square] & blackPawns & bitboards[WHITE_OCC])

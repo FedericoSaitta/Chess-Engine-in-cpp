@@ -1,8 +1,6 @@
 #pragma once
 
 #include <chrono> // for std::chrono functions
-#include <iomanip> // for std::setprecision
-#include <iostream> // for std::cout
 
 class Timer
 {
@@ -22,7 +20,7 @@ public:
     // Return elapsed time in milliseconds with high precision
     double elapsed() const
     {
-        return static_cast<int>( std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count() );
+        return std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count();
     }
 
     int roundedElapsed() const

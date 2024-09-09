@@ -14,7 +14,7 @@ enum NodeType {
 
 #define INF 50'000
 #define MATE_VALUE 49'000
-#define MATE_SCORE 48'000 // this is more like a boundary to the scores
+#define MATE_SCORE 48'000
 
 void initSearchTables();
 void clearHistoryTable();
@@ -54,7 +54,6 @@ public:
     int timePerMove;
 
     //                         //
-
     void parseFEN(const std::string& fenString) {
         repetitionIndex = 0;
         memset(repetitionTable, 0, sizeof(repetitionTable));

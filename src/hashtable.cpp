@@ -3,7 +3,6 @@
 #include <string>
 #include <assert.h>
 
-#include <vector>
 #include <cstdint>
 
 #include "macros.h"
@@ -137,5 +136,5 @@ int checkHashOccupancy() {
             count++;
         }
     }
-    return static_cast<int>( 1'000 * ((count) / transpotitionTableEntries) );
+    return static_cast<int>( 1'000 * (count / transpotitionTableEntries) );
 }

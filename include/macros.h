@@ -101,13 +101,6 @@
 #define G8  62
 #define H8  63
 
-// Castling rights relevant bits
-#define WK 1
-#define WQ 2
-#define BK 4
-#define BQ 8
-
-
 #define SET_BIT(board, square) ((board) |= (1ULL << (square)))
 #define SET_BIT_FALSE(board, square) ((board) &= ~(1ULL << (square)))
 #define GET_BIT(board, square) (((board) >> (square)) & 1ULL)

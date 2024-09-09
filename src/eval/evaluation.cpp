@@ -9,11 +9,15 @@
 #include "../../include/misc.h"
 #include <assert.h>
 
-#define FLIP(sq) ((sq)^56)
 
 //// ******* these boards are horizontally symmetric so no need for fancy flipping yet ////
 // once you get to asymetterical boards make sure to find a little endian version
 static int eval_table[12][64];
+
+int flip(const int square) {
+    return (square ^ 56);
+}
+
 
 void init_tables()
 {
@@ -21,7 +25,7 @@ void init_tables()
     for (int piece=0; piece < 6; piece++) {
         for (int square = 0; square < 64; square++) {
 
-            eval_table[piece][square] = piece_value[piece] + pesto_table[piece][FLIP(square)];
+            eval_table[piece][square] = piece_value[piece] + pesto_table[piece][flip(square)];
             eval_table[piece + 6][square] = piece_value[piece] + pesto_table[piece][square];
         }
     }
@@ -57,7 +61,7 @@ int evaluate(const Board& pos) {
 
             // Note that some of these masks do not consider if the pawns are in front or behind the pieces
             switch(bbPiece) {
-                case (PAWN):
+                case (WHITE_PAWN):
                     // you could try and avoid conditional branching here
                     if ( countBits(whitePawns & fileMasks[square]) > 1) score[WHITE] += doublePawnPenalty * countBits(whitePawns & fileMasks[square]);
 
@@ -85,7 +89,7 @@ int evaluate(const Board& pos) {
 
                     break;
 
-                case (ROOK):
+                case (WHITE_ROOK):
                     if ( (whitePawns & fileMasks[square]) == 0) score[WHITE] += semiOpenFileScore;
                     if ( ( (whitePawns | blackPawns) & fileMasks[square]) == 0) score[WHITE] += openFileScore;
 
@@ -100,7 +104,7 @@ int evaluate(const Board& pos) {
                     break;
 
                 // if the kings are on semi-open or open files they will be given penalties
-                case (KING):
+                case (WHITE_KING):
                     if ( (whitePawns & fileMasks[square]) == 0) score[WHITE] += kingSemiOpenFileScore;
                     if ( ( (whitePawns | blackPawns) & fileMasks[square]) == 0) score[WHITE] += kingOpenFileScore;
 
@@ -114,7 +118,7 @@ int evaluate(const Board& pos) {
                     score[BLACK] += kingShieldBonus * countBits( bitKingAttacks[square] & pos.bitboards[BLACK_OCC] );
                     break;
 
-                case (BISHOP):
+                case (WHITE_BISHOP):
                     whiteBishops += 1;
                     score[WHITE] += BishopMobility * countBits( getBishopAttacks(square, allPieces) );
                     break;
@@ -124,7 +128,7 @@ int evaluate(const Board& pos) {
                     score[BLACK] += BishopMobility * countBits( getBishopAttacks(square, allPieces) );
                     break;
 
-                case (KNIGHT):
+                case (WHITE_KNIGHT):
                     score[WHITE] += KnightMobility * countBits( bitKnightAttacks[square] & allPieces );
                     break;
 
@@ -132,7 +136,7 @@ int evaluate(const Board& pos) {
                     score[BLACK] += KnightMobility * countBits( bitKnightAttacks[square] & allPieces );
                     break;
 
-                case (QUEEN):
+                case (WHITE_QUEEN):
                     score[WHITE] += QueenMobility * countBits( getQueenAttacks(square, allPieces) );
                     break;
 
@@ -162,6 +166,3 @@ int evaluate(const Board& pos) {
 
     return (mgScore * mgPhase + egScore * egPhase) / 24;
 }
-
-
-
