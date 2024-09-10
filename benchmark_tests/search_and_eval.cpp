@@ -74,7 +74,7 @@ namespace Test::BenchMark {
         // proper History moves as each new FEN is treated as a different game.
         int numEntries { sizeof(fishTestFENs) / sizeof(std::string) };
         double averageBranchingRatio{};
-        double totalNodes{};
+        int totalNodes{};
 
         const auto start = std::chrono::steady_clock::now();
 

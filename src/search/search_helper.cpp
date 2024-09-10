@@ -37,12 +37,12 @@ bool Searcher::isRepetition() const {
 }
 
 
-void Searcher::sendUciInfo(const int score, const int depth, const int nodes, const Timer& depthTimer) const {
+void Searcher::sendUciInfo(const int score, const int depth, const int nodes) const {
     // Extracting the PV line and printing out in the terminal and logging file
     std::string pvString{};
     for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
 
-    const double nps { nodes / depthTimer.elapsed() };
+    const double nps { nodes / singleDepthTimer.elapsed() };
 
     std::string scoreType = "cp";
     int adjustedScore = score;
@@ -59,7 +59,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
     std::cout << "info score " << scoreType << " " << adjustedScore
               << " depth " << depth
               << " nodes " << nodes
-              << " nps " << 1'000 * static_cast<std::int64_t>(nps)
-              << " time " << depthTimer.roundedElapsed()
+              << " nps " << static_cast<std::int64_t>(1'000 * nps)
+              << " time " << singleDepthTimer.floorElapsed()
               << " pv " << pvString << std::endl;
 }

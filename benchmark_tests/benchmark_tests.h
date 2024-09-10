@@ -27,7 +27,7 @@ namespace Test::BenchMark {
     };
     void matingPuzzles();
 
-    void staticSearch(Searcher& thread, int depth=14);
+    void staticSearch(Searcher& thread, int depth=10);
 
     void staticEval();
 }

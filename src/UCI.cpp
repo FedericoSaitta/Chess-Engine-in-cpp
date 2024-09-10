@@ -33,6 +33,7 @@ static void handleUci() {
     std::cout << "id author Federico Saitta\n";
 
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";
+    std::cout << "option name Threads type spin default 1 min 1 max 1\n";
 
     // TUNABLE SEARCH PARAMETERS
 
