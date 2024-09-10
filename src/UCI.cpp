@@ -33,6 +33,7 @@ static void handleUci() {
     std::cout << "id author Federico Saitta\n";
 
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";
+    std::cout << "option name Threads type spin default 1 min 1 max 1\n";
 
     // TUNABLE SEARCH PARAMETERS
     std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
@@ -239,7 +240,7 @@ static void handleBench(std::istringstream& inputStream) {
 
     if ( token == "eval" ) { Test::BenchMark::staticEval(); }
     else if ( token == "game") { Test::Debug::gameScenario(); }
-    else if ( token == "") { Test::BenchMark::staticSearch(thread, 14); }
+    else if ( token == "") { Test::BenchMark::staticSearch(thread, 10); }
     else {
         try {
             const int depth { std::stoi(token) };

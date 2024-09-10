@@ -116,9 +116,10 @@ namespace Test::BenchMark {
         resetGameVariables();
 
         const std::chrono::duration<float> duration = std::chrono::steady_clock::now() - start;
-        std::cout << "Nodes: " << totalNodes / 1'000'000 << " Million\n";
-        std::cout << "AVG Branching Ratio: " << averageBranchingRatio << '\n';
-        std::cout << "Time taken: " << duration.count() << "s\n";
+
+        const int nps { static_cast<int>(totalNodes / duration.count()) };
+        std::cout << std::fixed;
+        std::cout << totalNodes << " nodes " << nps << " nps\n";
     }
 
     void staticEval() {
