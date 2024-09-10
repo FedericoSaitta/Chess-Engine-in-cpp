@@ -11,8 +11,8 @@ void Searcher::enablePVscoring(const MoveList& moveList) {
             assert(!pvTable[0][searchPly].isNone() && "enablePVscoring: pv is following a null move");
             assert(!moveList.moves[count].first.isNone() && "enablePVscoring: pv is following a null move");
 
-            scorePV = 1;
-            followPV = 1; // we found the principal variation so we want to follow it
+            scorePV = 1; // if we do find a move
+            followPV = 1; // we are in principal variation so we want to follow it
             break;
         }
     }
@@ -28,7 +28,7 @@ bool Searcher::isRepetition() const {
     // look if up until our repetition we have already encountered this position, asssuming the opponent
     // plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
     for (int index=0; index < repetitionIndex; index+= 1) {
-
+        // looping backwards over our previous keys
         if (repetitionTable[index] == hashKey) {
             return true; // repetition found
         }
@@ -59,7 +59,7 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes, co
     std::cout << "info score " << scoreType << " " << adjustedScore
               << " depth " << depth
               << " nodes " << nodes
-              << " nps " << static_cast<std::int64_t>(1'000 * nps)
+              << " nps " << 1'000 * static_cast<std::int64_t>(nps)
               << " time " << depthTimer.roundedElapsed()
               << " pv " << pvString << std::endl;
 }

@@ -104,3 +104,13 @@
 #define SET_BIT(board, square) ((board) |= (1ULL << (square)))
 #define SET_BIT_FALSE(board, square) ((board) &= ~(1ULL << (square)))
 #define GET_BIT(board, square) (((board) >> (square)) & 1ULL)
+
+
+enum CastlingRights {
+
+    WK = 1,
+    WQ = 2,
+    BK = 4,
+    BQ = 8,
+
+};

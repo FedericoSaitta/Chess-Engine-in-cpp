@@ -5,6 +5,7 @@
 #include <cstring>
 #include "macros.h"
 #include "types.h"
+#include "move.h"
 #include "../src/movegen/movegen.h"
 #include "inline_functions.h"
 

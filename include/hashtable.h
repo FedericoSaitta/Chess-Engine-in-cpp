@@ -2,6 +2,7 @@
 
 #include "macros.h"
 #include "types.h"
+#include "move.h"
 #include "board.h"
 
 extern U64 randomPieceKeys[12][64];

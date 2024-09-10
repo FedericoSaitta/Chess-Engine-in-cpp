@@ -5,6 +5,7 @@
 #include "board.h"
 #include "timer.h"
 
+
 enum NodeType {
     DONT_NULL=0,
     DO_NULL,
@@ -25,33 +26,33 @@ public:
     Board pos;
 
     // Search Tables:          //
-    Move killerMoves[2][MAX_PLY];
-    int historyScores[64][64];
+    Move killerMoves[2][MAX_PLY]{};
+    int historyScores[64][64]{};
 
-    Move pvTable[MAX_PLY][MAX_PLY];
-    int pvLength[MAX_PLY];
+    Move pvTable[MAX_PLY][MAX_PLY]{};
+    int pvLength[MAX_PLY]{};
 
-    U64 repetitionTable[512];
-    int repetitionIndex;
+    U64 repetitionTable[512]{};
+    int repetitionIndex{};
 
     // Search Variables:       //
-    int searchPly;
+    int searchPly{};
 
-    int scorePV;
-    int followPV; // if it is true then we follow the principal variation
+    int scorePV{};
+    int followPV{}; // if it is true then we follow the principal variation
 
     // Time Control variables: //
-    Timer searchTimer;
-    Timer singleDepthTimer;
+    Timer searchTimer{};
+    Timer singleDepthTimer{};
 
-    int gameLengthTime;
-    int time;
-    int increment;
+    int gameLengthTime{};
+    int time{};
+    int increment{};
 
-    int movesToGo;
+    int movesToGo{};
 
-    bool stopSearch;
-    int timePerMove;
+    bool stopSearch{};
+    int timePerMove{};
 
     //                         //
     void parseFEN(const std::string& fenString) {
@@ -94,7 +95,7 @@ public:
     int negamax(int alpha, int beta, int depth, NodeType canNull);
     void iterativeDeepening(int depth, bool timeConstraint=false);
 
-    void sendUciInfo(int score, int depth, int nodes, const Timer& depthTimer) const;
+    void sendUciInfo(int score, int depth, int nodes) const;
 
     void updateHistory(Move bestMove, int depth, const Move* quiets, int quietMoveCount);
 
@@ -111,13 +112,12 @@ public:
 
     void giveScores(MoveList& moveList, Move bestMove, const Board& board);
 
-    std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
+    static std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
 
     // TUNABLE PARAMETERS //
     int LMR_MIN_MOVES { 5 };
     int LMR_DEPTH { 2 };
 
-    // these are here but once tuned should be constexpr and done at compile time
     int LMR_BASE { 79 };
     int LMR_DIVISION { 287 };
 

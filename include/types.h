@@ -2,6 +2,7 @@
 
 #include "macros.h"
 #include <cstdint>
+#include <bit>
 #include <iostream>
 #include <assert.h>
 
@@ -18,12 +19,9 @@ enum Piece {
     BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING, NO_PIECE,
 };
 
-constexpr Piece make_piece(const Color c, const PieceType pt) {
+constexpr Piece make_piece(Color c, PieceType pt) {
     return Piece(6 * c + pt);
 }
-
-// Castling rights relevant bits
-enum CastlingRights { WK = 1, WQ = 2, BK = 4, BQ = 8, };
 
 enum Occupancies {
     WHITE_OCC=12, BLACK_OCC, BOTH_OCC
@@ -71,19 +69,16 @@ enum MoveFlags : int {
     DOUBLE_PUSH = 0b0001,
     OO = 0b0010, OOO = 0b0011,
 
-    // Promotions: 3rd bit is set
-    PROMOTION = 0b0100, 
+    PROMOTION = 0b0100, // All promotions have the third bit set
 
     PR_KNIGHT = 0b0100, PR_BISHOP = 0b0101, PR_ROOK = 0b0110, PR_QUEEN = 0b0111,
 
-    // Captures (en-passant too): 4th bit is set
-    CAPTURE = 0b1000,   
+    CAPTURE = 0b1000,   // All captures (en-passant too) have the fourth bit set
 
     EN_PASSANT = 0b1010,
     PC_KNIGHT = 0b1100, PC_BISHOP = 0b1101, PC_ROOK = 0b1110, PC_QUEEN = 0b1111,
 
-    // Mask for the relevant bits
-    PROMOTION_MASK = 0b0111,
+    PROMOTIONS = 0b0111,
 };
 
 class Move {
@@ -91,39 +86,37 @@ private:
     uint16_t move;
 
 public:
+    inline Move() : move(0) {}
 
-    Move() : move(0) {}
+    inline Move(uint16_t m) { move = m; }
 
-    Move(uint16_t m) { move = m; }
-
-    Move(const int from, const int to) : move(0) {
+    inline Move(const int from, const int to) : move(0) {
         move = static_cast<std::uint16_t>( (from << 6) | to );
     }
 
-    Move(const int from, const int to, const MoveFlags flags) : move(0) {
+    inline Move(const int from, const int to, const MoveFlags flags) : move(0) {
         move = static_cast<std::uint16_t>( (flags << 12) | (from << 6) | to);
     }
 
-    int to() const { return int(move & 0x3f); }
-    int from() const { return int((move >> 6) & 0x3f); }
-    int to_from() const { return move & 0xffff; }
-    MoveFlags flags() const { return MoveFlags((move >> 12) & 0xf); }
+    inline int to() const { return int(move & 0x3f); }
+    inline int from() const { return int((move >> 6) & 0x3f); }
+    inline int to_from() const { return move & 0xffff; }
+    inline MoveFlags flags() const { return MoveFlags((move >> 12) & 0xf); }
 
-
-    bool isCapture() const {
+    inline bool isCapture() const {
         return flags() & CAPTURE;
     }
 
     // this is also quite sketchy
-    bool isPromotion() const {
+    inline bool isPromotion() const {
         return flags() & PROMOTION;
     }
 
-    bool isQueenPromotion() const {
-        return (flags() & PROMOTION_MASK) == 0b0111;
+    inline bool isQueenPromotion() const {
+        return (flags() & PROMOTIONS) == 0b0111;
     }
 
-    bool isEnPassant() const {
+    inline bool isEnPassant() const {
         return flags() == EN_PASSANT;
     }
 
@@ -133,20 +126,19 @@ public:
 
     // Noisy moves are: captures, en-passant and queen promotions
     // Non-Noisy moves are: undepromtions( even capture promotions ) and quiet moves (castling etc)
-    bool isNoisy() const {
+    inline bool isNoisy() const {
         return isCapture() || isPromotion();
     }
 
     // this can be written so much better
-    PieceType promotionPiece() const {
-        assert( (std::max( ( flags() & PROMOTION_MASK) - 3, 0) < KING) && "promotionPiece: is wrong");
+    inline PieceType promotionPiece() const {
+        assert( (std::max( ( flags() & PROMOTIONS) - 3, 0) < KING) && "promotionPiece: is wrong");
 
-        return PieceType( std::max( ( flags() & PROMOTION_MASK) - 3, 0) );
+        return PieceType( std::max( ( flags() & PROMOTIONS) - 3, 0) );
     }
 
-    bool isNone() const { return to_from() == 0; }
-    
+    inline bool isNone() const { return (to_from() == 0); }
     bool operator==(const Move a) const { return to_from() == a.to_from(); }
     bool operator!=(const Move a) const { return to_from() != a.to_from(); }
-
 };
+

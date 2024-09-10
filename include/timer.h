@@ -23,7 +23,7 @@ public:
         return std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count();
     }
 
-    int roundedElapsed() const
+    int floorElapsed() const
     {
         return static_cast<int>( std::chrono::duration_cast<Milliseconds>(Clock::now() - m_beg).count() );
     }

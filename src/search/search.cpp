@@ -499,7 +499,7 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;
 
-		sendUciInfo(score, depth, nodes, singleDepthTimer);
+		sendUciInfo(score, depth, nodes);
     }
     std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
 	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));

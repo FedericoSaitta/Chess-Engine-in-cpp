@@ -2,18 +2,17 @@
 #include "board.h"
 #include "hashtable.h"
 #include "macros.h"
-#include "inline_functions.h"
 #include <iostream>
 #include <vector>
 #include <sstream>
 #include <stdio.h>
 #include <bitset>
-// File used for miscellanous functions such as a simple GUI and printing out bitboards etc,
-// these could go under benchmark_tests but I will put more rigorous testing functions there.
-
 
 const char promotedPieces[] { ' ', 'n', 'b', 'r', 'q', ' ',   // for white pieces
                               ' ', 'n', 'b', 'r', 'q', ' ' }; // for black pieces
+
+static constexpr char castlePieces[4] {'K', 'Q', 'k', 'q'};
+static constexpr std::string_view playingSides[2] {"White", "Black"};
 
 #if defined(__unix__) || defined(__APPLE__)
 
@@ -25,8 +24,6 @@ const char* unicodePieces[] { "P", "N", "B", "R", "Q", "K", // White
                               "p", "n", "b", "r", "q", "k"}; // Black
 #endif
 
-
-// from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Mirror_Horizontally
 void printBitBoard(const U64 bb, const bool mirrored) {
     std::cout << '\n';
     for (int square = 63; square >= 0; --square) {
@@ -40,11 +37,6 @@ void printBitBoard(const U64 bb, const bool mirrored) {
     else { std::cout << "   H G F E D C B A"; }
     std::cout << '\n';
 }
-
-
-
-static constexpr char castlePieces[4] = {'K', 'Q', 'k', 'q'};
-static constexpr std::string_view playingSides[2] = {"White", "Black"};
 
 
 void Board::printBoardFancy() const { // this will always be the right way around, doesnt work on windows
@@ -165,7 +157,7 @@ Move parseMove(const std::string_view move, const Board& currentBoard) {
     }
 
     std::cerr << "Could not find a move\n";
-    return 0; // returns null move
+    return Move::Null;
 }
 
 

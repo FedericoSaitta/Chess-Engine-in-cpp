@@ -25,7 +25,7 @@ namespace Test::Debug{
         MoveList moveList{};
         thread.pos.generateMoves(moveList);
 
-        thread.giveScores(moveList, 0, thread.pos);
+        thread.giveScores(moveList, Move::Null, thread.pos);
         for (int count=0; count < moveList.count; count++) {
             const Move move { moveList.moves[count].first };
             const int score { moveList.moves[count].second };
@@ -52,7 +52,7 @@ namespace Test::Debug{
         thread.pos.generateMoves(moveList);
 
         thread.pos.generateMoves(moveList);
-        thread.giveScores(moveList, 0, thread.pos);
+        thread.giveScores(moveList, Move::Null, thread.pos);
         std::cout << "\nSorted moves\n";
         for (int count=0; count < moveList.count; count++) {
 

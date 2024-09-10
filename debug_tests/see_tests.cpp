@@ -4,11 +4,10 @@
 #include "../src/search/see.h"
 #include "uci.h"
 #include "types.h"
+#include "move.h"
 #include "misc.h"
 
 #include <fstream>
-
-
 
 
 namespace Test::Debug {

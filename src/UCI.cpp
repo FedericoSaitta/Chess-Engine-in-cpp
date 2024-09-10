@@ -35,6 +35,7 @@ static void handleUci() {
     std::cout << "option name Hash type spin default 64 min 1 max 256\n";
 
     // TUNABLE SEARCH PARAMETERS
+
     std::cout << "option name LMR_MIN_MOVES type spin default 4 min 2 max 6\n";
     std::cout << "option name LMR_DEPTH type spin default 3 min 2 max 6\n";
 
@@ -58,7 +59,7 @@ static void handleUci() {
     std::cout << "option name SEE_CAPTURE_MARGIN type spin default -30 min -100 max -5\n";
     std::cout << "option name SEE_QUIET_MARGIN type spin default -65 min -120 max -20\n";
 
-    std::cout << "uciok" << std::endl;
+    std::cout << "uciok\n";
 }
 
 static void handleOption(const std::string& name, const int value) {
@@ -232,7 +233,7 @@ static void cleanUp() {
     if (transpositionTable != nullptr) free(transpositionTable);
 }
 
-
+//option name TEST type spin default 100 min 50 max 150
 void UCI(const std::string_view fileName) {
     std::string line{};
     std::ifstream file{};
@@ -264,7 +265,7 @@ void UCI(const std::string_view fileName) {
         // UCI COMMANDS
         if (token == "uci") handleUci();
         else if (token == "isready") handleIsReady();
-        else if (token == "position") handlePosition(inputStream);
+        else if (token == "position") handlePosition(inputStream); // though this seems expensive because of al lthe checks,80 move game in 235 microsec
         else if (token == "go") handleGo(inputStream);
 
         else if (token == "setoption") handleOption(inputStream);
@@ -281,7 +282,7 @@ void UCI(const std::string_view fileName) {
 
         else if (token == "display" ) thread.pos.printBoardFancy();
         else if (token == "moveOrdering") Test::Debug::printMoveOrdering(thread);
-        else if (token == "hashfull") std::cout << checkHashOccupancy() << std::endl;
+        else if (token == "hashfull") std::cout << checkHashOccupancy() << "/1000\n";
     }
 }
 

@@ -1,5 +1,6 @@
 #include "macros.h"
 #include "types.h"
+#include "move.h"
 #include <random>
 
 #include "inline_functions.h"
@@ -8,6 +9,7 @@
 #include "search/search.h"
 
 
+const Move Move::Null = Move();
 
 // ARRAYS NEEDED FOR MAGIC U64 APPROACH //
 constexpr int bishopRelevantBits[64]{

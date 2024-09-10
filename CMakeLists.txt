@@ -85,6 +85,7 @@ set(SOURCE_FILES
         debug_tests/see_tests.cpp
         src/search/time_manager.cpp
         src/search/search_helper.cpp
+        include/move.h
 )
 
 # Add executable
