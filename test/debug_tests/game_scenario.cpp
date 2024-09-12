@@ -11,7 +11,6 @@
 
 #include "uci.h"
 #include "../chess/board.h"
-#include "../chess/macros.h"
 #include "../../chess/misc.h"
 #include "../../engine/search/search.h"
 

@@ -1,7 +1,6 @@
 #include "movegen.h"
 #include "../../chess/board.h"
 
-#include "../../chess/macros.h"
 #include "init.h"
 
 #include "../../chess/inline_functions.h"

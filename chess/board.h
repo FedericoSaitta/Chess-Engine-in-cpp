@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <cstring>
-#include "macros.h"
 #include "types.h"
 #include "move.h"
 #include "../chess/movegen/movegen.h"
@@ -11,7 +10,8 @@
 
 extern const char* chessBoard[65];
 
-constexpr int bitboardsSIZE{ };
+constexpr int mailBoxSIZE{ 256 };
+constexpr int bitboardsSIZE{ 120 };
 
 
 void parseFEN(const std::string& fenString);
@@ -26,11 +26,11 @@ hashKey = hashKeyCopy;
 class Board {
 
 public:
+    Piece mailbox[64];
+    U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
+
     U64 castle;
     int enPassSq;
-
-    U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
-    Piece mailbox[64];
     int side{ WHITE };
 
     // constructors
@@ -38,12 +38,12 @@ public:
     explicit Board(const std::string& fenString) { parseFEN(fenString); }
 
     Board(const Board& board) {
+        std::memcpy(mailbox, board.mailbox, sizeof(mailbox));
+        std::memcpy(bitboards, board.bitboards, sizeof(bitboards));
+
         castle = board.castle;
         enPassSq = board.enPassSq;
         side = board.side;
-
-        std::memcpy(bitboards, board.bitboards, sizeof(bitboards));
-        std::memcpy(mailbox, board.mailbox, sizeof(mailbox));
     }
 
     void parseFEN(const std::string& fenString);
@@ -55,11 +55,10 @@ public:
     U64 getPieceTypeBitBoard(const int pc) const { return bitboards[pc] | bitboards[pc+6]; }
 
     void resetBoard() {
-        std::memset(bitboards, 0ULL, sizeof(bitboards));
-
         // not sure why a SISSEGV happens if std::memset is used....
         // std::memset(mailbox, NO_PIECE, sizeof(mailbox));
         for (int i = 0; i < 64; i++) { mailbox[i] = NO_PIECE; }
+        std::memset(bitboards, 0ULL, sizeof(bitboards));
 
         castle = 0ULL;
         enPassSq = NO_SQ;
@@ -125,18 +124,17 @@ public:
 
     // TESTS IF TWO BOARS ARE EQUAL
     bool operator==(const Board& board) const {
+        for (int i = 0; i < 64; i++) {
+            if (this->mailbox[i] != board.mailbox[i]) { return false; }
+        }
+
+        for (int i = 0; i < 15; i++) {
+            if (this->bitboards[i] != board.bitboards[i]) { return false; }
+        }
 
         if (this->castle != board.castle
             || this->enPassSq != board.enPassSq
             || this->side != board.side) { return false; }
-
-        // very basic copy for now
-        for (int i = 0; i < 15; i++) {
-            if (this->bitboards[i] != board.bitboards[i]) { return false; }
-        }
-        for (int i = 0; i < 64; i++) {
-            if (this->mailbox[i] != board.mailbox[i]) { return false; }
-        }
 
         return true;
     }

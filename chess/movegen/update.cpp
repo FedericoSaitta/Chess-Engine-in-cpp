@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <variant>
 
-#include "../../chess/macros.h"
 #include "../../chess/types.h"
 #include "../../include/hashtable.h"
 

@@ -1,5 +1,4 @@
 #include "board.h"
-#include "macros.h"
 
 #include <vector>
 #include <sstream>

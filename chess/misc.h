@@ -3,7 +3,6 @@
 #include "movegen/movegen.h"
 #include "types.h"
 #include <vector>
-#include "macros.h"
 #include "board.h"
 
 

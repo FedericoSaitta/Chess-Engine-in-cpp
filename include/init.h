@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../chess/macros.h"
 extern const int bishopRelevantBits[64];
 extern const int rookRelevantBits[64];
 

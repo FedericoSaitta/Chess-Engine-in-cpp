@@ -1,4 +1,3 @@
-#include "../chess/macros.h"
 #include "../chess/types.h"
 #include "move.h"
 #include <random>

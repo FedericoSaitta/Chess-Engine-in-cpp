@@ -10,7 +10,6 @@
 #include <sstream>
 #include <cmath>
 
-#include "../chess/macros.h"
 #include "hashtable.h"
 #include "../chess/board.h"
 #include "movegen/movegen.h"
@@ -104,7 +103,6 @@ namespace Test::BenchMark {
             std::string line;
 
             while (std::getline(outputStream, line)) {
-
                 std::vector<std::string> tokens = split(line);
 
                 if (tokens.size() > 6 && tokens[6] == "nodes") {
@@ -116,11 +114,10 @@ namespace Test::BenchMark {
 
                         totalNodes += dummyNodes;
                         averageBranchingRatio += (branchingRatio / numEntries);
-                       // std::cout << "At depth: " << depth << " Branching Ratio: " << branchingRatio << '\n';
+                        // std::cout << "At depth: " << depth << " Branching Ratio: " << branchingRatio << '\n';
                     }
                 }
             }
-
         }
 
         resetGameVariables();

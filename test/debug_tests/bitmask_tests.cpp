@@ -10,7 +10,6 @@
 #include "debug_tests.h"
 #include "../include/init.h"
 #include "../../chess/misc.h"
-#include "../chess/macros.h"
 
 
 namespace Test::Debug{

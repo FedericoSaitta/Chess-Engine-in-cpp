@@ -1,6 +1,5 @@
 #pragma once
 
-#include "macros.h"
 #include "../include/init.h"
 
 inline U64 getBishopAttacks(const int square, U64 occupancy) {

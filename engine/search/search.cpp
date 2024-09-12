@@ -21,7 +21,6 @@
 #include <algorithm>
 
 #include "game_statistics.h"
-#include "../../chess/macros.h"
 
 #include "config.h"
 
@@ -111,7 +110,6 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 	int score{};
 
 	for (int depth = 1; depth <= maxDepth; depth++){
-		std::cout << "depth cleared" << std::endl;
 		nodes = 0;
 		followPV = 1;
 
@@ -121,8 +119,6 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 		singleDepthTimer.reset();
 
 		score = aspirationWindow(depth, score);
-
-		std::cout << "got the score" << std::endl;
 
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;

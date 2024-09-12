@@ -11,7 +11,6 @@
 #include "hashtable.h"
 #include "../chess/board.h"
 #include "../../engine/search/search.h"
-#include "../chess/macros.h"
 
 namespace Test::BenchMark {
     // this test can be very time consuming

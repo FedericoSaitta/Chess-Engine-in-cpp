@@ -1,7 +1,6 @@
 #include "misc.h"
 #include "board.h"
 #include "../include/hashtable.h"
-#include "macros.h"
 #include <iostream>
 #include <vector>
 #include <sstream>

@@ -11,7 +11,6 @@
 #include "hashtable.h"
 #include "search/search.h"
 #include "../chess/board.h"
-#include "../chess/macros.h"
 #include "../chess/misc.h"
 #include "benchmark_tests.h"
 #include "debug_tests.h"

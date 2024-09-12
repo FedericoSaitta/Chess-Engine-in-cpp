@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../chess/macros.h"
 #include "../chess/types.h"
 #include "../chess/move.h"
 #include "../chess/board.h"

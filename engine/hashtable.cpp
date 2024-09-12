@@ -5,7 +5,6 @@
 
 #include <cstdint>
 
-#include "../chess/macros.h"
 #include "../chess/board.h"
 #include "../chess/inline_functions.h"
 

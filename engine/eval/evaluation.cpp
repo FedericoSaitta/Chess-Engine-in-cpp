@@ -1,5 +1,4 @@
 #include <iostream>
-#include "../../chess/macros.h"
 #include "../../chess/types.h"
 #include "../../chess/inline_functions.h"
 #include "../../chess/board.h"

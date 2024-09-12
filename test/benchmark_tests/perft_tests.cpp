@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <chrono>
 #include <fstream>
-#include "../chess/macros.h"
 #include "hashtable.h"
 #include "../chess/board.h"
 #include "../../chess/misc.h"
