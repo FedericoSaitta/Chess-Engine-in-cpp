@@ -1,9 +1,9 @@
 #pragma once
 
-#include "macros.h"
-#include "types.h"
-#include "move.h"
-#include "board.h"
+#include "../chess/macros.h"
+#include "../chess/types.h"
+#include "../chess/move.h"
+#include "../chess/board.h"
 
 extern U64 randomPieceKeys[12][64];
 extern U64 randomEnPassantKeys[64];

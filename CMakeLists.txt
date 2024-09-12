@@ -32,8 +32,10 @@ endif()
 # Include directories
 include_directories(
         include
-        benchmark_tests
-        debug_tests
+        chess
+        engine
+        test/benchmark_tests
+        test/debug_tests
         eval
         search
         movegen
@@ -44,48 +46,51 @@ include_directories(
 
 # Source files
 set(SOURCE_FILES
-        src/main.cpp
-        src/movegen/movegen.cpp
-        src/board.cpp
-        src/movegen/update.cpp
-        src/init.cpp
-        src/misc.cpp
-        src/search/search.cpp
-        src/UCI.cpp
-        src/hashtable.cpp
-        src/eval/evaluation.cpp
-        src/search/movesort.cpp
-        benchmark_tests/perft_tests.cpp
-        benchmark_tests/search_and_eval.cpp
-        benchmark_tests/puzzle_tests.cpp
-        debug_tests/evaluation_tests.cpp
-        debug_tests/move_tests.cpp
-        debug_tests/bitmask_tests.cpp
-        src/movegen/movegen.h
-        src/search/search.h
-        include/misc.h
-        include/macros.h
+        engine/main.cpp
+        chess/movegen/movegen.cpp
+        chess/board.cpp
+        chess/movegen/update.cpp
+        engine/init.cpp
+        chess/misc.cpp
+        engine/search/search.cpp
+        engine/UCI.cpp
+        engine/hashtable.cpp
+        engine/eval/evaluation.cpp
+        engine/search/movesort.cpp
+        test/benchmark_tests/perft_tests.cpp
+        test/benchmark_tests/search_and_eval.cpp
+        test/benchmark_tests/puzzle_tests.cpp
+        test/debug_tests/evaluation_tests.cpp
+        test/debug_tests/move_tests.cpp
+        test/debug_tests/bitmask_tests.cpp
+        chess/movegen/movegen.h
+        chess/search.h
+        chess/misc.h
+        chess/macros.h
         include/uci.h
         include/hashtable.h
         include/init.h
-        include/board.h
-        include/inline_functions.h
-        include/types.h
-        src/eval/evaluation.h
-        benchmark_tests/benchmark_tests.h
-        debug_tests/debug_tests.h
-        src/logger/logger.h
+        chess/board.h
+        chess/inline_functions.h
+        chess/types.h
+        engine/eval/evaluation.h
+        test/benchmark_tests/benchmark_tests.h
+        test/debug_tests/debug_tests.h
+        engine/logger/logger.h
         include/config.h
-        src/logger/logger.cpp
-        debug_tests/game_scenario.cpp
+        engine/logger/logger.cpp
+        test/debug_tests/game_scenario.cpp
         include/timer.h
         include/game_statistics.h
-        src/search/see.cpp
-        src/search/see.h
-        debug_tests/see_tests.cpp
-        src/search/time_manager.cpp
-        src/search/search_helper.cpp
-        include/move.h
+        chess/see.cpp
+        engine/search/see.h
+        test/debug_tests/see_tests.cpp
+        engine/search/time_manager.cpp
+        engine/search/search_helper.cpp
+        chess/move.h
+        chess/bit_operations.h
+        chess/move.cpp
+        chess/move.cpp
 )
 
 # Add executable
