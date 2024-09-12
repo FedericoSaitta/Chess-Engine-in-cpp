@@ -1,4 +1,4 @@
-#include "../../chess/search.h"
+#include "search.h"
 #include "../../chess/misc.h"
 
 

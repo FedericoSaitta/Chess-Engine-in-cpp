@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../chess/search.h"
+#include "../../engine/search/search.h"
 
 // ANSI escape codes for colored output
 #define RESET   "\033[0m"       // Reset the text formatting

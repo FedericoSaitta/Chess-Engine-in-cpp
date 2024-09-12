@@ -17,16 +17,19 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Ob2 /DNDEBUG")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # GCC/Clang specific flags for both Debug and Release
+    # GCC/Clang specific flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-omit-frame-pointer")
 
-    set(SANITIZER_FLAGS "-fsanitize=address,undefined,thread,leak")
+    # Sanitizer flags for debug builds
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined,leak")  # Use ThreadSanitizer only when needed (it's slower)
 
+    # Enable sanitizers in debug builds
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 ${SANITIZER_FLAGS}")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 
-    # Linker settings for sanitizers (only applied in debug mode)
+    # Linker settings for sanitizers
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
+
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 endif()
 
 # Include directories
@@ -64,7 +67,7 @@ set(SOURCE_FILES
         test/debug_tests/move_tests.cpp
         test/debug_tests/bitmask_tests.cpp
         chess/movegen/movegen.h
-        chess/search.h
+        engine/search/search.h
         chess/misc.h
         chess/macros.h
         include/uci.h
@@ -83,7 +86,7 @@ set(SOURCE_FILES
         include/timer.h
         include/game_statistics.h
         chess/see.cpp
-        engine/search/see.h
+        chess/see.h
         test/debug_tests/see_tests.cpp
         engine/search/time_manager.cpp
         engine/search/search_helper.cpp

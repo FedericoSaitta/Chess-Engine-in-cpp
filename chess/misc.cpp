@@ -61,19 +61,18 @@ void Board::printBoardFancy() const { // this will always be the right way aroun
         if ((square + 1) % 8 == 0) std::cout << '\n' << (square + 1) / 8 << "| ";
 
         const Piece piece { mirrorredMailBox[square] };
-
-        const char* symbol{ (piece == NO_PIECE) ? "." : unicodePieces[piece] };
+        const char* symbol{ (piece >= NO_PIECE) ? "." : unicodePieces[piece] };
         std::cout << ' ' << symbol << ' ';
     }
 
     std::string castleRightsString{};
     for (int i = 0; i < 4; ++i) {
-        if (history[gamePly].castle & (1 << i)) { castleRightsString += castlePieces[i]; }
+        if (castle & (1 << i)) { castleRightsString += castlePieces[i]; }
     }
 
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
     std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
-              << ", En Passant: " << chessBoard[history[gamePly].enPassSq] << '\n';
+              << ", En Passant: " << chessBoard[enPassSq] << '\n';
     std::cout << "HashKey: " << hashKey << std::endl;
 }
 

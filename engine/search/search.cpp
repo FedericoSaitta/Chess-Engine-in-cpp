@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-#include "../../chess/search.h"
+#include "search.h"
 
 #include <assert.h>
 #include <cstdint>
@@ -111,6 +111,7 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 	int score{};
 
 	for (int depth = 1; depth <= maxDepth; depth++){
+		std::cout << "depth cleared" << std::endl;
 		nodes = 0;
 		followPV = 1;
 
@@ -120,6 +121,8 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 		singleDepthTimer.reset();
 
 		score = aspirationWindow(depth, score);
+
+		std::cout << "got the score" << std::endl;
 
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;
@@ -208,6 +211,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 		// no NULL flag used to ensure we dont do two null moves in a row
 		if (depth > this->NMP_DEPTH  && canNull && pos.nonPawnMaterial()) {
 			COPY_HASH()
+			const Board copyBoard = pos;
 			pos.nullMove();
 
 			searchPly++;
@@ -218,10 +222,9 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 			const int r = std::min(static_cast<int>( (this->NMP_BASE/100.0) + depth / (this->NMP_DIVISION/100.0) ), depth);
 			const int nullMoveScore { -negamax(-beta, -beta + 1, depth - r, DONT_NULL) };
 
-			pos.undoNullMove();
 			searchPly--;
 			repetitionIndex--;
-
+			pos = copyBoard;
 			RESTORE_HASH() // un-making the null move
 
 			if (nullMoveScore >= beta) return beta;
@@ -319,7 +322,9 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     	}
 
         COPY_HASH()
-        searchPly++;
+    	Board copyBoard = pos;
+
+	    searchPly++;
     	repetitionIndex++;
     	repetitionTable[repetitionIndex] = hashKey;
 
@@ -365,7 +370,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
         searchPly--;
     	repetitionIndex--;
-    	pos.undo(move);
+    	pos = copyBoard;
         RESTORE_HASH()
 
     	movesSearched++;
@@ -471,6 +476,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 		}
 
 		COPY_HASH()
+		Board copyBoard = pos;
 		searchPly++;
 		repetitionIndex++;
 		repetitionTable[repetitionIndex] = hashKey;
@@ -487,7 +493,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 		searchPly--;
 		repetitionIndex--;
-		pos.undo(move);
+		pos = copyBoard;
 		RESTORE_HASH()
 
 		// found a better move

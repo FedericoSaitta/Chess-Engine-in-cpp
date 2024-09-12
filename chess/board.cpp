@@ -5,7 +5,7 @@
 #include <sstream>
 
 #include "../include/hashtable.h"
-#include "search.h"
+#include "../engine/search/search.h"
 #include "types.h"
 #include "inline_functions.h"
 
@@ -76,20 +76,20 @@ void Board::parseFEN(const std::string& fenString) {
 
     for (const char c : parts[2]) {
         switch (c) {
-            case 'K': history[gamePly].castle |= WK; break;
-            case 'Q': history[gamePly].castle |= WQ; break;
-            case 'k': history[gamePly].castle |= BK; break;
-            case 'q': history[gamePly].castle |= BQ; break;
+            case 'K': castle |= WK; break;
+            case 'Q': castle |= WQ; break;
+            case 'k': castle |= BK; break;
+            case 'q': castle |= BQ; break;
             default: break;
         }
     }
 
     if(parts[3][0] == '-') {
-        history[gamePly].enPassSq = 64; // the 64th index represents the 'outside the board' square
+        enPassSq = 64; // the 64th index represents the 'outside the board' square
     } else {
         const int col { parts[3][0] - 'a'};
         const int row { 8 - (parts[3][1] - '0') };
-        history[gamePly].enPassSq = 56 - 8 * row + col;
+        enPassSq = 56 - 8 * row + col;
     }
 
 

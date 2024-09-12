@@ -1,4 +1,4 @@
-#include "../../chess/search.h"
+#include "search.h"
 
 
 void Searcher::calculateMoveTime(const bool timeConstraint) {

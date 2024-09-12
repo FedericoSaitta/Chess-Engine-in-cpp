@@ -10,7 +10,7 @@
 #include "../chess/inline_functions.h"
 
 #include "hashtable.h"
-#include "../chess/search.h"
+#include "search/search.h"
 
 #include "bit_operations.h"
 
@@ -38,9 +38,9 @@ U64 generateHashKey(const Board& pos) { // to uniquely identify a position
         }
     }
 
-    if (pos.history[pos.gamePly].enPassSq != 64) key ^= randomEnPassantKeys[pos.history[pos.gamePly].enPassSq];
+    if (pos.enPassSq != 64) key ^= randomEnPassantKeys[pos.enPassSq];
 
-    key ^= randomCastlingKeys[pos.history[pos.gamePly].castle];
+    key ^= randomCastlingKeys[pos.castle];
     if (pos.side == BLACK) key ^= sideKey; // only done if side to move is black
 
     return key;

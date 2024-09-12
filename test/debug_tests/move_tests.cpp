@@ -7,7 +7,7 @@
 #include "../chess/board.h"
 #include "../chess/macros.h"
 #include "../../chess/misc.h"
-#include "../../chess/search.h"
+#include "../../engine/search/search.h"
 
 
 namespace Test::Debug{
@@ -56,6 +56,8 @@ namespace Test::Debug{
             const int score { scoredPair.second };
 
             COPY_HASH()
+            const Board copyBoard = thread.pos;
+
             if( !thread.pos.makeMove(move, 0) ) continue;
 
             std::cout << move << getStringFlags(move.flags());
@@ -64,7 +66,7 @@ namespace Test::Debug{
                       << " promotion piece: " << promotedPieces[move.promotionPiece()]
                       << " gives check: " << thread.pos.currentlyInCheck() << '\n';
 
-            thread.pos.undo(move);
+            thread.pos = copyBoard;
             RESTORE_HASH()
         }
 

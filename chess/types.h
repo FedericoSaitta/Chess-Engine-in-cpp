@@ -16,7 +16,6 @@ enum Square{
 };
 
 enum CastlingRights {
-
     WK = 1,
     WQ = 2,
     BK = 4,
@@ -46,35 +45,5 @@ inline int color(const Piece pc){ return pc / 6; }
 
 enum Occupancies {
     WHITE_OCC=12, BLACK_OCC, BOTH_OCC
-};
-
-
-struct UndoInfo {
-
-    U64 castle;
-    Piece captured;
-    int enPassSq;
-
-    constexpr UndoInfo() : castle(0ULL), captured(NO_PIECE), enPassSq(NO_SQ) {}
-
-    UndoInfo(const UndoInfo& prev) :
-        castle(prev.castle), captured(NO_PIECE), enPassSq(NO_SQ) {}
-
-    // Copy assignment operator
-    UndoInfo& operator=(const UndoInfo& other) {
-        if (this != &other) {
-            castle = other.castle;
-            captured = other.captured;
-            enPassSq = other.enPassSq;
-        }
-        return *this;
-    }
-
-    void resetUndoInfo() {
-        castle = 0ULL;
-        captured = NO_PIECE;
-        enPassSq = 64;
-    }
-
 };
 

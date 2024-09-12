@@ -14,7 +14,7 @@
 #include "hashtable.h"
 #include "../chess/board.h"
 #include "movegen/movegen.h"
-#include "../../chess/search.h"
+#include "../../engine/search/search.h"
 #include "../../chess/misc.h"
 #include "uci.h"
 #include "../engine/eval/evaluation.h"

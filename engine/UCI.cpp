@@ -9,7 +9,7 @@
 #include "config.h"
 
 #include "hashtable.h"
-#include "../chess/search.h"
+#include "search/search.h"
 #include "../chess/board.h"
 #include "../chess/macros.h"
 #include "../chess/misc.h"
@@ -18,7 +18,7 @@
 
 #include "logger/logger.h"
 
-#include "search.h"
+#include "search/search.h"
 
 Searcher thread;
 static bool isNewGame{true};

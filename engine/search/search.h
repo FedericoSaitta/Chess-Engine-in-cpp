@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../include/hashtable.h"
-#include "types.h"
-#include "board.h"
-#include "../include/timer.h"
+#include "../../include/hashtable.h"
+#include "../../chess/types.h"
+#include "../../chess/board.h"
+#include "../../include/timer.h"
 
 
 enum NodeType {

@@ -6,7 +6,7 @@
 #include "../chess/inline_functions.h"
 #include "hashtable.h"
 #include "eval/evaluation.h"
-#include "../chess/search.h"
+#include "search/search.h"
 #include "bit_operations.h"
 
 const Move Move::Null = Move();

@@ -1,8 +1,7 @@
 #include "benchmark_tests.h"
-#include "debug_tests.h"
 #include "uci.h"
 #include "init.h"
-#include "../chess/search.h"
+#include "search/search.h"
 
 // #define DEBUG_TEST
 // #define BENCHMARK_TEST

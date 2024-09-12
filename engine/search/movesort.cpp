@@ -1,4 +1,4 @@
-#include "../../chess/search.h"
+#include "search.h"
 #include "../../chess/board.h"
 #include "../../chess/inline_functions.h"
 #include "config.h"

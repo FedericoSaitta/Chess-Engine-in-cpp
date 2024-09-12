@@ -10,7 +10,7 @@
 
 #include "hashtable.h"
 #include "../chess/board.h"
-#include "../../chess/search.h"
+#include "../../engine/search/search.h"
 #include "../chess/macros.h"
 
 namespace Test::BenchMark {

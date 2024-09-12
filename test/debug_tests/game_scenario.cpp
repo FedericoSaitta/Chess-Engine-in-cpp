@@ -13,7 +13,7 @@
 #include "../chess/board.h"
 #include "../chess/macros.h"
 #include "../../chess/misc.h"
-#include "../../chess/search.h"
+#include "../../engine/search/search.h"
 
 
 namespace Test::Debug {

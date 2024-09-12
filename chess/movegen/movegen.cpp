@@ -80,8 +80,8 @@ void Board::generateMoves(MoveList& moveList) const {
                     }
 
                     // generate enPassantCaptures
-                    if (history[gamePly].enPassSq != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[WHITE][startSquare] & (1ULL << history[gamePly].enPassSq);
+                    if (enPassSq != 64) {
+                        U64 enPassantAttacks = bitPawnAttacks[WHITE][startSquare] & (1ULL << enPassSq);
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
@@ -93,7 +93,7 @@ void Board::generateMoves(MoveList& moveList) const {
 
             if (piece == KING) {
                 // king C castling
-                if (history[gamePly].castle & WK) {
+                if (castle & WK) {
                     // checking that the space is empty
                     if( !getBit(bitboards[BOTH_OCC], F1) && !getBit(bitboards[BOTH_OCC], G1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(F1, BLACK) ) {
@@ -103,7 +103,7 @@ void Board::generateMoves(MoveList& moveList) const {
                 }
 
                 //QUEEN C castling
-                if (history[gamePly].castle & WQ) {
+                if (castle & WQ) {
                     // checking that the space is empty
                     if( !getBit(bitboards[BOTH_OCC], B1) && !getBit(bitboards[BOTH_OCC], C1) && !getBit(bitboards[BOTH_OCC], D1)) {
                         if ( !isSqAttacked(E1, BLACK) && !isSqAttacked(D1, BLACK) ) {
@@ -160,8 +160,8 @@ void Board::generateMoves(MoveList& moveList) const {
                         }
                     }
                     // generate enPassantCaptures
-                    if (history[gamePly].enPassSq != 64) {
-                        U64 enPassantAttacks = bitPawnAttacks[BLACK][startSquare] & (1ULL << history[gamePly].enPassSq);
+                    if (enPassSq != 64) {
+                        U64 enPassantAttacks = bitPawnAttacks[BLACK][startSquare] & (1ULL << enPassSq);
 
                         if (enPassantAttacks) {
                             targetSquare = bsf(enPassantAttacks);
@@ -173,7 +173,7 @@ void Board::generateMoves(MoveList& moveList) const {
 
             if (piece == (KING + 6)) {
                 // king C castling
-                if (history[gamePly].castle & BK) {
+                if (castle & BK) {
                     // checking that the space is empty
                     if( !getBit(bitboards[BOTH_OCC], F8) && !getBit(bitboards[BOTH_OCC], G8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(F8, WHITE) ) {
@@ -183,7 +183,7 @@ void Board::generateMoves(MoveList& moveList) const {
                 }
 
                 //QUEEN C castling
-                if (history[gamePly].castle & BQ) {
+                if (castle & BQ) {
                     // checking that the space is empty
                     if( !getBit(bitboards[BOTH_OCC], B8) && !getBit(bitboards[BOTH_OCC], C8) && !getBit(bitboards[BOTH_OCC], D8)) {
                         if ( !isSqAttacked(E8, WHITE) && !isSqAttacked(D8, WHITE) ) {

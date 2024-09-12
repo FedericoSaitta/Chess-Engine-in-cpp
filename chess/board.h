@@ -7,8 +7,12 @@
 #include "move.h"
 #include "../chess/movegen/movegen.h"
 #include "inline_functions.h"
+#include <cstring>
 
 extern const char* chessBoard[65];
+
+constexpr int bitboardsSIZE{ };
+
 
 void parseFEN(const std::string& fenString);
 
@@ -22,15 +26,25 @@ hashKey = hashKeyCopy;
 class Board {
 
 public:
-    UndoInfo history[512];
+    U64 castle;
+    int enPassSq;
+
     U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
     Piece mailbox[64];
-    int gamePly{};
     int side{ WHITE };
 
     // constructors
     Board() { resetBoard(); }
     explicit Board(const std::string& fenString) { parseFEN(fenString); }
+
+    Board(const Board& board) {
+        castle = board.castle;
+        enPassSq = board.enPassSq;
+        side = board.side;
+
+        std::memcpy(bitboards, board.bitboards, sizeof(bitboards));
+        std::memcpy(mailbox, board.mailbox, sizeof(mailbox));
+    }
 
     void parseFEN(const std::string& fenString);
 
@@ -41,12 +55,14 @@ public:
     U64 getPieceTypeBitBoard(const int pc) const { return bitboards[pc] | bitboards[pc+6]; }
 
     void resetBoard() {
-        for (int i = 0; i < 512; i ++ )history[i].resetUndoInfo();
-        memset(bitboards, 0ULL, sizeof(bitboards));
+        std::memset(bitboards, 0ULL, sizeof(bitboards));
 
-        for (int i=0; i<64; i++) mailbox[i] = NO_PIECE;
+        // not sure why a SISSEGV happens if std::memset is used....
+        // std::memset(mailbox, NO_PIECE, sizeof(mailbox));
+        for (int i = 0; i < 64; i++) { mailbox[i] = NO_PIECE; }
 
-        gamePly = 0;
+        castle = 0ULL;
+        enPassSq = NO_SQ;
         side = WHITE;
     }
 
@@ -60,17 +76,16 @@ public:
     Piece getMovedPiece(const Move move) const {return mailbox[move.from()];}
     Piece getCapturedPiece(const Move move) const { return mailbox[move.to()]; }
 
-    template <bool UpdateHash> void movePiece(int from, int to);
-    template <bool UpdateHash> void movePieceQuiet(int from, int to);
+    void movePiece(int from, int to);
+    void movePieceQuiet(int from, int to);
 
-    template <bool UpdateHash> void putPiece(Piece pc, int s);
-    template <bool UpdateHash> void removePiece(int s);
+    void putPiece(Piece pc, int s);
+    void removePiece(int s);
 
-    void undo(Move move);
+   // void undo(Move move);
     int makeMove(Move move, int onlyCaptures);
 
     void nullMove();
-    void undoNullMove();
 
     bool currentlyInCheck() const; // true if the side to move is in check
     bool nonPawnMaterial() const; // true if the side to move has pieces other than pawns and a king
@@ -107,4 +122,22 @@ public:
     bool isInsufficientMaterial() const;
 
     void printBoardFancy() const;
+
+    // TESTS IF TWO BOARS ARE EQUAL
+    bool operator==(const Board& board) const {
+
+        if (this->castle != board.castle
+            || this->enPassSq != board.enPassSq
+            || this->side != board.side) { return false; }
+
+        // very basic copy for now
+        for (int i = 0; i < 15; i++) {
+            if (this->bitboards[i] != board.bitboards[i]) { return false; }
+        }
+        for (int i = 0; i < 64; i++) {
+            if (this->mailbox[i] != board.mailbox[i]) { return false; }
+        }
+
+        return true;
+    }
 };
