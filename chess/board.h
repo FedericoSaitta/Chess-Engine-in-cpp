@@ -7,6 +7,7 @@
 #include "../chess/movegen/movegen.h"
 #include "inline_functions.h"
 #include <cstring>
+#include "bit_operations.h"
 
 extern const char* chessBoard[65];
 
@@ -16,21 +17,15 @@ constexpr int bitboardsSIZE{ 120 };
 
 void parseFEN(const std::string& fenString);
 
-#define COPY_HASH()             \
-U64 hashKeyCopy = hashKey;
-
-// restore board state
-#define RESTORE_HASH()       \
-hashKey = hashKeyCopy;
-
 class Board {
 
 public:
     Piece mailbox[64];
     U64 bitboards[15]; // 0-11: pieces, 12-14: occupancies
 
-    U64 castle;
-    int enPassSq;
+    U64 hashkey{ 0ULL };
+    U64 castle{ 0ULL };
+    int enPassSq{ NO_SQ };
     int side{ WHITE };
 
     // constructors
@@ -41,6 +36,7 @@ public:
         std::memcpy(mailbox, board.mailbox, sizeof(mailbox));
         std::memcpy(bitboards, board.bitboards, sizeof(bitboards));
 
+        hashkey = board.hashkey;
         castle = board.castle;
         enPassSq = board.enPassSq;
         side = board.side;
@@ -55,11 +51,10 @@ public:
     U64 getPieceTypeBitBoard(const int pc) const { return bitboards[pc] | bitboards[pc+6]; }
 
     void resetBoard() {
-        // not sure why a SISSEGV happens if std::memset is used....
-        // std::memset(mailbox, NO_PIECE, sizeof(mailbox));
-        for (int i = 0; i < 64; i++) { mailbox[i] = NO_PIECE; }
+        std::ranges::fill(mailbox, NO_PIECE);
         std::memset(bitboards, 0ULL, sizeof(bitboards));
 
+        hashkey = 0ULL;
         castle = 0ULL;
         enPassSq = NO_SQ;
         side = WHITE;
@@ -122,6 +117,7 @@ public:
 
     void printBoardFancy() const;
 
+
     // TESTS IF TWO BOARS ARE EQUAL
     bool operator==(const Board& board) const {
         for (int i = 0; i < 64; i++) {
@@ -134,8 +130,11 @@ public:
 
         if (this->castle != board.castle
             || this->enPassSq != board.enPassSq
-            || this->side != board.side) { return false; }
+            || this->side != board.side
+            || this->hashkey != board.hashkey) { return false; }
 
         return true;
     }
+
+
 };

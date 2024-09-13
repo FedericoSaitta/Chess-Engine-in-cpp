@@ -137,7 +137,7 @@ static void handlePosition(std::istringstream& inputStream) {
 
                     if (!move.isNone() ) { //so if the move inputStream != 0
                         thread.repetitionIndex++;
-                        thread.repetitionTable[thread.repetitionIndex] = hashKey;
+                        thread.repetitionTable[thread.repetitionIndex] = thread.pos.hashkey;
                         if (thread.pos.makeMove(move, 0) == 0) {
                             std::cerr << "Could not find the move" << std::endl;
                             LOG_ERROR("Move inputStream illegal " + token );
@@ -167,7 +167,7 @@ static void handlePosition(std::istringstream& inputStream) {
 
                 if (!move.isNone() ) { //so if the move inputStream != 0
                     thread.repetitionIndex++;
-                    thread.repetitionTable[thread.repetitionIndex] = hashKey;
+                    thread.repetitionTable[thread.repetitionIndex] = thread.pos.hashkey;
                     if (thread.pos.makeMove(move, 0) == 0) {
                         std::cerr << "Could not find the move" << std::endl;
                         LOG_ERROR("Move inputStream illegal " + token );

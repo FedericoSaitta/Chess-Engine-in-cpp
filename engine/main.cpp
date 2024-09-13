@@ -5,7 +5,7 @@
 
 // #define DEBUG_TEST
 // #define BENCHMARK_TEST
-//#define TUNE_ARAMIS
+#define TUNE_ARAMIS
 
 int main(const int argc, char *argv[]) {
     // In SPRT testing 8 Mb or smaller should be used
@@ -24,8 +24,9 @@ int main(const int argc, char *argv[]) {
 
 #ifdef TUNE_ARAMIS
     // to avoid including unwanted macros etc.
-    #include "init_tuner.h"
-    tune();
+    #include "../tuner/src/init_tuner.h"
+    init_tuner(argc, argv);
+
 #endif
 
 #ifdef BENCHMARK_TEST

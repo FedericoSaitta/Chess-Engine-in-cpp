@@ -3,7 +3,6 @@
 #include <iostream>
 #include <random>
 
-#include "uci.h"
 #include "../chess/board.h"
 #include "../../chess/misc.h"
 #include "../../engine/search/search.h"
@@ -54,7 +53,7 @@ namespace Test::Debug{
             const Move move { scoredPair.first };
             const int score { scoredPair.second };
 
-            COPY_HASH()
+
             const Board copyBoard = thread.pos;
 
             if( !thread.pos.makeMove(move, 0) ) continue;
@@ -66,7 +65,7 @@ namespace Test::Debug{
                       << " gives check: " << thread.pos.currentlyInCheck() << '\n';
 
             thread.pos = copyBoard;
-            RESTORE_HASH()
+
         }
 
     }

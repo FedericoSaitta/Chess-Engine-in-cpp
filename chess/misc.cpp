@@ -72,7 +72,7 @@ void Board::printBoardFancy() const { // this will always be the right way aroun
     std::cout << "\n    A  B  C  D  E  F  G  H \n";
     std::cout << playingSides[side] << " to move, Castling: " << castleRightsString
               << ", En Passant: " << chessBoard[enPassSq] << '\n';
-    std::cout << "HashKey: " << hashKey << std::endl;
+    std::cout << "HashKey: " << hashkey << std::endl;
 }
 
 std::string algebraicNotation(const Move move) {

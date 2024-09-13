@@ -12,7 +12,6 @@
  *
  */
 
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -41,8 +40,6 @@
 #include "see.h"
 #include "../logger/logger.h"
 
-constexpr int MAX_HISTORY_SCORE{ 16'384 };
-
 // SEARCH PARAMETERS //
 constexpr double LMR_BASE = 0.79;
 constexpr double LMR_DIVISION = 2.87;
@@ -59,54 +56,13 @@ void initSearchTables() {
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
 }
 
-void Searcher::updateKillers(const Move bestMove) {
-	// update killer moves if we found a new unique bestMove
-	assert(!bestMove.isPromotion() && "updateKillers: Killer move is promotion");
-
-	if (killerMoves[0][searchPly] != bestMove) {
-		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
-
-		killerMoves[1][searchPly] = killerMoves[0][searchPly];
-		killerMoves[0][searchPly] = bestMove;
-
-		assert((killerMoves[1][searchPly] != killerMoves[0][searchPly]) && "updateKillers: moves are identical");
-	}
-}
-void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
-	const int bonus = std::min(2100, 300 * depth - 300);
-	assert(!bestMove.isNone() && "updateHistory: bestMove is none");
-
-	// Bonus to the move that caused the beta cutoff
-	if (depth > 2) {
-		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
-
-		assert( std::abs(historyScores[bestMove.from()][bestMove.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
-	}
-
-	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
-	assert((quietMoveCount <= 32) && "updateHistory: quietMoveCount is too large");
-	for (int i = 0; i < quietMoveCount; i++) {
-		Move m = quiets[i];
-		assert(m != bestMove && "updateHistory: in loop, malus to bestMove");
-		assert(!m.isNone() && "updatedHistory: in loop, move is noen");
-
-		historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
-		assert( std::abs(historyScores[m.from()][m.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
-	}
-
-}
-
-
 void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint) {
-	resetSearchStates();
-
-	// note that bench command will not change as we create a separate thread for it
 	calculateMoveTime(timeConstraint);
 
-	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
-
+	resetSearchStates();
 	searchTimer.reset();
 
+	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 	int score{};
 
 	for (int depth = 1; depth <= maxDepth; depth++){
@@ -168,7 +124,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	assert(depth >= 0 && "negamax: depth is negative");
 	const bool pvNode { beta - alpha > 1 }; // Trick used to find if current node is pvNode
 
-
 	pvLength[searchPly] = searchPly;
 
 	Move bestMove {}; // for now as tt is turned off this is just a null move
@@ -179,7 +134,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
 	// reading the TT table, if we the move has already been searched, we return its evaluation
 	// ply && used to ensure we dont read from the transposition table at the root node
-	int score { probeHash(alpha, beta, &bestMove, depth, searchPly) };
+	int score { probeHash(alpha, beta, &bestMove, depth, searchPly, pos.hashkey) };
 	const bool ttHit { score != NO_HASH_ENTRY };
 
 	if (searchPly && ttHit && !pvNode) return score;
@@ -206,13 +161,12 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
 		if (depth > this->NMP_DEPTH  && canNull && pos.nonPawnMaterial()) {
-			COPY_HASH()
 			const Board copyBoard = pos;
 			pos.nullMove();
 
 			searchPly++;
 			repetitionIndex++;
-			repetitionTable[repetitionIndex] = hashKey;
+			repetitionTable[repetitionIndex] = pos.hashkey;
 
 			// more aggressive reduction
 			const int r = std::min(static_cast<int>( (this->NMP_BASE/100.0) + depth / (this->NMP_DIVISION/100.0) ), depth);
@@ -221,7 +175,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 			searchPly--;
 			repetitionIndex--;
 			pos = copyBoard;
-			RESTORE_HASH() // un-making the null move
 
 			if (nullMoveScore >= beta) return beta;
 		}
@@ -317,12 +270,11 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
     	}
 
-        COPY_HASH()
-    	Board copyBoard = pos;
+    	const Board copyBoard = pos;
 
 	    searchPly++;
     	repetitionIndex++;
-    	repetitionTable[repetitionIndex] = hashKey;
+    	repetitionTable[repetitionIndex] = pos.hashkey;
 
         // Illegal Moves
         if( !pos.makeMove(move, 0) ) {
@@ -367,7 +319,6 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
         searchPly--;
     	repetitionIndex--;
     	pos = copyBoard;
-        RESTORE_HASH()
 
     	movesSearched++;
 
@@ -422,7 +373,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
-	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth, searchPly);
+	if (bestEval != (-INF - 1)) recordHash(bestEval, bestMove, hashFlag, depth, searchPly, pos.hashkey);
 
 	return bestEval;
 }
@@ -450,7 +401,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 	const bool pvNode = (beta - alpha) > 1;
 
 	// there is something wrong here with TT table
-	const int value { probeHash(alpha, beta, &bestMove, 0, searchPly) };
+	const int value { probeHash(alpha, beta, &bestMove, 0, searchPly, pos.hashkey) };
 	const bool ttHit { value != NO_HASH_ENTRY };
 	if (searchPly && ttHit && !pvNode) return value;
 
@@ -471,11 +422,10 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 			continue; // very basic SEE for now
 		}
 
-		COPY_HASH()
-		Board copyBoard = pos;
+		const Board copyBoard = pos;
 		searchPly++;
 		repetitionIndex++;
-		repetitionTable[repetitionIndex] = hashKey;
+		repetitionTable[repetitionIndex] = pos.hashkey;
 
 		// maybe switch to only looking at quiet moves instead of captures
 		// pos.undo Illegal Moves or non-captures
@@ -490,7 +440,6 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 		searchPly--;
 		repetitionIndex--;
 		pos = copyBoard;
-		RESTORE_HASH()
 
 		// found a better move
 		if (score > bestEval) { // Known as PV node (principal variation)
@@ -511,7 +460,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 	if (alpha >= beta) hashFlag = HASH_FLAG_BETA; // beta cutoff, fail high
 	else if (alpha <= originalAlpha) hashFlag = HASH_FLAG_ALPHA; // failed to raise alpha, fail low
 
-	if (bestEval != standPat) recordHash(bestEval, bestMove, hashFlag, 0, searchPly);
+	if (bestEval != standPat) recordHash(bestEval, bestMove, hashFlag, 0, searchPly, pos.hashkey);
 
 	return bestEval; // node that fails low
 }

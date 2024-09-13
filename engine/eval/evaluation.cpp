@@ -10,12 +10,10 @@
 
 #include "bit_operations.h"
 
-//// ******* these boards are horizontally symmetric so no need for fancy flipping yet ////
-// once you get to asymetterical boards make sure to find a little endian version
 static int eval_table[12][64];
 
-int flip(const int square) {
-    return (square ^ 56);
+static int flip(const int square) {
+    return square ^ 56;
 }
 
 
@@ -42,19 +40,19 @@ int evaluate(const Board& pos) {
     const U64 allPieces { pos.bitboards[BOTH_OCC] };
 
     // for bishop pair bonus
-    std::int8_t whiteBishops{ 0 };
-    std::int8_t blackBishops{ 0 };
+    std::int8_t whiteBishops{};
+    std::int8_t blackBishops{};
 
     for (int bbPiece=0; bbPiece < 12; bbPiece++) {
 
         assert( std::abs(score[WHITE]) < (std::pow(2, 30) ) && "evaluate: eval is too high");
         assert( std::abs(score[BLACK]) < (std::pow(2, 30) ) && "evaluate: eval is too high");
 
-        U64 bitboardCopy = pos.bitboards[bbPiece];
+        U64 bitboardCopy { pos.bitboards[bbPiece] };
 
         // defo could improve the conditional branching in here
         while (bitboardCopy) {
-            const int square = pop_lsb(&bitboardCopy);
+            const int square = popLSB(&bitboardCopy);
             score[bbPiece / 6] += eval_table[bbPiece][square];
 
             gamePhase += gamephaseInc[bbPiece];

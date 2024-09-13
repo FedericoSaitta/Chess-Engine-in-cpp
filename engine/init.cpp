@@ -270,7 +270,7 @@ static U64 setOccupancies(const int index, const int bitInMask, U64 attackMask) 
 
     for (int i=0; i < bitInMask; i++) {
 
-        const int square {pop_lsb(&attackMask)};
+        const int square {popLSB(&attackMask)};
 
         if (index & (1ULL << i)) { setBit(occupancy, square); }
     }

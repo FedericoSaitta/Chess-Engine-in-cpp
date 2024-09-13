@@ -1,5 +1,13 @@
 #include "search.h"
 
+// FOR NEW TIME CONTROL SIMILAR TO ALEXANDRIA
+
+// safety overhead std::min(100, time / 2)
+
+// only scale TM if the depth is higher than 7
+
+
+
 
 void Searcher::calculateMoveTime(const bool timeConstraint) {
     if (!timeConstraint) {
@@ -13,7 +21,6 @@ void Searcher::calculateMoveTime(const bool timeConstraint) {
             timePerMove = time / movesToGo;
         }
     }
-
 
     assert((timePerMove > 0) && "getMoveTime: movetime is zero/negative");
 }

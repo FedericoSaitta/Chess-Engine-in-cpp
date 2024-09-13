@@ -36,7 +36,7 @@ void Board::generateMoves(MoveList& moveList) const {
                 // loop over WHITE pawn b1
 
                 while(b1) {
-                    startSquare = pop_lsb(&b1);
+                    startSquare = popLSB(&b1);
 
                     targetSquare = startSquare + 8;
 
@@ -64,7 +64,7 @@ void Board::generateMoves(MoveList& moveList) const {
                     attacks = bitPawnAttacks[WHITE][startSquare] & bitboards[BLACK_OCC];
 
                     while (attacks) {
-                        targetSquare = pop_lsb(&attacks);
+                        targetSquare = popLSB(&attacks);
 
                         if ( (startSquare >= A7) && (startSquare <= H7) ) {
                             // then we can add this move to the list
@@ -117,7 +117,7 @@ void Board::generateMoves(MoveList& moveList) const {
             if (piece == (PAWN + 6) ) { // loop over WHITE pawn b1
 
                 while(b1) {
-                    startSquare = pop_lsb(&b1);
+                    startSquare = popLSB(&b1);
 
                     targetSquare = startSquare - 8;
 
@@ -145,7 +145,7 @@ void Board::generateMoves(MoveList& moveList) const {
                     attacks = bitPawnAttacks[BLACK][startSquare] & bitboards[WHITE_OCC];
 
                     while (attacks) {
-                        targetSquare = pop_lsb(&attacks);
+                        targetSquare = popLSB(&attacks);
 
                         if ( (startSquare >= A2) && (startSquare <= H2) ) {
                             // then we can add this move to the list
@@ -197,14 +197,14 @@ void Board::generateMoves(MoveList& moveList) const {
         // generate KNIGHT moves
         if ( (C == WHITE)? piece == KNIGHT : piece == (KNIGHT + 6) ) {
             while (b1) {
-                startSquare = pop_lsb(&b1);
+                startSquare = popLSB(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = bitKnightAttacks[startSquare] & ((C == WHITE) ? ~bitboards[WHITE_OCC] : ~bitboards[BLACK_OCC]);
 
 
                 while (attacks) {
-                    targetSquare = pop_lsb(&attacks);
+                    targetSquare = popLSB(&attacks);
 
                     // quiet moves
                     if ( !getBit( ((C == WHITE) ? bitboards[BLACK_OCC] : bitboards[WHITE_OCC]), targetSquare ) ){
@@ -220,14 +220,14 @@ void Board::generateMoves(MoveList& moveList) const {
         // generate BISHOP moves
         if ( (C == WHITE)? piece == BISHOP : piece == (BISHOP + 6) ) {
             while (b1) {
-                startSquare = pop_lsb(&b1);
+                startSquare = popLSB(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getBishopAttacks(startSquare, bitboards[BOTH_OCC]) & ((C == WHITE) ? ~bitboards[WHITE_OCC] : ~bitboards[BLACK_OCC]);
 
 
                 while (attacks) {
-                    targetSquare = pop_lsb(&attacks);
+                    targetSquare = popLSB(&attacks);
 
                     // quiet moves
                     if ( !getBit( ((C == WHITE) ? bitboards[BLACK_OCC] : bitboards[WHITE_OCC]), targetSquare ) ){
@@ -243,13 +243,13 @@ void Board::generateMoves(MoveList& moveList) const {
         // generate ROOK moves
         if ( (C == WHITE)? piece == ROOK : piece == (ROOK + 6) ) {
             while (b1) {
-                startSquare = pop_lsb(&b1);
+                startSquare = popLSB(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getRookAttacks(startSquare, bitboards[BOTH_OCC]) & ((C == WHITE) ? ~bitboards[WHITE_OCC] : ~bitboards[BLACK_OCC]);
 
                 while (attacks) {
-                    targetSquare = pop_lsb(&attacks);
+                    targetSquare = popLSB(&attacks);
 
                     // quiet moves
                     if ( !getBit( ((C == WHITE) ? bitboards[BLACK_OCC] : bitboards[WHITE_OCC]), targetSquare ) ){
@@ -265,13 +265,13 @@ void Board::generateMoves(MoveList& moveList) const {
         // generate QUEEN moves
         if ( (C == WHITE)? piece == QUEEN : piece == (QUEEN + 6) ) {
             while (b1) {
-                startSquare = pop_lsb(&b1);
+                startSquare = popLSB(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = getQueenAttacks(startSquare, bitboards[BOTH_OCC]) & ((C == WHITE) ? ~bitboards[WHITE_OCC] : ~bitboards[BLACK_OCC]);
 
                 while (attacks) {
-                    targetSquare = pop_lsb(&attacks);
+                    targetSquare = popLSB(&attacks);
 
                     // quiet moves
                     if ( !getBit( ((C == WHITE) ? bitboards[BLACK_OCC] : bitboards[WHITE_OCC]), targetSquare ) ){
@@ -287,13 +287,13 @@ void Board::generateMoves(MoveList& moveList) const {
         // generate king moves
         if ( (C == WHITE)? piece == KING : piece == (KING + 6) ) {
             while (b1) {
-                startSquare =pop_lsb(&b1);
+                startSquare =popLSB(&b1);
 
                 // need to make sure landing squares are all but the ones occupied by your pieces
                 attacks = bitKingAttacks[startSquare] & ((C == WHITE) ? ~bitboards[WHITE_OCC] : ~bitboards[BLACK_OCC]);
 
                 while (attacks) {
-                    targetSquare = pop_lsb(&attacks);
+                    targetSquare = popLSB(&attacks);
 
                     // quiet moves
                     if ( !getBit( ((C == WHITE) ? bitboards[BLACK_OCC] : bitboards[WHITE_OCC]), targetSquare ) ){

@@ -29,7 +29,7 @@ bool Searcher::isRepetition() const {
     // plays optimally they (just like us) will avoid repeting even once unless the position is drawn.
     for (int index=repetitionIndex-1; index >= 0; index--) {
         // looping backwards over our previous keys
-        if (repetitionTable[index] == hashKey) {
+        if (repetitionTable[index] == pos.hashkey) {
             return true; // repetition found
         }
     }

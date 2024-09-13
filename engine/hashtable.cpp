@@ -19,12 +19,10 @@ U64 randomEnPassantKeys[64]{};
 U64 randomCastlingKeys[16]{};
 U64 sideKey{};
 
-U64 hashKey{};
-
 std::int64_t transpotitionTableEntries{};
 tt* transpositionTable{ nullptr };
 
-U64 generateHashKey(const Board& pos) { // to uniquely identify a position
+U64 generatehashkey(const Board& pos) { // to uniquely identify a position
     U64 key{};
     U64 tempPieceBitboard{};
 
@@ -32,7 +30,7 @@ U64 generateHashKey(const Board& pos) { // to uniquely identify a position
         tempPieceBitboard = pos.bitboards[piece];
 
         while (tempPieceBitboard) {
-            const int square = pop_lsb(&tempPieceBitboard);
+            const int square = popLSB(&tempPieceBitboard);
             key ^= randomPieceKeys[piece][square];
         }
     }
@@ -68,7 +66,7 @@ void initTranspositionTable(const int megaBytes) {
 void clearTranspositionTable() {
     if (transpositionTable != nullptr) { // extra check for ucinewgame
         for (int index=0; index < transpotitionTableEntries; index++) {
-            transpositionTable[index].hashKey=0;
+            transpositionTable[index].hashkey=0;
             transpositionTable[index].depth=0;
             transpositionTable[index].flag=0;
             transpositionTable[index].score=0;
@@ -79,14 +77,14 @@ void clearTranspositionTable() {
     }
 }
 
-int probeHash(const int alpha, const int beta, Move* best_move, const int depth, const int searchPly)
+int probeHash(const int alpha, const int beta, Move* best_move, const int depth, const int searchPly, const U64 hashkey)
 {
     // creates a pointer to the hash entry
-    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "probeHash: hashkey too large");
-    const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
+    assert( (hashkey % transpotitionTableEntries) < transpotitionTableEntries && "probeHash: hashkey too large");
+    const tt* hashEntry { &transpositionTable[hashkey % transpotitionTableEntries] };
 
-    // make sure we have the correct hashKey, not sure about the depth line
-    if (hashEntry->hashKey == hashKey) {
+    // make sure we have the correct hashkey, not sure about the depth line
+    if (hashEntry->hashkey == hashkey) {
         if (hashEntry->depth >= depth) { // only look at same or higher depths evaluations
 
             // extracted stores score from transposition table
@@ -112,10 +110,10 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth,
     return NO_HASH_ENTRY; // in case we dont get a tt hit
 }
 
-void recordHash(int score, const Move bestMove, const int flag, const int depth, const int searchPly)
+void recordHash(int score, const Move bestMove, const int flag, const int depth, const int searchPly, const U64 hashkey)
 {
-    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "recordHash: hashkey too large");
-    tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
+    assert( (hashkey % transpotitionTableEntries) < transpotitionTableEntries && "recordHash: hashkey too large");
+    tt* hashEntry = &transpositionTable[hashkey % transpotitionTableEntries];
 
     // independent from distance of path taken from root node to current mating position
     if (score < -MATE_SCORE) score += searchPly;
@@ -123,7 +121,7 @@ void recordHash(int score, const Move bestMove, const int flag, const int depth,
 
     assert(!bestMove.isNone() && "recordHash: Trying to store a null move");
 
-    hashEntry->hashKey = hashKey;
+    hashEntry->hashkey = hashkey;
     hashEntry->score = score;
     hashEntry->flag = flag;
     hashEntry->depth = depth;
@@ -133,7 +131,7 @@ void recordHash(int score, const Move bestMove, const int flag, const int depth,
 int checkHashOccupancy() {
     float count {};
     for (const tt* position = transpositionTable; position < transpositionTable + transpotitionTableEntries; ++position) {
-        if (position->hashKey != 0) {
+        if (position->hashkey != 0) {
             count++;
         }
     }

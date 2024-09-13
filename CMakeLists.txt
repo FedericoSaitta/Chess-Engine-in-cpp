@@ -69,7 +69,6 @@ set(SOURCE_FILES
         chess/movegen/movegen.h
         engine/search/search.h
         chess/misc.h
-        chess/macros.h
         include/uci.h
         include/hashtable.h
         include/init.h
@@ -94,6 +93,14 @@ set(SOURCE_FILES
         chess/bit_operations.h
         chess/move.cpp
         chess/move.cpp
+
+        # TUNER STUFF
+        tuner/src/engines/myeval.cpp
+        tuner/src/init_tuner.h
+        tuner/src/init_tuner.cpp
+        tuner/src/config.h
+        tuner/src/threadpool.cpp
+        tuner/src/tuner.cpp
 )
 
 # Add executable
@@ -112,5 +119,4 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
     target_link_libraries(ChessEngine PRIVATE pthread)
 endif()
 
-# Link Threads library
 target_link_libraries(ChessEngine PRIVATE Threads::Threads)

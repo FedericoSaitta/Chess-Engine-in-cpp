@@ -1,6 +1,5 @@
 #pragma once
 
-#include "init.h"
 #include <assert.h>
 
 
@@ -20,11 +19,8 @@ inline void setBitFalse(U64& board, const int square) {
 }
 
 
-inline int countBits(U64 b) {
-    // to quickly count the number of bits on a bitboard use the bit hacK board &= (board - 1)
-    int count{};
-    while (b) { b &= (b - 1); count++; }
-    return count;
+inline int countBits(const U64 b) {
+    return __builtin_popcountll(b);
 }
 
 
@@ -47,7 +43,7 @@ constexpr int bsf(const U64 b) {
 }
 
 //Returns the index of the least significant bit in the bitboard, and removes the bit from the bitboard
-inline int pop_lsb(U64* b) {
+inline int popLSB(U64* b) {
     const int lsb = bsf(*b);
     *b &= *b - 1;
     return lsb;

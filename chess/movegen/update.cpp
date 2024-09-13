@@ -32,7 +32,7 @@ void Board::movePieceQuiet(const int from, const int to) {
 
     const Piece piece { mailbox[from] };
 
-	hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
+	hashkey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to];
 
     bitboards[piece] ^= ( (1ULL << from) | (1ULL << to) );
 
@@ -49,7 +49,7 @@ void Board::movePiece(const int from, const int to) {
 	const Piece piece { mailbox[from] };
 	const Piece capturedPiece { mailbox[to] };
 
-	hashKey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
+	hashkey ^= randomPieceKeys[piece][from] ^ randomPieceKeys[piece][to] ^ randomPieceKeys[capturedPiece][to];
 
 	const U64 mask = (1ULL << from) | (1ULL << to);
 
@@ -66,7 +66,7 @@ void Board::putPiece(const Piece pc, const int s) {
 
 	mailbox[s] = pc;
 	bitboards[pc] |= (1ULL << s);
-	hashKey ^= randomPieceKeys[pc][s];
+	hashkey ^= randomPieceKeys[pc][s];
 
 }
 
@@ -74,7 +74,7 @@ void Board::removePiece(const int s) {
 
 	assert((mailbox[s] != NO_PIECE) && "removePiece: piece is NO_PIECE");
 
-	hashKey ^= randomPieceKeys[mailbox[s]][s];
+	hashkey ^= randomPieceKeys[mailbox[s]][s];
 
 	bitboards[mailbox[s]] &= ~(1ULL << s);
 	mailbox[s] = NO_PIECE;
@@ -89,16 +89,15 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 	if(!onlyCaptures) {
 		nodes++;
 		// should be put at the bottom of this
-		COPY_HASH();
 		const Board copyBoard { *this };
 
 		assert(*this == copyBoard && "Two boards arent equal");
 
-		if (enPassSq != 64) { hashKey ^= randomEnPassantKeys[enPassSq]; }
+		if (enPassSq != 64) { hashkey ^= randomEnPassantKeys[enPassSq]; }
 		enPassSq = 64;
 
 		side ^= 1; // change side
-		hashKey ^= sideKey;
+		hashkey ^= sideKey;
 
 		const MoveFlags type = move.flags();
 		const auto C { static_cast<Color>(side) };
@@ -114,11 +113,11 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 				if (C == WHITE) {
 					enPassSq = move.to() + 8;
-					hashKey ^= randomEnPassantKeys[move.to() + 8];
+					hashkey ^= randomEnPassantKeys[move.to() + 8];
 
 				} else {
 					enPassSq = move.to() - 8;
-					hashKey ^= randomEnPassantKeys[move.to() - 8];
+					hashkey ^= randomEnPassantKeys[move.to() - 8];
 				}
 			//This is the square behind the pawn that was double-pushed
 
@@ -206,29 +205,29 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 		}
 
 		// hash castling
-		hashKey ^= randomCastlingKeys[castle]; // get trid of castling
+		hashkey ^= randomCastlingKeys[castle]; // get trid of castling
 
 		// castle bit hack for updating the rights
 		castle &= castlingRightsConstant[move.from()];
 		castle &= castlingRightsConstant[move.to()];
 
-		hashKey ^= randomCastlingKeys[castle]; // re-insert castling rights
+		hashkey ^= randomCastlingKeys[castle]; // re-insert castling rights
 
 		resetOcc();
 		for (int bbPiece=0; bbPiece < 6; bbPiece++) {
 			bitboards[WHITE_OCC] |= bitboards[bbPiece]; // for white
 			bitboards[BLACK_OCC] |= bitboards[bbPiece + 6]; // for black
-			bitboards[BOTH_OCC] |= (bitboards[bbPiece] | bitboards[bbPiece + 6]); // for both
 		}
 
+		bitboards[BOTH_OCC] |= (bitboards[WHITE_OCC] | bitboards[BLACK_OCC]); // for both
+
 		// Zobrist Debug test from Maksim Korzh
-		assert((generateHashKey(*this) == hashKey) && "makeMove: hashKey is wrong");
+		assert((generatehashkey(*this) == hashkey) && "makeMove: hashkey is wrong");
 
 		// make sure that the king has not been exposed into check
 		if ( isSqAttacked(bsf( bitboards[KING + 6 * (side^1)] ), side)) {
 			// square is illegal so we take it back
 			*this = copyBoard;
-			RESTORE_HASH();
 
 			return 0;
 		}
@@ -246,11 +245,11 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 
 void Board::nullMove() {
-	hashKey ^= sideKey;
-	if (enPassSq != 64) hashKey ^= randomEnPassantKeys[enPassSq];
+	hashkey ^= sideKey;
+	if (enPassSq != 64) hashkey ^= randomEnPassantKeys[enPassSq];
 	enPassSq = 64;
 	side ^= 1; // make null move
 
-	assert((generateHashKey(*this) == hashKey) && "nullMove: hashKey is wrong");
+	assert((generatehashkey(*this) == hashkey) && "nullMove: hashkey is wrong");
 }
 

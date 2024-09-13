@@ -41,7 +41,7 @@ namespace Test::BenchMark {
 
         for (int moveCount = 0; moveCount < moveList.count; moveCount++)
         {
-            COPY_HASH();
+
             const Board copyBoard = board;
 
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) {
@@ -50,7 +50,7 @@ namespace Test::BenchMark {
             perftDriver(depth - 1, board);
 
             board = copyBoard;
-            RESTORE_HASH();
+
         }
     }
 
@@ -63,7 +63,7 @@ namespace Test::BenchMark {
         board.generateMoves(moveList);
 
         for (int moveCount = 0;  moveCount < moveList.count; moveCount++) {
-            COPY_HASH();
+
             const Board copyBoard = board;
 
             if (!board.makeMove(moveList.moves[moveCount].first, 0)) continue;
@@ -73,7 +73,7 @@ namespace Test::BenchMark {
             perftDriver(depth - 1, board);
 
             board = copyBoard;
-            RESTORE_HASH();
+
 
             // Print parent moves for debugging purposes
 

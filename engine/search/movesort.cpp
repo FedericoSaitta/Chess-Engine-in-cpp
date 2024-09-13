@@ -38,6 +38,9 @@
 // is of value 105 and this is to avoid checking whether the move is
 // an en-passant move. En-passant moves appear to 'capture' empty squares
 // hence index 12 (NO_PIECE = 12) is reserved for en-passants
+constexpr int MAX_HISTORY_SCORE{ 16'384 };
+
+
 static int mvv_lva[12][13] = {
 	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605, 105},
 	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604, 105},
@@ -68,7 +71,6 @@ int Searcher::scoreMove(const Move move, const Board& board) {
 	assert(searchPly < MAX_PLY && "scoreMove: out of bounds table indexing");
 	assert(move.from() < 64 && "scoreMove: out of bounds table indexing");
 	assert(move.to() < 64 && "scoreMove: out of bounds table indexing");
-
 
 	if (scorePV && (pvTable[0][searchPly] == move)) {
 		assert((scorePV == 1) && "scoreMove: scorePV is unitialized");
@@ -119,19 +121,60 @@ std::pair<Move, int> Searcher::pickBestMove(MoveList& moveList, const int start)
     int bestMoveScore{ moveList.moves[start].second };
     int bestMoveIndex{ start };
 
-	for (int index = start; index < moveList.count; ++index) {
-		if (moveList.moves[index].second > bestMoveScore) {
-			bestMoveScore = moveList.moves[index].second;
+	for (int index = start + 1; index < moveList.count; ++index) {
+		const int score = moveList.moves[index].second;
+
+		if (score > bestMoveScore) {
+			bestMoveScore = score;
 			bestMoveIndex = index;
 		}
 	}
 
-	// swap position of the current index with the best move
-	const std::pair<Move, int> tempMove = moveList.moves[start];
-	moveList.moves[start] = moveList.moves[bestMoveIndex];
-	moveList.moves[bestMoveIndex] = tempMove;
+	// Only swap if necessary to avoid unnecessary memory operations
+	if (bestMoveIndex != start) {
+		std::swap(moveList.moves[start], moveList.moves[bestMoveIndex]);
+	}
 
 	assert(!moveList.moves[start].first.isNone() && "pickBestMove: returned move is none");
 
 	return moveList.moves[start];
 }
+
+void Searcher::updateKillers(const Move bestMove) {
+	// update killer moves if we found a new unique bestMove
+	assert(!bestMove.isPromotion() && "updateKillers: Killer move is promotion");
+
+	if (killerMoves[0][searchPly] != bestMove) {
+		assert(!bestMove.isNone() && "updateKillers: bestMove is empty");
+
+		killerMoves[1][searchPly] = killerMoves[0][searchPly];
+		killerMoves[0][searchPly] = bestMove;
+
+		assert((killerMoves[1][searchPly] != killerMoves[0][searchPly]) && "updateKillers: moves are identical");
+	}
+}
+void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
+	const int bonus = std::min(2100, 300 * depth - 300);
+
+	assert(!bestMove.isNone() && "updateHistory: bestMove is none");
+
+	// Bonus to the move that caused the beta cutoff
+	if (depth > 2) {
+		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+
+		assert( std::abs(historyScores[bestMove.from()][bestMove.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
+	}
+
+	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
+	assert((quietMoveCount <= 32) && "updateHistory: quietMoveCount is too large");
+	for (int i = 0; i < quietMoveCount; i++) {
+		Move m = quiets[i];
+		assert(m != bestMove && "updateHistory: in loop, malus to bestMove");
+		assert(!m.isNone() && "updatedHistory: in loop, move is noen");
+
+		historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+		assert( std::abs(historyScores[m.from()][m.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
+	}
+
+}
+
