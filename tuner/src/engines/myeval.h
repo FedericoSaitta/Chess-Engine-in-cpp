@@ -5,7 +5,6 @@
 #include "../base.h"
 #include "../external/chess.hpp"
 
-#include <string>
 #include <vector>
 
 namespace myEval

@@ -1,30 +1,48 @@
 #include "search.h"
 
-// FOR NEW TIME CONTROL SIMILAR TO ALEXANDRIA
+constexpr double bestmoveScale[5] {2.43, 1.35, 1.09, 0.88, 0.68};
 
-// safety overhead std::min(100, time / 2)
-
-// only scale TM if the depth is higher than 7
-
-
-
-
+// From Alexandria :) thanks
 void Searcher::calculateMoveTime(const bool timeConstraint) {
-    if (!timeConstraint) {
-        timePerMove = 180'000; // maximum searching time of 3 minutes
-    } else {
+    const int safetyOverhead = std::min(100.0, time / 2);
+    time -= safetyOverhead;
 
+    if (!timeConstraint) {
+        // If not given a time constraint search for one minute
+        maxTime = 60'000;
+    } else {
+        // case of wtime btime command
         if (movesToGo == 0) {
-            timePerMove = time / 30 + increment;
-            if ( (increment > 0) && (time < (5 * increment) ) ) timePerMove = static_cast<int>(0.75 * increment);
+            // Never use more than 76% of the total time left for a single move
+            const double basetime = (time * 0.054 + increment * 0.85);
+
+            maxTime = 0.76 * time;
+
+            // Time we use to stop if we just cleared a depth
+            softBoundTime = std::min(0.76 * basetime, maxTime);
+
+            // Absolute maximum time we can spend on a search (unless it is bigger than the bound)
+            maxTime = std::min(3.04 * basetime, maxTime);
+
+
         } else {
-            timePerMove = time / movesToGo;
+            maxTime = time / movesToGo;
         }
     }
+
+    // for convenience we cast them into ints as out timer works with ints
+    maxTime = static_cast<int>(maxTime);
+    softBoundTime = static_cast<int>(softBoundTime);
 
     assert((timePerMove > 0) && "getMoveTime: movetime is zero/negative");
 }
 
+
+
+void Searcher::scaleTimeControl(const int bestMoveStabilityFactor) {
+    softBoundTime = static_cast<int>( bestmoveScale[bestMoveStabilityFactor] * softBoundTime );
+}
+
 void Searcher::isTimeUp() {
-    if ( searchTimer.elapsed() > timePerMove) stopSearch = true;
+    if ( searchTimer.elapsed() > maxTime) stopSearch = true;
 }

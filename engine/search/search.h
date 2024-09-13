@@ -45,14 +45,15 @@ public:
     Timer searchTimer{};
     Timer singleDepthTimer{};
 
-    int gameLengthTime{};
-    int time{};
-    int increment{};
+    double gameLengthTime{};
+    double time{};
+    double increment{};
 
     int movesToGo{};
 
     bool stopSearch{};
-    int timePerMove{};
+    double maxTime{};
+    double softBoundTime{};
 
     //                         //
     void parseFEN(const std::string& fenString) {
@@ -106,6 +107,8 @@ public:
     void isTimeUp();
 
     void calculateMoveTime(bool timeConstraint);
+    void scaleTimeControl(int bestMoveStabilityFactor);
+
     void enablePVscoring(const MoveList& moveList);
 
     int scoreMove(Move move, const Board& board);

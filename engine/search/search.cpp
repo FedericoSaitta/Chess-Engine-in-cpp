@@ -62,15 +62,16 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 	resetSearchStates();
 	searchTimer.reset();
 
-	const int softTimeLimit = static_cast<int>(timePerMove / 3.0);
 	int score{};
+	Move previousBestMove { Move::Null };
+	int bestMoveStabilityFactor{};
 
-	for (int depth = 1; depth <= maxDepth; depth++){
+	for (int depth = 1; depth <= maxDepth; depth++) {
 		nodes = 0;
 		followPV = 1;
 
 		if (stopSearch) break;
-		if (searchTimer.elapsed() > softTimeLimit) break;
+		if (timeConstraint && searchTimer.elapsed() > softBoundTime) break;
 
 		singleDepthTimer.reset();
 
@@ -78,6 +79,18 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;
+
+		// we scale the time control
+		if (previousBestMove == pvTable[0][0]){
+			bestMoveStabilityFactor = std::min(bestMoveStabilityFactor + 1, 4);
+		} else {
+			previousBestMove = pvTable[0][0];
+			bestMoveStabilityFactor = 0;
+		}
+
+		if (depth > 7) {
+			scaleTimeControl(bestMoveStabilityFactor);
+		}
 
 		sendUciInfo(score, depth, nodes);
 	}

@@ -204,17 +204,17 @@ static void handleGo(std::istringstream& inputStream) {
             goto end_of_function;
         }
 
-        if (token == "wtime" && (thread.pos.side == WHITE) ) { if (inputStream >> token) thread.time = std::stoi(token); }
-        else if (token == "btime" && (thread.pos.side == BLACK) ) { if (inputStream >> token) thread.time = std::stoi(token); }
+        if (token == "wtime" && (thread.pos.side == WHITE) ) { if (inputStream >> token) thread.time = std::stod(token); }
+        else if (token == "btime" && (thread.pos.side == BLACK) ) { if (inputStream >> token) thread.time = std::stod(token); }
 
-        else if (token == "winc" && (thread.pos.side == WHITE) ) { if (inputStream >> token) thread.increment = std::stoi(token); }
-        else if (token == "binc" && (thread.pos.side == BLACK) ) { if (inputStream >> token) thread.increment = std::stoi(token); }
+        else if (token == "winc" && (thread.pos.side == WHITE) ) { if (inputStream >> token) thread.increment = std::stod(token); }
+        else if (token == "binc" && (thread.pos.side == BLACK) ) { if (inputStream >> token) thread.increment = std::stod(token); }
 
-        else if (token == "movestogo") { if (inputStream >> token) thread.movesToGo = std::stoi(token); }
+        else if (token == "movestogo") { if (inputStream >> token) thread.movesToGo = std::stod(token); }
         else if (token == "movetime") {
             thread.movesToGo = 1; // as we will only need to make a singular move
             if (inputStream >> token) {
-                thread.time = std::stoi(token);
+                thread.time = std::stod(token);
             }
         }
         else { LOG_ERROR("Unrecognized go input " + token); }
