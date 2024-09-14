@@ -1,6 +1,7 @@
 #include "search.h"
 
 constexpr double bestmoveScale[5] {2.43, 1.35, 1.09, 0.88, 0.68};
+constexpr double evalScale[5] = {1.25, 1.15, 1.00, 0.94, 0.88};
 
 // From Alexandria :) thanks
 void Searcher::calculateMoveTime(const bool timeConstraint) {
@@ -39,8 +40,11 @@ void Searcher::calculateMoveTime(const bool timeConstraint) {
 
 
 
-void Searcher::scaleTimeControl(const int bestMoveStabilityFactor) {
-    softBoundTime = static_cast<int>( bestmoveScale[bestMoveStabilityFactor] * softBoundTime );
+void Searcher::scaleTimeControl(const int bestMoveStabilityFactor, const int evalStabilityFactor) {
+    const double bestMoveScalingFactor { bestmoveScale[bestMoveStabilityFactor] };
+    const double evalScalingFactor { evalScale[evalStabilityFactor] };
+
+    softBoundTime = static_cast<int>( bestMoveScalingFactor * evalScalingFactor * softBoundTime );
 }
 
 void Searcher::isTimeUp() {

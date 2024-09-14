@@ -62,9 +62,9 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 	resetSearchStates();
 	searchTimer.reset();
 
-	int score{};
 	Move previousBestMove { Move::Null };
-	int bestMoveStabilityFactor{};
+	int score{}, avgScore{ -100'000 };
+	int bestMoveStabilityFactor{}, evalStabilityFactor{};
 
 	for (int depth = 1; depth <= maxDepth; depth++) {
 		nodes = 0;
@@ -76,6 +76,7 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 		singleDepthTimer.reset();
 
 		score = aspirationWindow(depth, score);
+		avgScore = (avgScore == -100'000) ? score : (avgScore + score) / 2;
 
 		// checking after the search to prevent from printing empty pv string
 		if (stopSearch) break;
@@ -88,8 +89,16 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 			bestMoveStabilityFactor = 0;
 		}
 
+		// Keep track of eval stability
+		if (score > avgScore - 10 && score < avgScore + 10) {
+			evalStabilityFactor = std::min(evalStabilityFactor + 1, 4);
+		}
+		else {
+			evalStabilityFactor = 0;
+		}
+
 		if (depth > 7) {
-			scaleTimeControl(bestMoveStabilityFactor);
+			scaleTimeControl(bestMoveStabilityFactor, evalStabilityFactor);
 		}
 
 		sendUciInfo(score, depth, nodes);

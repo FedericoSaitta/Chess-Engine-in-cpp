@@ -27,7 +27,7 @@ public:
 
     // Search Tables:          //
     Move killerMoves[2][MAX_PLY]{};
-    int historyScores[64][64]{};
+    int historyScores[2][64][64]{};
 
     Move pvTable[MAX_PLY][MAX_PLY]{};
     int pvLength[MAX_PLY]{};
@@ -107,7 +107,7 @@ public:
     void isTimeUp();
 
     void calculateMoveTime(bool timeConstraint);
-    void scaleTimeControl(int bestMoveStabilityFactor);
+    void scaleTimeControl(int bestMoveStabilityFactor, int evalStabilityFactor);
 
     void enablePVscoring(const MoveList& moveList);
 

@@ -99,7 +99,7 @@ int Searcher::scoreMove(const Move move, const Board& board) {
 	if (killerMoves[0][searchPly] == move) return firstKiller;
 	if (killerMoves[1][searchPly] == move) return secondKiller;
 
-	return (historyScores[move.from()][move.to()]);
+	return (historyScores[pos.side][move.from()][move.to()]);
 }
 
 
@@ -154,15 +154,16 @@ void Searcher::updateKillers(const Move bestMove) {
 	}
 }
 void Searcher::updateHistory(const Move bestMove, const int depth, const Move* quiets, const int quietMoveCount) {
-	const int bonus = std::min(2100, 300 * depth - 300);
+	const int bonus { std::min(2100, 300 * depth - 300) };
+	const int side { pos.side };
 
 	assert(!bestMove.isNone() && "updateHistory: bestMove is none");
 
 	// Bonus to the move that caused the beta cutoff
 	if (depth > 2) {
-		historyScores[bestMove.from()][bestMove.to()] += bonus - historyScores[bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+		historyScores[side][bestMove.from()][bestMove.to()] += bonus - historyScores[side][bestMove.from()][bestMove.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
 
-		assert( std::abs(historyScores[bestMove.from()][bestMove.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
+		assert( std::abs(historyScores[side][bestMove.from()][bestMove.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
 	}
 
 	// Penalize quiet moves that failed to produce a cut only if bestMove is also quiet
@@ -172,8 +173,8 @@ void Searcher::updateHistory(const Move bestMove, const int depth, const Move* q
 		assert(m != bestMove && "updateHistory: in loop, malus to bestMove");
 		assert(!m.isNone() && "updatedHistory: in loop, move is noen");
 
-		historyScores[m.from()][m.to()] += -bonus - historyScores[m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
-		assert( std::abs(historyScores[m.from()][m.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
+		historyScores[side][m.from()][m.to()] += -bonus - historyScores[side][m.from()][m.to()] * std::abs(bonus) / MAX_HISTORY_SCORE;
+		assert( std::abs(historyScores[side][m.from()][m.to()]) <= MAX_HISTORY_SCORE && "updateHistory: history bonus is too large");
 	}
 
 }
