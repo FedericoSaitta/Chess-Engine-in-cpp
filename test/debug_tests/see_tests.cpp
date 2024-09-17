@@ -8,7 +8,7 @@
 #include "../../chess/misc.h"
 
 #include <fstream>
-
+#include <sstream>
 
 namespace Test::Debug {
 

@@ -153,7 +153,7 @@ The Engine matches were run in fast-chess with a book from Fish-Test with positi
 
 | Version | ELO Estimate | CCRL Blitz ELO |
 |---------|--------------|----------------|
-| 1.4.0   | 2500         | ----           |
+| 1.4.0   | 2500         | 2749           |
 | 1.3.0   | 2400         | 2407           |
 | 1.1.0   | 1800         | ----           |
 

@@ -18,16 +18,16 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # GCC/Clang specific flags
-  #  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-omit-frame-pointer")
 
     # Sanitizer flags for debug builds
- #   set(SANITIZER_FLAGS "-fsanitize=address,undefined,leak")  # Use ThreadSanitizer only when needed (it's slower)
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined,leak")  # Use ThreadSanitizer only when needed (it's slower)
 
     # Enable sanitizers in debug builds
-#    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 ${SANITIZER_FLAGS}")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 ${SANITIZER_FLAGS}")
 
     # Linker settings for sanitizers
-  #  set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
 
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
 endif()
