@@ -15,7 +15,7 @@
 
 ## Introduction
 
-Aramis is an uci-compliant chess engine that does not have its own GUI. This project has been largely inspired by my previously built python chess engine which I estimate to play around 1400 - 1500 ELO.
+Aramis is an uci-compliant chess engine that does not have its own GUI. This project has been largely inspired by my previously built python chess engine which I estimate to play around 900 - 1100 ELO.
 Thanks to the speed brought by c++ many more optimizations were squeezed in the game-tree search bringing Aramis_v1_3_0 to a rating of 2407 in CCRL Blitz.
 The latest code for v1.5.0 can be found in the respective branch, though development has been slower due to the demanding computing resources and time required to test new patches, one day I wish to return to this project
 and aim for higher spots in the global leaderboards. Please contact me for any advice, critique or question about the bot :)
