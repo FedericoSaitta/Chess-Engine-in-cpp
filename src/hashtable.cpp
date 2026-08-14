@@ -4,6 +4,9 @@
 #include <assert.h>
 
 #include <cstdint>
+#include <algorithm>
+#include <bit>
+#include <new>
 
 #include "macros.h"
 #include "board.h"
@@ -22,6 +25,7 @@ U64 hashKey{};
 
 std::int64_t transpotitionTableEntries{};
 tt* transpositionTable{ nullptr };
+static U64 transpositionTableMask{};
 
 U64 generateHashKey(const Board& pos) { // to uniquely identify a position
     U64 key{};
@@ -46,43 +50,44 @@ U64 generateHashKey(const Board& pos) { // to uniquely identify a position
 
 // https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm
 void initTranspositionTable(const int megaBytes) {
-    const U64 hashSize = 0x100000 * megaBytes;
-    transpotitionTableEntries = hashSize / sizeof(tt);
+    const U64 requestedBytes = 0x100000ULL * std::max(megaBytes, 1);
+    U64 entries = std::bit_floor(requestedBytes / sizeof(tt));
+    tt* replacement = nullptr;
 
-    if (transpositionTable != nullptr)
-        clearTranspositionTable();
-
-    transpositionTable = static_cast<tt *>(malloc(transpotitionTableEntries * sizeof(tt)));
-
-    if (transpositionTable == nullptr) {
-        std::cerr << "ERR Allocation of memory has failed\n";
-        initTranspositionTable(megaBytes / 2);
-    } else {
-        // if the allocation has succeded
-        clearTranspositionTable();
+    while (entries > 0 && replacement == nullptr) {
+        replacement = new (std::nothrow) tt[entries]{};
+        if (replacement == nullptr) entries /= 2;
     }
 
+    if (replacement == nullptr) {
+        std::cerr << "ERR Allocation of transposition table failed\n";
+        return;
+    }
+
+    delete[] transpositionTable;
+    transpositionTable = replacement;
+    transpotitionTableEntries = static_cast<std::int64_t>(entries);
+    transpositionTableMask = entries - 1;
+}
+
+void freeTranspositionTable() {
+    delete[] transpositionTable;
+    transpositionTable = nullptr;
+    transpotitionTableEntries = 0;
+    transpositionTableMask = 0;
 }
 
 void clearTranspositionTable() {
     if (transpositionTable != nullptr) { // extra check for ucinewgame
-        for (int index=0; index < transpotitionTableEntries; index++) {
-            transpositionTable[index].hashKey=0;
-            transpositionTable[index].depth=0;
-            transpositionTable[index].flag=0;
-            transpositionTable[index].score=0;
-            transpositionTable[index].bestMove=Move(0, 0);
-        }
-    } else {
-        std::cerr << "clearTranspositionTable: trying to clear a nullptr tt" << std::endl;
+        std::fill_n(transpositionTable, transpotitionTableEntries, tt{});
     }
 }
 
 int probeHash(const int alpha, const int beta, Move* best_move, const int depth, const int searchPly)
 {
     // creates a pointer to the hash entry
-    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "probeHash: hashkey too large");
-    const tt* hashEntry { &transpositionTable[hashKey % transpotitionTableEntries] };
+    assert(transpositionTable != nullptr && transpotitionTableEntries > 0);
+    const tt* hashEntry { &transpositionTable[hashKey & transpositionTableMask] };
 
     // make sure we have the correct hashKey, not sure about the depth line
     if (hashEntry->hashKey == hashKey) {
@@ -113,12 +118,12 @@ int probeHash(const int alpha, const int beta, Move* best_move, const int depth,
 
 void recordHash(int score, const Move bestMove, const int flag, const int depth, const int searchPly)
 {
-    assert( (hashKey % transpotitionTableEntries) < transpotitionTableEntries && "recordHash: hashkey too large");
-    tt* hashEntry = &transpositionTable[hashKey % transpotitionTableEntries];
+    assert(transpositionTable != nullptr && transpotitionTableEntries > 0);
+    tt* hashEntry = &transpositionTable[hashKey & transpositionTableMask];
 
     // independent from distance of path taken from root node to current mating position
-    if (score < -MATE_SCORE) score += searchPly;
-    if (score > MATE_SCORE) score -= searchPly;
+    if (score < -MATE_SCORE) score -= searchPly;
+    if (score > MATE_SCORE) score += searchPly;
 
     assert(!bestMove.isNone() && "recordHash: Trying to store a null move");
 

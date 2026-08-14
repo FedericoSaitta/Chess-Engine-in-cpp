@@ -133,6 +133,11 @@ void printMovesList(const MoveList& moveList) {
 
 }
 Move parseMove(const std::string_view move, const Board& currentBoard) {
+	if (move.size() != 4 && move.size() != 5) return Move::Null;
+	if (move[0] < 'a' || move[0] > 'h' || move[2] < 'a' || move[2] > 'h'
+		|| move[1] < '1' || move[1] > '8' || move[3] < '1' || move[3] > '8') {
+		return Move::Null;
+	}
 
     const int startSquare = (move[0] - 'a') + (move[1] - '0') * 8 - 8;
     const int endSquare = (move[2] - 'a') + (move[3] - '0') * 8 - 8;
@@ -146,17 +151,17 @@ Move parseMove(const std::string_view move, const Board& currentBoard) {
             const int promotedPiece{ moveList.moves[count].first.promotionPiece() };
 
             if (promotedPiece) {
+				if (move.size() != 5) continue;
 
                 if ( ((promotedPiece % 6) == QUEEN) && (move[4] == 'q') ) return moveList.moves[count].first;
                 if ( ((promotedPiece % 6) == ROOK) && (move[4] == 'r') ) return moveList.moves[count].first;
                 if ( ((promotedPiece % 6) == BISHOP) && (move[4] == 'b') ) return moveList.moves[count].first;
                 if ( ((promotedPiece % 6) == KNIGHT) && (move[4] == 'n') ) return moveList.moves[count].first;
 
-            } else { return moveList.moves[count].first; }
+			} else if (move.size() == 4) { return moveList.moves[count].first; }
         }
     }
 
-    std::cerr << "Could not find a move\n";
     return Move::Null;
 }
 

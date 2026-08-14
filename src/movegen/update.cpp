@@ -158,8 +158,9 @@ void Board::undo(const Move move) {
 int Board::makeMove(const Move move, const int onlyCaptures) {
 
 	assert(!move.isNone() && "makeMove: making a NULL MOVE");
-	assert((gamePly < 512) && "makeMove: gamePly is too large");
+	assert((gamePly < 511) && "makeMove: gamePly is too large");
 	assert(move.to() != move.from() && "makeMove: start and end-square are same");
+	if (gamePly >= 511) return 0;
 
 	if(!onlyCaptures) {
 
@@ -320,6 +321,8 @@ int Board::makeMove(const Move move, const int onlyCaptures) {
 
 
 void Board::nullMove() {
+	assert((gamePly < 511) && "nullMove: gamePly is too large");
+	if (gamePly >= 511) return;
 	hashKey ^= sideKey;
 	if (history[gamePly].enPassSq != 64) hashKey ^= randomEnPassantKeys[history[gamePly].enPassSq];
 	
@@ -327,7 +330,6 @@ void Board::nullMove() {
 	gamePly++;
 	history[gamePly] = UndoInfo(history[gamePly - 1]);
 
-	assert((gamePly < 512) && "nullMove: gamePly is too large");
 	assert((generateHashKey(*this) == hashKey) && "nullMove: hashKey is wrong");
 }
 
@@ -337,4 +339,3 @@ void Board::undoNullMove() {
 
 	assert((gamePly >= 0) && "undoNullMove: gameply is negative");
 }
-

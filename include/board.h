@@ -11,8 +11,6 @@
 
 extern const char* chessBoard[65];
 
-void parseFEN(const std::string& fenString);
-
 #define COPY_HASH()             \
 U64 hashKeyCopy = hashKey;
 
@@ -31,9 +29,10 @@ public:
 
     // constructors
     Board() { resetBoard(); }
-    explicit Board(const std::string& fenString) { parseFEN(fenString); }
+    explicit Board(const std::string& fenString) : Board() { parseFEN(fenString); }
 
     void parseFEN(const std::string& fenString);
+    bool tryParseFEN(const std::string& fenString);
 
     U64 getBitboard(const Piece pc) const { return bitboards[pc]; }
     U64 getBitboard(const Occupancies occ)  const { return bitboards[occ]; }

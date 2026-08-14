@@ -89,6 +89,8 @@ For windows:`ChessEngine.exe`
   - `movestogo x`
 
 `setoption name Hash value x`, by default the hash size is of 256 MegaBytes. \
+`setoption name UseNNUE value true|false`, NNUE is enabled by default when valid weights are available. \
+`setoption name EvalFile value <path>`, loads a replacement network transactionally; a failed load keeps the previous network. \
 `uci`, `isready`, `ucinewgame`, `quit`.
 
 ### Extra-UCI commands:
@@ -110,6 +112,8 @@ SPSA and Texel-Tuning brought over 200 ELO so far.
 
 
 #### Board Evaluation:
+- [X] Incremental Bullet NNUE (`768 -> 512` per perspective, SCReLU, 8 material buckets)
+- [X] Full-refresh validation and safe fallback to handcrafted evaluation when weights are unavailable
 - [X] Hand-Crafted-Evaluation tuned with Texel tuner
 - [X] Tapered evaluation which considers piece position on the board, and their mobility
 - [X] Rooks and Queens gain bonuses for being on semi-open and open files
