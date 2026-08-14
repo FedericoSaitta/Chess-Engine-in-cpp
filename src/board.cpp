@@ -39,28 +39,79 @@ static Piece charToPiece(const char c) {
     }
 }
 
-// think about using string view as you only need to read from the FEN string i think??
 void Board::parseFEN(const std::string& fenString) {
+    tryParseFEN(fenString);
+}
 
-    // re-setting the board state each time a new FEN is parsed
-    resetBoard();
-
-    // FEN string like: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-    // is the accepted format, missing whitespaces will result in errors
+bool Board::tryParseFEN(const std::string& fenString) {
     std::istringstream iss(fenString);
-    std::vector<std::string> parts{};
-    std::string part{};
-    while (std::getline(iss, part, ' ')) {
-        parts.push_back(part);
+    std::string boardConfig;
+    std::string sideToken;
+    std::string castleToken;
+    std::string enPassantToken;
+    if (!(iss >> boardConfig >> sideToken >> castleToken >> enPassantToken)) {
+        std::cerr << "Invalid FEN: expected at least four fields\n";
+        return false;
     }
 
-    const std::string_view boardConfig { parts[0] };
+    int ranks = 1;
+    int files = 0;
+    int whiteKings = 0;
+    int blackKings = 0;
+    for (const char c : boardConfig) {
+        if (c == '/') {
+            if (files != 8 || ranks >= 8) {
+                std::cerr << "Invalid FEN board layout\n";
+                return false;
+            }
+            ++ranks;
+            files = 0;
+        } else if (c >= '1' && c <= '8') {
+            files += c - '0';
+        } else {
+            const Piece piece = charToPiece(c);
+            if (piece == NO_PIECE) {
+                std::cerr << "Invalid FEN piece: " << c << '\n';
+                return false;
+            }
+            ++files;
+            whiteKings += piece == WHITE_KING;
+            blackKings += piece == BLACK_KING;
+        }
+
+        if (files > 8) {
+            std::cerr << "Invalid FEN rank width\n";
+            return false;
+        }
+    }
+
+    if (ranks != 8 || files != 8 || whiteKings != 1 || blackKings != 1) {
+        std::cerr << "Invalid FEN board or king count\n";
+        return false;
+    }
+    if ((sideToken != "w" && sideToken != "b")
+        || (enPassantToken != "-"
+            && (enPassantToken.size() != 2
+                || enPassantToken[0] < 'a' || enPassantToken[0] > 'h'
+                || (enPassantToken[1] != '3' && enPassantToken[1] != '6')))) {
+        std::cerr << "Invalid FEN side or en-passant field\n";
+        return false;
+    }
+    for (const char c : castleToken) {
+        if (c != '-' && c != 'K' && c != 'Q' && c != 'k' && c != 'q') {
+            std::cerr << "Invalid FEN castling field\n";
+            return false;
+        }
+    }
+
+    // Validation completed: only now replace the current position.
+    resetBoard();
     int rank{7}, file{};
     for (const char c : boardConfig) {
         if (c == '/') {
             rank--;
             file = 0;
-        } else if (std::isdigit(c)) {
+        } else if (c >= '1' && c <= '8') {
             file += (c - '0'); // Skip empty squares, offseeting the char by position of '0' in ASCII
         } else {
             const Piece piece { charToPiece(static_cast<unsigned char>(c)) };
@@ -70,9 +121,9 @@ void Board::parseFEN(const std::string& fenString) {
         }
     }
 
-    side = (parts[1][0] == 'w') ? WHITE : BLACK;
+    side = (sideToken == "w") ? WHITE : BLACK;
 
-    for (const char c : parts[2]) {
+    for (const char c : castleToken) {
         switch (c) {
             case 'K': history[gamePly].castle |= WK; break;
             case 'Q': history[gamePly].castle |= WQ; break;
@@ -82,12 +133,12 @@ void Board::parseFEN(const std::string& fenString) {
         }
     }
 
-    if(parts[3][0] == '-') {
+    if(enPassantToken == "-") {
         history[gamePly].enPassSq = 64; // the 64th index represents the 'outside the board' square
     } else {
-        const int col { parts[3][0] - 'a'};
-        const int row { 8 - (parts[3][1] - '0') };
-        history[gamePly].enPassSq = 56 - 8 * row + col;
+        const int fileIndex { enPassantToken[0] - 'a'};
+        const int rankIndex { enPassantToken[1] - '1'};
+        history[gamePly].enPassSq = rankIndex * 8 + fileIndex;
     }
 
 
@@ -100,6 +151,7 @@ void Board::parseFEN(const std::string& fenString) {
 
     // Now we initialize the zobrist hash key
     hashKey = generateHashKey(*this);
+    return true;
 }
 
 
@@ -129,7 +181,5 @@ U64 Board::allAttackers(const int square, const U64 occupancy) const {
          | (getRookAttacks(square, occupancy) & (attackingRooks | attackingQueens))
          | (bitKingAttacks[square] & attackingKing);
 }
-
-
 
 

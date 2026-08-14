@@ -19,12 +19,14 @@ extern U64 hashKey; // of the position
 
 // transposition table data structure
 struct tt {
-    U64 hashKey;
-    int depth;
-    int flag;
-    int score;
-    Move bestMove;
+    U64 hashKey{};
+    int score{};
+    Move bestMove{};
+    std::int8_t depth{};
+    std::uint8_t flag{};
 };
+
+static_assert(sizeof(tt) == 16, "TT entries must stay compact");
 
 #define NO_HASH_ENTRY 100'000 // large enough to make sure it goes outside alpha beta window size
 
@@ -32,6 +34,7 @@ extern tt* transpositionTable;
 extern std::int64_t transpotitionTableEntries;
 
 void initTranspositionTable(int megaBytes);
+void freeTranspositionTable();
 void clearTranspositionTable();
 int probeHash(int alpha, int beta, Move* best_move, int depth, int searchPly);
 void recordHash(int score, Move best_move, int flag, int depth, int searchPly);

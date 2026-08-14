@@ -4,6 +4,7 @@
 #include "../include/types.h"
 #include "board.h"
 #include "timer.h"
+#include "../eval/nnue.h"
 
 
 enum NodeType {
@@ -17,13 +18,15 @@ enum NodeType {
 #define MATE_VALUE 49'000
 #define MATE_SCORE 48'000
 
-void initSearchTables();
+void initSearchTables(int lmrBase = 79, int lmrDivision = 287);
 void clearHistoryTable();
 
 class Searcher {
 
 public:
     Board pos;
+    nnue::Accumulator nnueAccumulator;
+    bool useNNUE{true};
 
     // Search Tables:          //
     Move killerMoves[2][MAX_PLY]{};
@@ -56,9 +59,14 @@ public:
 
     //                         //
     void parseFEN(const std::string& fenString) {
+        tryParseFEN(fenString);
+    }
+
+    bool tryParseFEN(const std::string& fenString) {
+        if (!pos.tryParseFEN(fenString)) return false;
         repetitionIndex = 0;
         memset(repetitionTable, 0, sizeof(repetitionTable));
-        pos.parseFEN(fenString);
+        return true;
     }
 
     void resetGame(){
@@ -89,13 +97,18 @@ public:
         stopSearch = false;
     }
 
+    void setUseNNUE(bool enabled) { useNNUE = enabled; }
+    void refreshNNUE() {
+        if (useNNUE) nnueAccumulator.refresh(pos);
+    }
+
 
     int quiescenceSearch(int alpha, int beta);
     int aspirationWindow(int currentDepth, int previousScore);
     int negamax(int alpha, int beta, int depth, NodeType canNull);
     void iterativeDeepening(int depth, bool timeConstraint=false);
 
-    void sendUciInfo(int score, int depth, int nodes) const;
+    void sendUciInfo(int score, int depth, std::uint64_t nodes) const;
 
     void updateHistory(Move bestMove, int depth, const Move* quiets, int quietMoveCount);
 
@@ -113,6 +126,15 @@ public:
     void giveScores(MoveList& moveList, Move bestMove, const Board& board);
 
     static std::pair<Move, int> pickBestMove(MoveList& moveList, int start);
+
+private:
+    int evaluatePosition() const;
+    bool makeMoveWithNNUE(Move move, int onlyCaptures, nnue::Update& update);
+    void undoMoveWithNNUE(Move move, const nnue::Update& update);
+    void makeNullMoveWithNNUE();
+    void undoNullMoveWithNNUE();
+
+public:
 
     // TUNABLE PARAMETERS //
     int LMR_MIN_MOVES { 5 };

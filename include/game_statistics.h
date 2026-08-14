@@ -1,3 +1,5 @@
 #pragma once
 
-extern int nodes;
+#include <cstdint>
+
+extern std::uint64_t nodes;

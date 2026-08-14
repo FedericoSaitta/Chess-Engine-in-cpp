@@ -20,7 +20,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "
     # GCC/Clang specific flags for both Debug and Release
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fno-omit-frame-pointer")
 
-    set(SANITIZER_FLAGS "-fsanitize=address,undefined,thread,leak")
+    # AddressSanitizer and ThreadSanitizer are mutually exclusive in Clang.
+    # Keep the default Debug build useful by combining ASan with UBSan;
+    # dedicated race-testing builds can opt into TSan separately.
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined")
 
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 ${SANITIZER_FLAGS}")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -mtune=native -funroll-loops -ffast-math -flto")
@@ -54,6 +57,7 @@ set(SOURCE_FILES
         src/UCI.cpp
         src/hashtable.cpp
         src/eval/evaluation.cpp
+        src/eval/nnue.cpp
         src/search/movesort.cpp
         benchmark_tests/perft_tests.cpp
         benchmark_tests/search_and_eval.cpp
@@ -72,6 +76,7 @@ set(SOURCE_FILES
         include/inline_functions.h
         include/types.h
         src/eval/evaluation.h
+        src/eval/nnue.h
         benchmark_tests/benchmark_tests.h
         debug_tests/debug_tests.h
         src/logger/logger.h
@@ -106,3 +111,28 @@ endif()
 
 # Link Threads library
 target_link_libraries(ChessEngine PRIVATE Threads::Threads)
+
+# Keep the exact Bullet network next to the executable. Runtime loading is
+# still validated and transactional; if this file is absent, Aramis safely
+# uses its handcrafted evaluation.
+set(NNUE_SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/networks/pesos_bullet_512_buckets8.bin")
+if(EXISTS "${NNUE_SOURCE_FILE}")
+    configure_file("${NNUE_SOURCE_FILE}"
+                   "${CMAKE_CURRENT_BINARY_DIR}/pesos_bullet_512_buckets8.bin"
+                   COPYONLY)
+endif()
+
+include(CTest)
+if(BUILD_TESTING AND EXISTS "${NNUE_SOURCE_FILE}")
+    add_test(
+        NAME nnue_incremental_refresh
+        COMMAND ChessEngine nnue-test "${NNUE_SOURCE_FILE}"
+    )
+    add_test(
+        NAME nnue_uci_stability
+        COMMAND "${CMAKE_COMMAND}"
+                "-DENGINE=$<TARGET_FILE:ChessEngine>"
+                "-DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/tests/uci_nnue_commands.txt"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/uci_nnue_smoke.cmake"
+    )
+endif()

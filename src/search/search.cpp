@@ -45,19 +45,45 @@
 constexpr int MAX_HISTORY_SCORE{ 16'384 };
 
 // SEARCH PARAMETERS //
-constexpr double LMR_BASE = 0.79;
-constexpr double LMR_DIVISION = 2.87;
-
 static int LMR_table[MAX_PLY][MAX_PLY];
-int nodes{};
+std::uint64_t nodes{};
 
-void initSearchTables() {
+void initSearchTables(const int lmrBase, const int lmrDivision) {
+		const double base = lmrBase / 100.0;
+		const double division = lmrDivision / 100.0;
 		for(int depth = 1; depth < MAX_PLY; depth++) {
-			for(int played = 1; played < 64; played++) {
-				LMR_table[depth][played] = static_cast<int>( LMR_BASE + std::log(depth) * std::log(played) / LMR_DIVISION ); // formula from Berserk engine
+			for(int played = 1; played < MAX_PLY; played++) {
+				LMR_table[depth][played] = static_cast<int>(base + std::log(depth) * std::log(played) / division); // formula from Berserk engine
 			}
 		}
 	LMR_table[0][0] = LMR_table[1][0] =  LMR_table[0][1] = 0;
+}
+
+int Searcher::evaluatePosition() const {
+	if (useNNUE && nnueAccumulator.valid()) return nnueAccumulator.evaluate();
+	return evaluate(pos);
+}
+
+bool Searcher::makeMoveWithNNUE(const Move move, const int onlyCaptures, nnue::Update& update) {
+	update = useNNUE ? nnueAccumulator.prepareUpdate(pos, move) : nnue::Update{};
+	if (!pos.makeMove(move, onlyCaptures)) return false;
+	if (useNNUE) nnueAccumulator.apply(update, pos.side);
+	return true;
+}
+
+void Searcher::undoMoveWithNNUE(const Move move, const nnue::Update& update) {
+	pos.undo(move);
+	if (useNNUE) nnueAccumulator.undo(update, pos.side);
+}
+
+void Searcher::makeNullMoveWithNNUE() {
+	pos.nullMove();
+	if (useNNUE && nnueAccumulator.valid()) nnueAccumulator.setSideToMove(pos.side);
+}
+
+void Searcher::undoNullMoveWithNNUE() {
+	pos.undoNullMove();
+	if (useNNUE && nnueAccumulator.valid()) nnueAccumulator.setSideToMove(pos.side);
 }
 
 void Searcher::updateKillers(const Move bestMove) {
@@ -108,8 +134,8 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 	if ((nodes & 4095) == 0) isTimeUp();
 	if (stopSearch) return 0; // If the time is up, we return 0;
 
-	if ( searchPly > (MAX_PLY - 1) ) return evaluate(pos);
-	const int standPat{ evaluate(pos) };
+	if (searchPly >= MAX_PLY || repetitionIndex >= 512) return evaluatePosition();
+	const int standPat{ evaluatePosition() };
 
 	// delta pruning
 	if (standPat < (alpha - 975) ) return alpha;
@@ -145,12 +171,12 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 		COPY_HASH()
 		searchPly++;
-		repetitionIndex++;
-		repetitionTable[repetitionIndex] = hashKey;
+		repetitionTable[repetitionIndex++] = hashKey;
 
 		// maybe switch to only looking at quiet moves instead of captures
 		// pos.undo Illegal Moves or non-captures
-		if( !pos.makeMove(move, 1) ) {
+		nnue::Update nnueUpdate;
+		if( !makeMoveWithNNUE(move, 1, nnueUpdate) ) {
 			searchPly--;
 			repetitionIndex--;
 			continue;
@@ -160,7 +186,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 		searchPly--;
 		repetitionIndex--;
-		pos.undo(move);
+		undoMoveWithNNUE(move, nnueUpdate);
 		RESTORE_HASH()
 
 		// found a better move
@@ -190,6 +216,7 @@ int Searcher::quiescenceSearch(int alpha, const int beta) {
 
 int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNull) {
 	assert(depth >= 0 && "negamax: depth is negative");
+	if (searchPly >= MAX_PLY || repetitionIndex >= 512) return evaluatePosition();
 
 	pvLength[searchPly] = searchPly;
 	Move bestMove {}; // for now as tt is turned off this is just a null move
@@ -206,7 +233,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	if (searchPly && ttHit && !pvNode) return score;
 
 	if ((nodes & 4095) == 0) isTimeUp();
-	if (searchPly > MAX_PLY - 1) return evaluate(pos);
+	if (searchPly >= MAX_PLY || repetitionIndex >= 512) return evaluatePosition();
 	if ( depth < 1 ) return quiescenceSearch(alpha, beta);
 
 
@@ -218,7 +245,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 	if (!pvNode && !inCheck && searchPly) {
 
 		// reverse futility pruning
-		const int eval { ttHit ? score : evaluate(pos) };
+		const int eval { ttHit ? score : evaluatePosition() };
 		if (depth < this->RFP_DEPTH && (eval - depth * this->RFP_MARGIN) >= beta)
 			return eval;
 
@@ -227,19 +254,18 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 		// Do not attempt null move pruning in case our pos.side only has pawns on the pos
 		// maybe you need a flag to make sure you dont re-attempt null move twice in a row?
 		// no NULL flag used to ensure we dont do two null moves in a row
-		if (depth > this->NMP_DEPTH  && canNull && pos.nonPawnMaterial()) {
+		if (depth > this->NMP_DEPTH && canNull && pos.nonPawnMaterial() && pos.gamePly < 511) {
 			COPY_HASH()
-			pos.nullMove();
+			repetitionTable[repetitionIndex++] = hashKey;
+			makeNullMoveWithNNUE();
 
 			searchPly++;
-			repetitionIndex++;
-			repetitionTable[repetitionIndex] = hashKey;
 
 			// more aggressive reduction
 			const int r = std::min(static_cast<int>( (this->NMP_BASE/100.0) + depth / (this->NMP_DIVISION/100.0) ), depth);
 			const int nullMoveScore = -negamax(-beta, -beta + 1, depth - r, DONT_NULL);
 
-			pos.undoNullMove();
+			undoNullMoveWithNNUE();
 			searchPly--;
 			repetitionIndex--;
 			RESTORE_HASH() // un-making the null move
@@ -251,7 +277,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 		if (depth <= 3 && canNull){
 			// get static eval and add first bonus
 			// as we need to preserve score for FP, we make a new variable here
-			int r_score = evaluate(pos) + 125;
+			int r_score = evaluatePosition() + 125;
 
 			int newScore; // define new score
 
@@ -339,11 +365,11 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
         COPY_HASH()
         searchPly++;
-    	repetitionIndex++;
-    	repetitionTable[repetitionIndex] = hashKey;
+		repetitionTable[repetitionIndex++] = hashKey;
 
         // Illegal Moves
-        if( !pos.makeMove(move, 0) ) {
+        nnue::Update nnueUpdate;
+        if( !makeMoveWithNNUE(move, 0, nnueUpdate) ) {
             searchPly--;
         	repetitionIndex--;
 
@@ -355,7 +381,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
         legalMoves++;
 
-    	if (isQuiet && (quietMoveCount < 31) ) {
+		if (isQuiet && quietMoveCount < 32) {
     	    quiets[quietMoveCount] = move;
     	    quietMoveCount++;
     	}
@@ -369,7 +395,9 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
     		if( (movesSearched >= this->LMR_MIN_MOVES) && (depth >= this->LMR_DEPTH) && isQuiet ) {
 
     			//int reduction = ( (this->LMR_BASE / 100.0) + std::log(depth) * std::log(count) / (this->LMR_DIVISION / 100.0) );
-    			int reduction = LMR_table[std::min(depth, MAX_PLY)][std::min(count, MAX_PLY)];
+			const int depthIndex = std::min(depth, MAX_PLY - 1);
+			const int moveIndex = std::min(count, MAX_PLY - 1);
+			int reduction = LMR_table[depthIndex][moveIndex];
 
     			reduction = std::min(depth - 1, std::max(reduction, 1)); // to avoid dropping into qs directly
     			score = -negamax(-alpha-1, -alpha, depth-1-reduction, DO_NULL); // Search this move with reduced depth:
@@ -388,7 +416,7 @@ int Searcher::negamax(int alpha, const int beta, int depth, const NodeType canNu
 
         searchPly--;
     	repetitionIndex--;
-    	pos.undo(move);
+	undoMoveWithNNUE(move, nnueUpdate);
         RESTORE_HASH()
 
     	movesSearched++;
@@ -475,6 +503,7 @@ int Searcher::aspirationWindow(const int currentDepth, const int previousScore) 
 
 void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint) {
 	resetSearchStates();
+	refreshNNUE();
 
 	// note that bench command will not change as we create a separate thread for it
 	calculateMoveTime(timeConstraint);
@@ -501,8 +530,9 @@ void Searcher::iterativeDeepening(const int maxDepth, const bool timeConstraint)
 
 		sendUciInfo(score, depth, nodes);
     }
-    std::cout << "bestmove " + algebraicNotation(pvTable[0][0]) << std::endl;
-	LOG_INFO("bestmove " + algebraicNotation(pvTable[0][0]));
+    const std::string bestMove = pvTable[0][0].isNone() ? "0000" : algebraicNotation(pvTable[0][0]);
+    std::cout << "bestmove " << bestMove << std::endl;
+	LOG_INFO("bestmove " + bestMove);
 
 	assert((searchPly == 0) && "iterativeDeepening: searchPly too small");
 	assert((generateHashKey(pos) == hashKey) && "iterativeDeepening: hashKey is wrong illegal move");

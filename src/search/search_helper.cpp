@@ -37,7 +37,7 @@ bool Searcher::isRepetition() const {
 }
 
 
-void Searcher::sendUciInfo(const int score, const int depth, const int nodes) const {
+void Searcher::sendUciInfo(const int score, const int depth, const std::uint64_t nodes) const {
     // Extracting the PV line and printing out in the terminal and logging file
     std::string pvString{};
     for (int count = 0; count < pvLength[0]; count++) { pvString += algebraicNotation(pvTable[0][count]) + ' '; }
@@ -47,12 +47,12 @@ void Searcher::sendUciInfo(const int score, const int depth, const int nodes) co
     std::string scoreType = "cp";
     int adjustedScore = score;
 
-    if (score > -MATE_VALUE && score < -MATE_SCORE) {
+    if (score >= -MATE_VALUE && score < -MATE_SCORE) {
         scoreType = "mate";
-        adjustedScore = -(score + MATE_VALUE) / 2 - 1;
-    } else if (score > MATE_SCORE && score < MATE_VALUE) {
+        adjustedScore = -(score + MATE_VALUE + 1) / 2;
+    } else if (score > MATE_SCORE && score <= MATE_VALUE) {
         scoreType = "mate";
-        adjustedScore = (MATE_VALUE - score) / 2 + 1;
+        adjustedScore = (MATE_VALUE - score + 1) / 2;
     }
 
     // Print the information

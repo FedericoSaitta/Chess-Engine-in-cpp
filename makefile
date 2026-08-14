@@ -11,6 +11,7 @@ LDFLAGS = -lpthread
 SRC_FILES = src/main.cpp src/movegen/movegen.cpp src/board.cpp src/movegen/update.cpp \
             src/init.cpp src/misc.cpp src/search/search.cpp src/UCI.cpp \
             src/hashtable.cpp src/eval/evaluation.cpp src/search/movesort.cpp \
+            src/eval/nnue.cpp \
             benchmark_tests/perft_tests.cpp benchmark_tests/search_and_eval.cpp \
             benchmark_tests/puzzle_tests.cpp debug_tests/evaluation_tests.cpp \
             debug_tests/move_tests.cpp debug_tests/bitmask_tests.cpp \
